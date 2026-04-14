@@ -1,0 +1,60 @@
+{
+  "folders": [
+    {
+      "name": "✨ limetry",
+      "path": "."
+    },
+    // {
+    //   "name": "📦 @limetry/ci",
+    //   "path": "packages/ci"
+    // },
+    // {
+    //   "name": "📦 @limetry/cli",
+    //   "path": "packages/cli"
+    // },
+    // {
+    //   "name": "📦 @limetry/skill",
+    //   "path": "packages/limetry-skill"
+    // },
+    // {
+    //   "name": "📦 @limetry/mcp",
+    //   "path": "packages/mcp"
+    // },
+    // {
+    //   "name": "📦 @limetry/preflight",
+    //   "path": "packages/preflight"
+    // },
+    {
+      "name": "☁️ limetry-enterprise",
+      "path": "../limetry-enterprise"
+    }
+    // {
+    //   "name": "📦 @limetry/ci",
+    //   "path": "packages/ci"
+    // },
+    // {
+    //   "name": "📦 @limetry/cli",
+    //   "path": "packages/cli"
+    // },
+    // {
+    //   "name": "📦 @limetry/skill",
+    //   "path": "packages/limetry-skill"
+    // },
+    // {
+    //   "name": "📦 @limetry/mcp",
+    //   "path": "packages/mcp"
+    // },
+    // {
+    //   "name": "📦 @limetry/preflight",
+    //   "path": "packages/preflight"
+    // },
+  ],
+  "settings": {
+    "eslint.workingDirectories": [
+      {
+        "mode": "auto"
+      }
+    ],
+    "eslint.lintTask.enable": false
+  }
+}
