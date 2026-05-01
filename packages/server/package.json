@@ -1,0 +1,51 @@
+{
+  "name": "@limetry/server",
+  "description": "Limetry agent action governance and telemetry server",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "sync:openapi": "node scripts/sync-openapi.mjs",
+    "build": "yarn sync:openapi && rm -rf dist && tsc -p tsconfig.json",
+    "build:lambda": "node scripts/build-lambda-bundle.mjs",
+    "start": "yarn build && node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "yarn sync:openapi && vitest run",
+    "test:critical-coverage": "vitest run src/services/action-evaluator.test.ts src/services/decision-receipt.test.ts src/routes/actions.test.ts --coverage",
+    "typecheck": "tsgo -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@codegenie/serverless-express": "^5.0.0",
+    "@dotenvx/dotenvx": "^2.23.0",
+    "@limetry/preflight": "workspace:*",
+    "@limetry/sdk": "workspace:*",
+    "@opentelemetry/api": "^1.9.1",
+    "@sentry/node": "^10.75.0",
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "ioredis": "^5.11.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0",
+    "pino": "^10.3.1",
+    "posthog-node": "^5.52.4",
+    "yaml": "^2.9.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.163",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.4.1",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "esbuild": "^0.28.2",
+    "supertest": "^7.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
