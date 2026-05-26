@@ -1,0 +1,16 @@
+{
+  "name": "@limetry/skill",
+  "description": "Limetry AI Payment Governance agent skill",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate_policy.mjs",
+    "evaluate": "node scripts/evaluate_intent.mjs"
+  },
+  "dependencies": {
+    "minimist": "^1.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1"
+  },
+  "private": true
+}

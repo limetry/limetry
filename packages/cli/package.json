@@ -1,0 +1,47 @@
+{
+  "name": "@limetry/cli",
+  "description": "CLI for Limetry agent action governance — setup, policy apply, eval, and audit",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "limetry": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/limetry/limetry.git",
+    "directory": "packages/cli"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node dist/index.js",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsgo -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@limetry/sdk": "workspace:*",
+    "chalk": "^6.0.0",
+    "commander": "^15.0.0",
+    "inquirer": "^14.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "node-fetch": "^3.3.2",
+    "open": "^11.0.2"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^26.4.1",
+    "typescript": "^5.8.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
