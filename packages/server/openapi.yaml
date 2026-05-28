@@ -1,0 +1,191 @@
+openapi: 3.1.0
+info:
+  title: Limetry evaluate API
+  description: |
+    Self-hosted Limetry evaluation server: register action policies, evaluate
+    action intents, record outcomes, and read the privacy-safe audit trail.
+
+    Authentication: bearer API key (or local JWT in development). Mint keys with
+    the Limetry CLI (`limetry setup`) against this server.
+  version: 1.2.0
+  contact:
+    url: https://limetry.org
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.limetry.org
+    description: Hosted Limetry API
+  - url: http://localhost:3810
+    description: Local dev (default 3810)
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+  schemas:
+    ActionIntent:
+      type: object
+      required: [intent_id, agent_id, action_type, resource, issued_at]
+      properties:
+        intent_id:
+          type: string
+          format: uuid
+        policy_id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+        action_type:
+          type: string
+          examples: [http_post, deploy, sql.write]
+        resource:
+          type: string
+        issued_at:
+          type: string
+          format: date-time
+        cost:
+          type: object
+          properties:
+            amount_minor:
+              type: integer
+            currency:
+              type: string
+    EvaluateRequest:
+      type: object
+      required: [intent]
+      properties:
+        policy_id:
+          type: string
+          format: uuid
+        intent:
+          $ref: "#/components/schemas/ActionIntent"
+    EvaluateResponse:
+      type: object
+      properties:
+        decision:
+          type: string
+          enum: [allow, deny, approval_required]
+        reasons:
+          type: array
+          items:
+            type: string
+        receipt:
+          type: object
+          additionalProperties: true
+
+paths:
+  /health:
+    get:
+      security: []
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Server is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  service:
+                    type: string
+                  version:
+                    type: string
+
+  /v1/policy/evaluate:
+    post:
+      summary: Evaluate an action intent
+      operationId: evaluateAction
+      description: |
+        Match an action intent against the registered action policy. Returns
+        allow, deny, or approval_required with reasons and an optional signed receipt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluateRequest"
+      responses:
+        "200":
+          description: Policy decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluateResponse"
+        "401":
+          description: Missing or invalid credentials
+        "403":
+          description: Insufficient scope
+
+  /v1/actions/record:
+    post:
+      summary: Record action outcome
+      operationId: recordAction
+      description: Record whether the tool ran after evaluate (executed, skipped, or blocked).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Outcome recorded
+        "401":
+          description: Missing or invalid credentials
+
+  /v1/audit:
+    get:
+      summary: List audit events
+      operationId: listAudit
+      description: Privacy-safe audit rows for this workspace (retention depends on deployment).
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Audit page
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "401":
+          description: Missing or invalid credentials
+
+  /v1/policies/{id}:
+    put:
+      summary: Upsert an action policy
+      operationId: upsertPolicy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Policy stored
+        "401":
+          description: Missing or invalid credentials
