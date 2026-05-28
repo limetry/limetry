@@ -1,0 +1,5 @@
+{
+  "framework": "express",
+  "installCommand": "cd ../.. && bash scripts/vercel-install.sh",
+  "buildCommand": "cd ../.. && node .yarn/releases/yarn-4.13.0.cjs workspace @limetry/server build"
+}

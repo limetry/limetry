@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Limetry Central — Agent Action Governance API</title>
+  <meta
+    name="description"
+    content="Self-hosted Limetry governance server. Evaluate agent tool calls, deny with reasons, audit outcomes. MCP, CLI, and SDK compatible."
+  />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222 47% 11%;
+      --card: 0 0% 100%;
+      --muted: 210 40% 96%;
+      --muted-foreground: 215 16% 47%;
+      --border: 214 32% 91%;
+      --primary: 160 84% 39%;
+      --brand: #21b263;
+      --primary-foreground: 0 0% 100%;
+      --surface: 210 40% 98%;
+      --radius: 1rem;
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: 222 47% 6%;
+        --foreground: 210 40% 98%;
+        --card: 222 47% 9%;
+        --muted: 217 33% 14%;
+        --muted-foreground: 215 20% 65%;
+        --border: 217 33% 18%;
+        --primary: 160 84% 39%;
+        --primary-foreground: 222 47% 6%;
+        --surface: 222 47% 9%;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: var(--font-sans);
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      line-height: 1.5;
+    }
+
+    a { color: hsl(var(--primary)); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page {
+      position: relative;
+      overflow: hidden;
+      min-height: 100vh;
+    }
+
+    .mesh {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(600px 400px at 10% 0%, hsl(var(--primary) / 0.14), transparent 60%),
+        radial-gradient(500px 360px at 90% 20%, hsl(190 80% 45% / 0.1), transparent 55%),
+        radial-gradient(700px 500px at 50% 100%, hsl(var(--primary) / 0.06), transparent 50%);
+    }
+
+    .accent {
+      pointer-events: none;
+      position: absolute;
+      right: -8rem;
+      top: -6rem;
+      width: 28rem;
+      height: 28rem;
+      opacity: 0.07;
+      transform: rotate(12deg);
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    @media (min-width: 640px) {
+      .shell { padding: 3rem 1.5rem 5rem; }
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--brand);
+      text-decoration: none;
+      font-family: Inter, var(--font-sans);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-size: 1.25rem;
+    }
+
+    .brand img {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .nav {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 0.75rem;
+      padding: 0.65rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      white-space: nowrap;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover { text-decoration: none; transform: translateY(-1px); }
+
+    .btn-primary {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      box-shadow: 0 10px 24px hsl(var(--primary) / 0.25);
+    }
+
+    .btn-ghost {
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      border-color: hsl(var(--border));
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid hsl(var(--primary) / 0.3);
+      background: hsl(var(--primary) / 0.1);
+      color: hsl(var(--primary));
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+
+    .dot {
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 999px;
+      background: hsl(var(--primary));
+      box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      font-weight: 900;
+    }
+
+    .lead {
+      margin: 1.25rem 0 0;
+      max-width: 42rem;
+      color: hsl(var(--muted-foreground));
+      font-size: 1.05rem;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid.thirds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    .card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: calc(var(--radius) + 0.25rem);
+      padding: 1.25rem;
+      box-shadow: 0 1px 2px hsl(222 47% 11% / 0.04);
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .card p {
+      margin: 0.5rem 0 0;
+      color: hsl(var(--muted-foreground));
+      font-size: 0.9rem;
+    }
+
+    section {
+      margin-top: 3.5rem;
+    }
+
+    section > h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    section > .section-lead {
+      margin: 0 0 1.25rem;
+      color: hsl(var(--muted-foreground));
+      max-width: 40rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid hsl(var(--border));
+      vertical-align: top;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background: hsl(var(--surface));
+      color: hsl(var(--muted-foreground));
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    code, .mono {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .method {
+      display: inline-block;
+      min-width: 3.25rem;
+      font-weight: 700;
+      color: hsl(var(--primary));
+    }
+
+    .tag {
+      display: inline-block;
+      margin-left: 0.35rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 0.35rem;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--muted));
+      color: hsl(var(--muted-foreground));
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .tag.legacy {
+      border-color: hsl(38 92% 50% / 0.35);
+      background: hsl(38 92% 50% / 0.12);
+      color: hsl(32 95% 40%);
+    }
+
+    pre {
+      margin: 1.25rem 0 0;
+      padding: 1rem 1.15rem;
+      overflow: auto;
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--surface));
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.55;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid hsl(var(--border));
+      color: hsl(var(--muted-foreground));
+      font-size: 0.85rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.5rem;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="mesh" aria-hidden="true"></div>
+    <img class="accent" src="/limetry-icon.svg" alt="" aria-hidden="true" />
+
+    <div class="shell">
+      <header>
+        <a class="brand" href="/" aria-label="Limetry Central home">
+          <img src="/limetry-icon.svg" alt="" />
+          <span>Limetry Central</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a class="btn btn-ghost" href="/health">Health</a>
+          <a class="btn btn-ghost" href="__WEB_ORIGIN__/docs/quick-start" target="_blank" rel="noopener noreferrer">Docs</a>
+          <a class="btn btn-primary" href="https://github.com/limetry/limetry" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </header>
+
+      <main>
+        <div class="badge"><span class="dot" aria-hidden="true"></span> Self-hosted · Action governance API</div>
+        <h1>Stop irreversible agent side effects cold.</h1>
+        <p class="lead">
+          This node is the open-source Limetry evaluation server. Agents, MCP hosts, and the CLI call it to
+          <strong>evaluate</strong> tool-call intents, return an <strong>outcome</strong>
+          (allow, deny, or wait), and <strong>audit</strong> a scrubbed projection (minimal by default) —
+          before an irreversible tool runs.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#paths">Browse API paths</a>
+          <a class="btn btn-ghost" href="__WEB_ORIGIN__/docs/quick-start" target="_blank" rel="noopener noreferrer">Wire Limetry in 5 minutes</a>
+        </div>
+
+        <div class="grid thirds">
+          <article class="card">
+            <h2>Evaluate before execute</h2>
+            <p>POST an ActionIntent. Get allow, deny, or wait — plus reasons and a signed receipt. Audit stores a scrubbed projection (<code>minimal</code> by default)—not the full intent.</p>
+          </article>
+          <article class="card">
+            <h2>Audit you can tail</h2>
+            <p>Every evaluation and recorded outcome becomes a structured event for operators and CI.</p>
+          </article>
+          <article class="card">
+            <h2>Engineer surfaces</h2>
+            <p>Same contract as <code>@limetry/sdk</code>, <code>@limetry/cli</code>, and <code>@limetry/mcp</code>.</p>
+          </article>
+        </div>
+
+        <section id="paths">
+          <h2>Available paths</h2>
+          <p class="section-lead">
+            Bearer tokens need matching scopes. JWT routes use operator login.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Method / path</th>
+                <th>Auth</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="method">GET</span> <code>/</code></td>
+                <td>none</td>
+                <td>This landing page</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/health</code></td>
+                <td>none</td>
+                <td>Liveness JSON</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/metrics</code></td>
+                <td>bearer · <code>metrics:read</code></td>
+                <td>Process metrics snapshot</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> <code>/v1/policy/evaluate</code></td>
+                <td>bearer · <code>policy:evaluate</code></td>
+                <td>Evaluate ActionIntent</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> <code>/v1/actions/record</code></td>
+                <td>bearer · <code>actions:record</code></td>
+                <td>Record executed / skipped / blocked outcome</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/v1/audit</code></td>
+                <td>bearer · <code>audit:read</code></td>
+                <td>List audit / telemetry events</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/v1/policies</code></td>
+                <td>bearer · <code>policies:read</code></td>
+                <td>List registered policies</td>
+              </tr>
+              <tr>
+                <td><span class="method">PUT</span> <code>/v1/policies/:policyId</code></td>
+                <td>bearer · <code>policies:write</code></td>
+                <td>Upsert ActionPolicy</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/v1/approvals</code></td>
+                <td>bearer · <code>approvals:read</code></td>
+                <td>List pending / resolved approvals</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> <code>/v1/approvals/:approvalId/approve</code></td>
+                <td>bearer · <code>approvals:write</code></td>
+                <td>Approve a pending action after payload-hash match</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> <code>/v1/approvals/:approvalId/deny</code></td>
+                <td>bearer · <code>approvals:write</code></td>
+                <td>Deny a pending action</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> <code>/v1/auth/register</code></td>
+                <td>none</td>
+                <td>Create operator user + tenant</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> <code>/v1/auth/login</code></td>
+                <td>none</td>
+                <td>JWT login (requires tenantId)</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> <code>/v1/auth/logout</code></td>
+                <td>JWT</td>
+                <td>Revoke current JWT</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/v1/profile</code></td>
+                <td>JWT</td>
+                <td>Current operator profile</td>
+              </tr>
+              <tr>
+                <td><span class="method">POST</span> / <span class="method">GET</span> / <span class="method">DELETE</span> <code>/v1/tokens</code></td>
+                <td>JWT</td>
+                <td>Create, list, revoke API tokens</td>
+              </tr>
+              <tr>
+                <td><span class="method">CRUD</span> <code>/v1/rules</code></td>
+                <td>JWT or bearer · <code>rules:*</code></td>
+                <td>Governance rule management</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>Try evaluate</h2>
+          <p class="section-lead">
+            With the server running and <code>LIMETRY_BEARER_TOKEN</code> set, upsert a policy then evaluate a denied action:
+          </p>
+          <pre>curl -s http://localhost:3810/health
+
+curl -s -X PUT http://localhost:3810/v1/policies/$POLICY_ID \
+  -H "Authorization: Bearer $LIMETRY_BEARER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"policy":{ ... ActionPolicy ... }}'
+
+curl -s -X POST http://localhost:3810/v1/policy/evaluate \
+  -H "Authorization: Bearer $LIMETRY_BEARER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"policy_id":"'"$POLICY_ID"'","intent":{ ... ActionIntent ... }}'</pre>
+        </section>
+      </main>
+
+      <footer>
+        <span>Limetry Central · MIT · Advisory until you enforce deny in middleware</span>
+        <span>
+          <a href="__WEB_ORIGIN__" target="_blank" rel="noopener noreferrer">limetry.org</a>
+          ·
+          <a href="https://github.com/limetry/limetry" target="_blank" rel="noopener noreferrer">source</a>
+          ·
+          <span title="App version">v__APP_VERSION__</span>
+        </span>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
