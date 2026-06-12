@@ -1,0 +1,18 @@
+{
+  "name": "@examples/serverless-slack-aws-cost-control",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsgo -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@limetry/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.130",
+    "@types/node": "^26.4.1",
+    "typescript": "^5.3.3",
+    "vitest": "4.1.11"
+  }
+}
