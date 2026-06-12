@@ -1,0 +1,431 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Limetry Action Governance API",
+    "description": "Server-authoritative policy evaluation and scrubbed audit for AI agent actions. Upsert ActionPolicies (prefer audit_mode=minimal), evaluate ActionIntents, and record outcomes. Do not put secrets or chat transcripts in metadata/details. Legacy payment authorize/settle paths remain for rail handoff demos.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://your-limetry-server.example.com"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/policies/{policyId}": {
+      "put": {
+        "operationId": "upsertActionPolicy",
+        "summary": "Create or replace an action policy",
+        "parameters": [
+          {
+            "name": "policyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertActionPolicyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Policy stored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "policy_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/policy/evaluate": {
+      "post": {
+        "operationId": "evaluateActionIntent",
+        "summary": "Evaluate an ActionIntent against a registered policy",
+        "description": "Returns allow/deny with reasons and a signed decision receipt. Writes a scrubbed policy.evaluated audit projection (not full intent under audit_mode=minimal).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evaluation completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluateActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Policy not found."
+          }
+        }
+      }
+    },
+    "/v1/actions/record": {
+      "post": {
+        "operationId": "recordAction",
+        "summary": "Record that an evaluated action was executed, skipped, or blocked",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Audit event recorded."
+          }
+        }
+      }
+    },
+    "/v1/audit": {
+      "get": {
+        "operationId": "listAuditEvents",
+        "summary": "List recent audit/telemetry events",
+        "parameters": [
+          {
+            "name": "event_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "policy.evaluated",
+                "action.recorded"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit events."
+          }
+        }
+      }
+    },
+    "/v1/governance/authorize": {
+      "post": {
+        "operationId": "authorizePaymentIntent",
+        "summary": "[Legacy payment domain] Issue a single-use authorization artifact",
+        "description": "Optional payment-rail path. Prefer /v1/policy/evaluate for action governance. Does not move funds.",
+        "deprecated": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizeIntentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Intent approved and authorization issued."
+          },
+          "403": {
+            "description": "Intent blocked by policy."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "ActionIntent": {
+        "type": "object",
+        "required": [
+          "intent_id",
+          "policy_id",
+          "agent_id",
+          "action_type",
+          "resource",
+          "issued_at"
+        ],
+        "properties": {
+          "intent_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agent_id": {
+            "type": "string"
+          },
+          "action_type": {
+            "type": "string",
+            "example": "http_post"
+          },
+          "resource": {
+            "type": "string",
+            "example": "https://prod.example.com/run"
+          },
+          "cost": {
+            "type": "object",
+            "properties": {
+              "amount_minor": {
+                "type": "integer"
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ActionPolicy": {
+        "type": "object",
+        "required": [
+          "policy_id",
+          "version",
+          "organization_id",
+          "agent_id",
+          "allowed_action_types",
+          "status",
+          "updated_at"
+        ],
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "organization_id": {
+            "type": "string"
+          },
+          "agent_id": {
+            "type": "string"
+          },
+          "allowed_action_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "denied_action_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_resource_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blocked_resource_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "max_cost_minor": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended",
+              "revoked"
+            ]
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpsertActionPolicyRequest": {
+        "type": "object",
+        "required": [
+          "policy"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "default": "default"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/ActionPolicy"
+          }
+        }
+      },
+      "EvaluateActionRequest": {
+        "type": "object",
+        "required": [
+          "policy_id",
+          "intent"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "default": "default"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/ActionIntent"
+          }
+        }
+      },
+      "EvaluateActionResult": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "decision_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receipt": {
+            "type": "object",
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "allow",
+                  "deny"
+                ]
+              },
+              "decision_id": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string"
+              },
+              "exp": {
+                "type": "integer"
+              },
+              "sig": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "RecordActionRequest": {
+        "type": "object",
+        "required": [
+          "intent",
+          "outcome"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/ActionIntent"
+          },
+          "decision_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "executed",
+              "skipped",
+              "blocked"
+            ]
+          }
+        }
+      },
+      "AuthorizeIntentRequest": {
+        "type": "object",
+        "description": "Legacy authorize body (maps to ActionIntent evaluate).",
+        "properties": {
+          "tenant_id": {
+            "type": "string"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "intent": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}
