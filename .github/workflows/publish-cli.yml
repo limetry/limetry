@@ -1,0 +1,46 @@
+name: Publish @limetry/cli to npm
+
+on:
+  push:
+    tags:
+      - "cli-v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build and publish @limetry/cli
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: yarn
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build @limetry/cli
+        run: yarn workspace @limetry/cli build
+
+      - name: Test @limetry/cli
+        run: yarn workspace @limetry/cli test
+
+      - name: Smoke test CLI
+        run: node packages/cli/dist/index.js --help
+
+      - name: Stamp package version from root
+        run: node scripts/stamp-publish-version.mjs packages/cli
+
+      - name: Publish @limetry/cli
+        run: yarn workspace @limetry/cli npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
