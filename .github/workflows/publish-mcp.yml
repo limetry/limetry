@@ -1,0 +1,46 @@
+name: Publish @limetry/mcp to npm
+
+on:
+  push:
+    tags:
+      - "mcp-v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build and publish @limetry/mcp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: yarn
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build @limetry/mcp
+        run: yarn workspace @limetry/mcp build
+
+      - name: Typecheck @limetry/mcp
+        run: yarn workspace @limetry/mcp typecheck
+
+      - name: Smoke test MCP
+        run: node -e "require('node:fs').accessSync('packages/mcp/dist/index.js')"
+
+      - name: Stamp package version from root
+        run: node scripts/stamp-publish-version.mjs packages/mcp
+
+      - name: Publish @limetry/mcp
+        run: yarn workspace @limetry/mcp npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
