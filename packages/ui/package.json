@@ -1,0 +1,67 @@
+{
+  "name": "@limetry/ui",
+  "description": "Shared design system for Limetry — components, icons, and design tokens.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "react-native": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./src/index.ts"
+    },
+    "./drawer": {
+      "types": "./src/components/drawer-menu.web.tsx",
+      "react-native": "./src/components/drawer-menu.tsx",
+      "browser": "./src/components/drawer-menu.web.tsx",
+      "import": "./src/components/drawer-menu.web.tsx",
+      "default": "./src/components/drawer-menu.web.tsx"
+    },
+    "./tailwind": "./tailwind.config.ts",
+    "./global.css": "./src/global.css"
+  },
+  "files": [
+    "dist",
+    "src",
+    "tailwind.config.ts"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --out-dir dist",
+    "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "yarn build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.41.0",
+    "lucide-react-native": "^1.41.0",
+    "nativewind": "^4.1.23",
+    "tailwind-merge": "^3.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@types/react": "^19.1.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-native": "0.86.2",
+    "react-native-css-interop": "^0.2.6",
+    "react-native-reanimated": "~3.17.5",
+    "react-native-svg": "15.15.5",
+    "tailwindcss": "^3.4.19",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.2",
+    "vitest": "4.1.11"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.73",
+    "react-native-svg": ">=15"
+  }
+}
