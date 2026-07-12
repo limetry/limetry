@@ -1,0 +1,52 @@
+---
+title: Run production operations
+description: Enable a durable store, set audit retention, share state across instances, and rotate decision-receipt secrets.
+---
+
+Enable durable policy and audit storage for any production evaluation server.
+Generate unique `JWT_SECRET` and related secrets for this stack — do not reuse
+secrets from another deployment.
+
+## Enable durable storage
+
+```bash
+USE_POSTGRES_STORE=true
+DATABASE_URL=postgresql://...
+DECISION_HMAC_SECRET=<min-32-char-secret>
+LIMETRY_BEARER_TOKEN=<min-32-char-unique-token>
+JWT_SECRET=<min-32-char-unique-secret>
+# Optional multi-instance nonce / throttle / JWT revocation
+# REDIS_URL=redis://...
+```
+
+The server runs idempotent migrations before listening. PostgreSQL stores users, API tokens, rules,
+policies, authorization lifecycle records (optional payment path), audit events, and transactional
+replay/velocity state. Redis is optional.
+
+## Share state across instances
+
+- Point every instance at the same PostgreSQL database.
+- Prefer scoped API tokens over the static admin bearer.
+- Set `DECISION_HMAC_SECRET` so signed allow/deny receipts can be verified for tampering.
+
+## Set audit retention
+
+```bash
+LIMETRY_DEFAULT_AUDIT_MODE=minimal
+LIMETRY_AUDIT_RETENTION_DAYS=90
+# LIMETRY_AUDIT_PURGE_INTERVAL_MS=3600000
+```
+
+See [Minimize audit data](/docs/server/data-minimization) for audit modes and secret scrubbing.
+
+## Rotate secrets
+
+1. Generate a new `DECISION_HMAC_SECRET`.
+1. Deploy it to all instances together (old receipts expire within their `exp` window).
+1. Restart instances and verify `/health`.
+1. Rotate `LIMETRY_BEARER_TOKEN` / JWT secrets on a separate schedule; revoke API tokens as needed.
+
+<Warning>
+Limetry does not custody payment keys or private settlement credentials. Verify
+allow/deny outcomes with signed decision receipts (`DECISION_HMAC_SECRET`).
+</Warning>

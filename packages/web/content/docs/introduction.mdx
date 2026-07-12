@@ -1,0 +1,98 @@
+---
+title: Introduction
+description: Check agent action intents against your policy on a self-run Limetry evaluation server.
+---
+
+Before an irreversible tool runs, submit an action intent (tool call, HTTP
+write, deploy, spend request). The evaluation server matches it against your
+action policy and returns `allow`, `deny`, or `approval_required` with reasons
+and a signed outcome receipt. Audit storage keeps a privacy-safe record, not
+the raw intent bag.
+
+<Warning>
+Enforce the outcome in your agent loop or resource middleware. Outcomes are
+advisory until you do. Agents can bypass Limetry if you skip that check.
+</Warning>
+
+## Gate irreversible tool calls
+
+1. **Draft an intent** — type, resource, optional cost.
+2. **Evaluate** — action policy rules: allowed/denied types, resource patterns, cost caps, approval knobs.
+3. **Read the receipt** — `allow`, `deny`, or `approval_required` with reasons.
+4. **Enforce** — skip or execute the tool; record `executed` / `skipped` / `blocked`.
+5. **Audit** — tail privacy-safe `policy.evaluated` and `action.recorded` events.
+
+Call evaluate from the **Limetry SDK**, **CLI** (`limetry eval`), or **MCP**
+(`limetry_evaluate`).
+
+## Read the architecture
+
+```
+Agent (LLM + tools / MCP host)
+        │
+        ▼ action intent (full intent for matching)
+┌───────────────────────┐
+│  Limetry server       │  ← self-run evaluation API
+│  Policy evaluation    │  ← TypeScript on the server (HTTP)
+│  Privacy-safe audit     │  ← minimal record by default
+└───────────────────────┘
+        │
+        ▼ (optional) enforce in your middleware
+  Tool execution
+```
+
+<Info>
+Policy matching uses the full intent. Audit stores a privacy-safe record. See
+[Minimize audit data](/docs/server/data-minimization).
+</Info>
+
+## Components in this repository
+
+Open source (MIT license):
+
+- `packages/server` — evaluation server (policy checks + audit)
+- `packages/sdk` — TypeScript SDK (`@limetry/sdk`)
+- `packages/ci` — GitHub Actions CI/CD privilege gate (`@limetry/ci`)
+- `packages/shopify` — Shopify mutation firewall (`@limetry/shopify`)
+- `packages/sql` — SQL write gate MCP server (`@limetry/sql`)
+- `packages/cli` — CLI tools (`@limetry/cli`)
+- `packages/mcp` — MCP server (`@limetry/mcp`)
+- `examples/` — Integration walkthroughs
+
+| Property | Value |
+|---|---|
+| Primary API | `/v1/policy/evaluate`, `/v1/actions/record`, `/v1/audit` |
+| Audit storage | Privacy-safe record; `audit_mode` minimal (default) or forensics |
+| Enforcement | Opt-in in your agent, CI workflow, or resource middleware |
+| License | MIT |
+
+## Continue
+
+<CardGroup>
+  <Card title="Evaluate your first intent" href="/docs/quick-start">
+    Start the evaluation server, apply a policy, and deny a prod POST.
+  </Card>
+  <Card title="Call the SDK" href="/docs/sdk">
+    Action intents, the Limetry SDK, and typed errors.
+  </Card>
+  <Card title="Connect an MCP host" href="/docs/mcp">
+    Cursor, Claude Desktop, and other MCP hosts.
+  </Card>
+  <Card title="Self-run the server" href="/docs/server/self-hosting">
+    Environment, containers, and production wiring.
+  </Card>
+</CardGroup>
+
+Optional platform integrations:
+
+<CardGroup>
+  <Card title="Gate GitHub Actions" href="/docs/ci">
+    Evaluate `ci_privilege` and `deploy` before secrets load.
+  </Card>
+  <Card title="Gate Shopify mutations" href="/docs/shopify">
+    Hold Admin tokens and evaluate refunds before Shopify sees them.
+  </Card>
+  <Card title="Gate SQL writes" href="/docs/sql">
+    Own DATABASE_URL and classify statements over MCP.
+  </Card>
+</CardGroup>

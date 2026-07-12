@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "introduction",
+    "quick-start",
+    "sdk",
+    "server",
+    "mcp",
+    "ci",
+    "sql",
+    "shopify"
+  ]
+}
