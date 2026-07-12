@@ -1,0 +1,92 @@
+---
+title: Connect an MCP host
+description: Build @limetry/mcp, register Cursor or Claude Desktop, and call limetry_evaluate before irreversible tools.
+---
+
+`@limetry/mcp` is open source. It talks HTTP to the evaluate API you set in
+`LIMETRY_BASE_URL` — typically a self-run Limetry node. Authenticate with
+`LIMETRY_BEARER_TOKEN` (or an API token you issued on that node).
+
+## Build the MCP server
+
+From a source checkout:
+
+```bash
+yarn workspace @limetry/mcp build
+```
+
+```json
+{
+  "mcpServers": {
+    "limetry": {
+      "command": "node",
+      "args": ["/path/to/limetry/packages/mcp/dist/index.js"],
+      "env": {
+        "LIMETRY_API_KEY": "your-bearer-token",
+        "LIMETRY_BASE_URL": "http://localhost:3810"
+      }
+    }
+  }
+}
+```
+
+Once published to npm:
+
+```json
+{
+  "mcpServers": {
+    "limetry": {
+      "command": "npx",
+      "args": ["-y", "@limetry/mcp"],
+      "env": {
+        "LIMETRY_API_KEY": "your-bearer-token",
+        "LIMETRY_BASE_URL": "http://localhost:3810"
+      }
+    }
+  }
+}
+```
+
+## Set host environment
+
+| Variable | Required | Description |
+|---|---|---|
+| `LIMETRY_API_KEY` | Yes (or `LIMETRY_BEARER_TOKEN`) | Bearer token for your Limetry server |
+| `LIMETRY_BASE_URL` | Recommended | Server URL. Defaults to `http://localhost:3810` — set this when you run your own node |
+
+## Register the host
+
+**Claude Desktop** — add the block above to
+`~/Library/Application Support/Claude/claude_desktop_config.json`.
+
+**Cursor** — add it to `.cursor/mcp.json` in your project root.
+
+## Call evaluate before tools
+
+| Tool | Description |
+|---|---|
+| `limetry_evaluate` | Evaluate an `ActionIntent` against a registered policy. Returns allow/deny, reasons, and a decision receipt. Writes privacy-safe `policy.evaluated` audit events. |
+| `limetry_record_action` | Record executed / skipped / blocked. Client-redacts `details`; server drops the details bag under `audit_mode=minimal`. |
+| `limetry_list_audit` | List recent privacy-safe audit events with optional filters (`event_type`, `agent_id`, cursor). |
+| `limetry_upsert_policy` | Create or update an `ActionPolicy` (types, resource patterns, optional cost, `auditMode`). |
+
+1. Call `limetry_evaluate` before HTTP POST, deploy, delete, spend, or email actions.
+2. If denied, do not run the tool — surface reasons to the user.
+3. If allowed, run the tool and call `limetry_record_action` with outcome `executed` or `blocked`.
+4. Use `limetry_list_audit` to review recent decisions.
+
+## Minimize what you send
+
+- Send `action_type`, `resource`, optional `cost` — fields the policy needs.
+- Do **not** put API keys, bearer tokens, passwords, or full chat transcripts in
+  `metadata` or `details`. The server still scrubs known secret keys and URL query
+  strings before audit storage.
+- Prefer `audit_mode: "minimal"` unless operators need forensics.
+
+See [Minimize audit data](/docs/server/data-minimization).
+
+<Note>
+Until `@limetry/mcp` is published to npm, run the built binary from a source
+checkout (`node packages/mcp/dist/index.js`) rather than assuming
+`npx @limetry/mcp` works.
+</Note>

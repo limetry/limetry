@@ -1,0 +1,94 @@
+---
+title: Run the server yourself
+description: Deploy the evaluation server with Node, an optional durable store, and TLS you control.
+---
+
+`packages/server` runs anywhere Node.js 20+ is available. You own policy
+evaluation, audit retention, and operator auth on the node you deploy.
+
+## Review the API surface
+
+- `POST /v1/policy/evaluate` — evaluate `ActionIntent`
+- `POST /v1/actions/record` — record executed / skipped / blocked actions
+- `GET /v1/audit` — list audit / telemetry events
+- `GET /v1/policies` / `PUT /v1/policies/:id` — list and upsert action policies
+- `POST /v1/policies/register` — register a policy (legacy-compatible)
+- `POST /v1/auth/register` / `POST /v1/auth/login` — JWT authentication
+- `/v1/profile`, `/v1/tokens`, `/v1/rules` — user, token, and rule management
+
+## Set environment variables
+
+Configuration is validated with Zod at startup. The full template lives at `.env.example` in the
+repository root.
+
+```bash
+LIMETRY_API_PORT=3810
+LIMETRY_BEARER_TOKEN=your-secure-bearer-token-min-16-chars
+JWT_SECRET=your-jwt-secret-min-32-chars
+DECISION_HMAC_SECRET=your-decision-hmac-secret-min-32-chars
+REPLAY_WINDOW_MS=300000
+THROTTLE_MAX_REQUESTS_PER_MINUTE=5
+USE_POSTGRES_STORE=false
+DATABASE_URL=postgresql://user:password@localhost:5432/limetry
+LIMETRY_DEFAULT_AUDIT_MODE=minimal
+LIMETRY_AUDIT_RETENTION_DAYS=90
+# LIMETRY_AUDIT_PURGE_INTERVAL_MS=3600000
+# REDIS_URL=redis://localhost:6379
+```
+
+<Info>
+`DECISION_HMAC_SECRET` signs outcome receipts so middleware can detect tampering of an allow.
+See [Minimize audit data](/docs/server/data-minimization) and [Run production operations](/docs/server/operations).
+</Info>
+
+## Run from source
+
+```bash
+git clone https://github.com/limetry/limetry.git
+cd limetry
+corepack enable && yarn install
+yarn build:sdk && yarn build:server
+cp .env.example .env           # set LIMETRY_BEARER_TOKEN
+yarn dev:server                # http://localhost:3810
+```
+
+## Run with Docker
+
+```bash
+docker build -f packages/server/Dockerfile -t limetry-server .
+docker run --rm -p 3810:3810 \
+  -e LIMETRY_BEARER_TOKEN=your-secure-bearer-token \
+  -e DECISION_HMAC_SECRET=your-decision-hmac-secret-min-32-chars \
+  -e NODE_ENV=production \
+  -e USE_POSTGRES_STORE=true \
+  -e DATABASE_URL=postgresql://... \
+  limetry-server
+```
+
+Terminate TLS in front of the container and inject secrets from your platform.
+
+## Point clients at the node
+
+```typescript
+import { createRemoteEngine } from "@limetry/sdk"
+
+const engine = createRemoteEngine({
+  baseUrl: "https://limetry.internal.example.com",
+  apiKey: process.env.LIMETRY_BEARER_TOKEN,
+})
+
+const decision = await engine.evaluateAction({
+  intent_id: crypto.randomUUID(),
+  policy_id: "...",
+  agent_id: "demo",
+  action_type: "http_post",
+  resource: "https://prod.example.com/charge",
+  issued_at: new Date().toISOString(),
+})
+```
+
+```bash
+LIMETRY_BASE_URL=https://limetry.internal.example.com
+LIMETRY_API_KEY=your-secure-bearer-token
+limetry doctor
+```
