@@ -1,0 +1,79 @@
+---
+title: Minimize audit data
+description: Send only policy fields, choose audit_mode, and configure retention on your evaluation server.
+---
+
+Evaluate uses the full intent for policy matching. Audit storage keeps a
+**privacy-safe record**. Default mode is **minimal** — decision fields only, not
+open metadata bags or chat dumps.
+
+## Send only policy fields
+
+Send:
+
+- `action_type`, `resource`, optional `cost`
+
+Do not send API keys, bearer tokens, passwords, or full transcripts in
+`metadata` or record `details`.
+
+Call client helpers before you log or ship telemetry yourself:
+
+```typescript
+import {
+  redactActionIntent,
+  redactDetails,
+  projectIntentForAudit,
+} from "@limetry/sdk"
+
+const safe = redactActionIntent(intent)
+const forAudit = projectIntentForAudit(intent, "minimal")
+const safeDetails = redactDetails(details)
+```
+
+<Note>
+Server-side scrubbing still runs even if a client forgets.
+</Note>
+
+## Choose an audit mode
+
+| Mode | Stored after scrubbing |
+|---|---|
+| `minimal` (default) | `action_type`, scrubbed `resource` (no query/userinfo), ids, cost, decision/outcome, reasons |
+| `forensics` | Same plus redacted `metadata` and (on record) redacted `details` |
+
+```typescript
+import { createSlimActionPolicy } from "@limetry/sdk"
+
+const policy = createSlimActionPolicy({
+  agentId: "ops",
+  allowedActionTypes: ["http_get", "http_post"],
+  auditMode: "forensics",
+})
+```
+
+Environment default when a policy omits `audit_mode`:
+
+```bash
+LIMETRY_DEFAULT_AUDIT_MODE=minimal
+```
+
+## Apply scrubbing rules
+
+- Sensitive metadata/details **keys** matching token/password/secret patterns → `[REDACTED]`
+- `resource` URLs → strip userinfo, query string, and hash
+- Embedded `Bearer …`, `?token=`, live secret-key substrings (`sk_live_…`) → redacted
+
+Policy matching still uses the **original** intent at evaluate time. Digests for decision receipts
+are computed on the original intent so enforcement stays bound to what was approved.
+
+## Set retention
+
+With `USE_POSTGRES_STORE=true`:
+
+```bash
+LIMETRY_AUDIT_RETENTION_DAYS=90
+LIMETRY_AUDIT_PURGE_INTERVAL_MS=3600000
+```
+
+Set `LIMETRY_AUDIT_RETENTION_DAYS=0` to disable automatic purge on a self-run
+node.

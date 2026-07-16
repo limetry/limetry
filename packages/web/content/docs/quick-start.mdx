@@ -1,0 +1,201 @@
+---
+title: Quick start
+description: Self-host the evaluation server, apply a policy, deny a production HTTP POST, and tail the audit log.
+---
+
+Run this path against a **self-run Limetry node**. Point the CLI at your local
+API and use `LIMETRY_BEARER_TOKEN` (or scoped API tokens you issue on that node).
+
+## Install the toolchain
+
+- Node.js ≥ 20 and Yarn 4 (`corepack enable`)
+- A source checkout (or published packages once released)
+
+```bash
+git clone https://github.com/limetry/limetry.git
+cd limetry
+corepack enable
+yarn install
+yarn build:server && yarn build:cli
+```
+
+<Steps>
+<Step title="Start the server">
+
+Set a bearer token (minimum 32 characters in production) and start the governance server:
+
+```bash
+export LIMETRY_BEARER_TOKEN="dev-local-bearer-token-min-32-chars"
+yarn workspace @limetry/server start
+```
+
+The API listens on `http://localhost:3810` by default.
+
+**Docker alternative:**
+
+```bash
+docker build -f packages/server/Dockerfile -t limetry-server .
+docker run -p 3810:3810 \
+  -e LIMETRY_BEARER_TOKEN="dev-local-bearer-token-min-32-chars" \
+  limetry-server
+```
+
+Verify health:
+
+```bash
+curl -s http://localhost:3810/health
+```
+
+</Step>
+
+<Step title="Configure the CLI">
+
+Point the CLI at your self-run server:
+
+```bash
+yarn workspace @limetry/cli dev setup
+```
+
+Enter `http://localhost:3810` and paste the same `LIMETRY_BEARER_TOKEN`.
+
+Run doctor to confirm connectivity:
+
+```bash
+yarn workspace @limetry/cli dev doctor
+```
+
+</Step>
+
+<Step title="Apply a policy">
+
+Deny `http_post` to a production URL pattern (allow GET for contrast):
+
+```bash
+yarn workspace @limetry/cli dev policy apply \
+  --allow http_get \
+  --deny http_post \
+  --block-resource "https://prod.example.com/*"
+```
+
+Prefer policies with `audit_mode: "minimal"` (slim builder default) unless you
+need forensics retention of redacted metadata.
+
+Record the `policy_id` printed in the JSON response. You need it for evaluation.
+
+</Step>
+
+<Step title="Evaluate an intent">
+
+Pipe an `ActionIntent` JSON document to `limetry eval`:
+
+```bash
+echo '{
+  "policy_id": "PASTE_POLICY_ID_HERE",
+  "agent_id": "demo_agent",
+  "action_type": "http_post",
+  "resource": "https://prod.example.com/api/deploy"
+}' | yarn workspace @limetry/cli dev eval
+```
+
+Expect **DENY** with reasons referencing the blocked resource or denied action type.
+
+Evaluate an allowed GET to the same host (adjust policy if needed) to see **ALLOW**.
+
+</Step>
+
+<Step title="Tail the audit log">
+
+```bash
+yarn workspace @limetry/cli dev audit tail --event-type policy.evaluated
+```
+
+Look for `policy.evaluated` events with your agent id and decision outcome.
+Stored events are **privacy-safe records** (default `audit_mode=minimal`) — not
+raw metadata bags. Do not put API keys or chat transcripts in intent `metadata`
+or record `details`. See [Minimize audit data](/docs/server/data-minimization).
+
+</Step>
+</Steps>
+
+## Connect Cursor MCP (optional)
+
+Build the MCP server and add to `.cursor/mcp.json`:
+
+```bash
+yarn workspace @limetry/mcp build
+```
+
+```json
+{
+  "mcpServers": {
+    "limetry": {
+      "command": "node",
+      "args": ["/path/to/limetry/packages/mcp/dist/index.js"],
+      "env": {
+        "LIMETRY_API_KEY": "dev-local-bearer-token-min-32-chars",
+        "LIMETRY_BASE_URL": "http://localhost:3810"
+      }
+    }
+  }
+}
+```
+
+Available tools: `limetry_evaluate`, `limetry_record_action`, `limetry_list_audit`, `limetry_upsert_policy`.
+
+Instruct Cursor to call `limetry_evaluate` before irreversible tool calls.
+
+## Evaluate from the SDK
+
+```typescript
+import { RemotePolicyEngine } from "@limetry/sdk"
+
+const engine = new RemotePolicyEngine({
+  baseUrl: "http://localhost:3810",
+  apiKey: process.env.LIMETRY_BEARER_TOKEN,
+})
+
+const decision = await engine.evaluateAction({
+  policy_id: process.env.POLICY_ID!,
+  agent_id: "demo_agent",
+  action_type: "http_post",
+  resource: "https://prod.example.com/api/deploy",
+})
+
+if (!decision.approved) {
+  console.error("Denied:", decision.reasons)
+}
+```
+
+<Warning>
+Block the tool call in your agent loop when `approved` is false. The SDK does
+not enforce deny for you.
+</Warning>
+
+## Choose an adapter
+
+These packages connect evaluate to your stack. Install only what you need. The
+HTTP API stays the same across adapters.
+
+<CardGroup>
+  <Card title="Gate GitHub Actions" href="/docs/ci">
+    Evaluate privilege before sensitive workflow steps run.
+  </Card>
+  <Card title="Gate Shopify mutations" href="/docs/shopify">
+    Hold Admin API tokens and enforce refund limits.
+  </Card>
+  <Card title="Gate SQL writes" href="/docs/sql">
+    Classify and gate PostgreSQL modifications before the driver runs.
+  </Card>
+</CardGroup>
+
+<CardGroup>
+  <Card title="Call the SDK" href="/docs/sdk">
+    the Limetry SDK, action types, and middleware.
+  </Card>
+  <Card title="Connect an MCP host" href="/docs/mcp">
+    Claude Desktop and Cursor setup.
+  </Card>
+  <Card title="Self-run the server" href="/docs/server/self-hosting">
+    Production environment, containers, and TLS.
+  </Card>
+</CardGroup>

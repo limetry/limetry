@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/disrupt-dev/limetry-open-web"
+    }
+  }
+}

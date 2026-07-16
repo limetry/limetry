@@ -1,0 +1,90 @@
+---
+title: Call the SDK
+description: Install @limetry/sdk, build an ActionIntent, and evaluate it against a self-run Limetry node.
+---
+
+`@limetry/sdk` is open source. Point `baseUrl` at your evaluation server
+(`http://localhost:3810` or your origin). Use `LIMETRY_BEARER_TOKEN` unless you
+issue your own API tokens on that node.
+
+## Install the SDK
+
+```bash
+npm install @limetry/sdk
+```
+
+Until the first npm release is live, install from the source checkout (see INSTALL.md).
+
+## Build an ActionIntent
+
+```typescript
+import type { ActionIntent, ActionPolicy } from "@limetry/sdk"
+import { createSlimActionPolicy, redactActionIntent } from "@limetry/sdk"
+
+const policy = createSlimActionPolicy({
+  agentId: "demo_agent",
+  allowedActionTypes: ["http_get"],
+  deniedActionTypes: ["http_post", "deploy"],
+  blockedResourcePatterns: ["https://prod.example.com/*"],
+  maxCostMinor: 100,
+  auditMode: "minimal",
+})
+
+const intent: ActionIntent = {
+  intent_id: crypto.randomUUID(),
+  policy_id: policy.policy_id,
+  agent_id: "demo_agent",
+  action_type: "http_post",
+  resource: "https://prod.example.com/api/charge",
+  issued_at: new Date().toISOString(),
+}
+
+/**
+ * Evaluate with the full intent. Use redact helpers for logs / client-side telemetry.
+ */
+const safeForLogs = redactActionIntent(intent)
+```
+
+<Tip>
+Send only fields needed for policy. Prefer `auditMode: "minimal"` unless you need
+forensics. See [Minimize audit data](/docs/server/data-minimization).
+</Tip>
+
+## Evaluate over HTTP
+
+```typescript
+import { createRemoteEngine } from "@limetry/sdk"
+
+const engine = createRemoteEngine({
+  baseUrl: "http://localhost:3810",
+  apiKey: process.env.LIMETRY_BEARER_TOKEN,
+})
+
+const decision = await engine.evaluateAction(intent)
+```
+
+`createRemoteEngine()` also reads `LIMETRY_API_KEY` / `LIMETRY_BEARER_TOKEN` and `LIMETRY_BASE_URL`.
+
+Set `LIMETRY_BASE_URL` to your evaluation server origin when it is not localhost.
+
+## Handle evaluate errors
+
+| Error | When |
+|---|---|
+| `PolicyViolationError` | Evaluate returned deny |
+| `ApprovalRequiredError` | Evaluate returned `approval_required` |
+| `NetworkError` | Server unreachable or timed out |
+
+## Continue
+
+<CardGroup>
+  <Card title="Evaluate your first intent" href="/docs/quick-start">
+    Self-host and evaluate a sample intent.
+  </Card>
+  <Card title="Minimize audit data" href="/docs/server/data-minimization">
+    Audit modes, secret scrubbing, and retention.
+  </Card>
+  <Card title="Self-run the server" href="/docs/server/self-hosting">
+    Deploy the evaluation server.
+  </Card>
+</CardGroup>
