@@ -1,0 +1,8 @@
+name: limetry-oss
+description: Limetry OSS — pay-as-you-go AWS (Lambda, API Gateway HTTP API, S3, CloudFront) + Neon via SSM
+runtime:
+  name: nodejs
+  options:
+    typescript: false
+    nodeargs: "--import tsx"
+main: src/index.ts

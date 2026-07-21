@@ -1,0 +1,33 @@
+{
+  "name": "infra",
+  "private": true,
+  "type": "module",
+  "description": "Pulumi TypeScript infrastructure for Limetry OSS (Lambda + API GW + S3/CloudFront + Neon via SSM)",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "test": "tsx --test src/*.test.ts",
+    "preview": "pulumi preview",
+    "up": "pulumi up --yes",
+    "destroy": "pulumi destroy",
+    "deploy": "pulumi up --yes",
+    "deploy:preview": "pulumi preview",
+    "stack:init": "pulumi stack init oss-prod"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.1131.0",
+    "@aws-sdk/client-s3": "^3.1131.0",
+    "@pulumi/aws": "^7.46.0",
+    "@pulumi/cloudflare": "^6.20.0",
+    "@pulumi/command": "^1.2.1",
+    "@pulumi/pulumi": "^3.262.0",
+    "tsx": "^4.23.13"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
