@@ -1,0 +1,84 @@
+name: Deploy OSS Infra
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/infra/**"
+      - "packages/server/**"
+      - "packages/web/**"
+      - "packages/sdk/**"
+      - ".github/workflows/deploy-infra.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-infra-oss-prod
+  cancel-in-progress: false
+
+jobs:
+  pulumi-up:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Typecheck infra
+        run: yarn workspace infra typecheck
+
+      - name: Build Lambda bundle and CI gate
+        run: >-
+          yarn workspace @limetry/sdk build &&
+          yarn workspace @limetry/server build &&
+          yarn workspace @limetry/server build:lambda &&
+          yarn build:cli && yarn build:ci
+
+      - name: Start Limetry and apply deploy policy
+        id: boot
+        uses: ./.github/actions/limetry-ci-server
+        with:
+          policy_file: packages/ci/policies/deploy.json
+        env:
+          LIMETRY_BEARER_TOKEN: ci-limetry-bearer-token-min-32-chars
+          JWT_SECRET: ci-limetry-jwt-secret-min-32-characters
+          DECISION_HMAC_SECRET: ci-limetry-decision-hmac-secret-32ch
+          THROTTLE_MAX_REQUESTS_PER_MINUTE: "60"
+
+      - name: Evaluate deploy before AWS credentials
+        env:
+          LIMETRY_BEARER_TOKEN: ci-limetry-bearer-token-min-32-chars
+          INPUT_LIMETRY_API_KEY: ci-limetry-bearer-token-min-32-chars
+          INPUT_LIMETRY_BASE_URL: http://127.0.0.1:3810
+          INPUT_POLICY_ID: ${{ steps.boot.outputs.policy_id }}
+          INPUT_AGENT_ID: github_actions
+          INPUT_ACTION_TYPE: deploy
+          INPUT_REQUIRE_TRUSTED: "true"
+        run: node packages/ci/dist/run-action.js
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-west-2' }}
+
+      - uses: pulumi/actions@v6
+        with:
+          command: up
+          stack-name: oss-prod
+          work-dir: packages/infra
+          upsert: true
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
