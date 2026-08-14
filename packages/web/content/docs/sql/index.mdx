@@ -1,0 +1,60 @@
+---
+title: Gate SQL writes
+description: Own DATABASE_URL in @limetry/sql, classify statements, and evaluate sql.read / sql.write / sql.ddl before execute.
+---
+
+`@limetry/sql` is a Limetry adapter. It owns `DATABASE_URL`,
+classifies statements, and evaluates `sql.read` / `sql.write` / `sql.ddl`
+intents before optional execute. Agents never receive write credentials from
+this package.
+
+Evaluate against your self-run Limetry node. You operate tokens, operator
+auth for approvals, and audit retention on that server.
+
+<Info>
+Use any SQL connection string your team already trusts. The live demo in this repo is GitHub Actions
+plus a SQL service, not a shared demo database.
+</Info>
+
+## Run the live demo
+
+- [limetry-sql-gate.yml](https://github.com/limetry/limetry/blob/main/.github/workflows/limetry-sql-gate.yml)
+  — allow `SELECT 1` and execute it; **deny** `DROP TABLE` and `DELETE` before the database runs them
+- Policy: [`packages/sql/policies/postgres.json`](https://github.com/limetry/limetry/blob/main/packages/sql/policies/postgres.json)
+
+## Register the MCP server
+
+```json
+{
+  "mcpServers": {
+    "limetry-sql": {
+      "command": "npx",
+      "args": ["-y", "@limetry/sql"],
+      "env": {
+        "DATABASE_URL": "postgresql://...",
+        "LIMETRY_API_KEY": "...",
+        "LIMETRY_POLICY_ID": "...",
+        "LIMETRY_SQL_DRY_RUN": "true"
+      }
+    }
+  }
+}
+```
+
+Set `LIMETRY_BASE_URL` to your evaluation server origin.
+
+## Apply the repo policy
+
+```bash
+limetry setup
+limetry policy apply --file packages/sql/policies/postgres.json
+```
+
+`policies/postgres.json` is read-only: `sql.write` and `sql.ddl` are denied
+outright. Add those types to `require_approval_action_types` if you need
+`limetry_sql_list_pending`.
+
+<Warning>
+Writes default to dry-run. `approval_required` pauses until `POST /v1/approvals/:id/approve`
+with a matching payload hash.
+</Warning>
