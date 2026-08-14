@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "limetry-sql": {
+      "command": "npx",
+      "args": ["-y", "@limetry/sql"],
+      "env": {
+        "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/postgres",
+        "LIMETRY_API_KEY": "limetry_...",
+        "LIMETRY_POLICY_ID": "55555555-5555-4555-8555-555555555555",
+        "LIMETRY_AGENT_ID": "cursor_claude_sql",
+        "LIMETRY_BASE_URL": "http://localhost:3810",
+        "LIMETRY_SQL_DRY_RUN": "false"
+      }
+    }
+  }
+}
