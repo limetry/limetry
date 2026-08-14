@@ -1,0 +1,98 @@
+name: Limetry SQL gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    name: Allow SELECT, deny DROP and DELETE
+    runs-on: ubuntu-latest
+    env:
+      LIMETRY_BEARER_TOKEN: ci-limetry-bearer-token-min-32-chars
+      JWT_SECRET: ci-limetry-jwt-secret-min-32-characters
+      DECISION_HMAC_SECRET: ci-limetry-decision-hmac-secret-32ch
+      THROTTLE_MAX_REQUESTS_PER_MINUTE: "60"
+      INPUT_LIMETRY_API_KEY: ci-limetry-bearer-token-min-32-chars
+      INPUT_LIMETRY_BASE_URL: http://127.0.0.1:3810
+      INPUT_AGENT_ID: sql_agent
+      DATABASE_URL: postgresql://limetry:limetry@127.0.0.1:5432/limetry
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: limetry
+          POSTGRES_PASSWORD: limetry
+          POSTGRES_DB: limetry
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build SDK, server, CLI, and SQL gate
+        run: yarn build:sdk && yarn build:server && yarn build:cli && yarn build:sql
+
+      - name: Start Limetry and apply postgres policy
+        id: boot
+        uses: ./.github/actions/limetry-ci-server
+        with:
+          policy_file: packages/sql/policies/postgres.json
+
+      - name: Allow SELECT 1 and execute it
+        env:
+          INPUT_POLICY_ID: ${{ steps.boot.outputs.policy_id }}
+          INPUT_SQL: SELECT 1 AS ok
+          INPUT_EXECUTE: "true"
+        run: node packages/sql/dist/run-ci-demo.js
+
+      - name: Deny DROP TABLE
+        id: deny-drop
+        continue-on-error: true
+        env:
+          INPUT_POLICY_ID: ${{ steps.boot.outputs.policy_id }}
+          INPUT_SQL: DROP TABLE customers
+          INPUT_EXECUTE: "true"
+        run: node packages/sql/dist/run-ci-demo.js
+
+      - name: Deny DELETE
+        id: deny-delete
+        continue-on-error: true
+        env:
+          INPUT_POLICY_ID: ${{ steps.boot.outputs.policy_id }}
+          INPUT_SQL: DELETE FROM customers
+          INPUT_EXECUTE: "true"
+        run: node packages/sql/dist/run-ci-demo.js
+
+      - name: Confirm Limetry stopped writes and DDL
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.deny-drop.outcome }}" != "failure" ]; then
+            echo "Expected DROP TABLE to be denied by packages/sql/policies/postgres.json"
+            exit 1
+          fi
+          if [ "${{ steps.deny-delete.outcome }}" != "failure" ]; then
+            echo "Expected DELETE to be denied by packages/sql/policies/postgres.json"
+            exit 1
+          fi
+          echo "Limetry allowed SELECT and denied DROP/DELETE before Postgres executed them"
