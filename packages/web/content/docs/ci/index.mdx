@@ -1,0 +1,80 @@
+---
+title: Gate GitHub Actions
+description: Evaluate ci_privilege and deploy intents with @limetry/ci before a workflow loads production secrets.
+---
+
+`@limetry/ci` is a Limetry adapter. It classifies GitHub Actions event trust and
+evaluates `ci_privilege` / `deploy` action intents bound to `owner/repo@sha`
+before a workflow uses production secrets or cloud credentials.
+
+Point the action at a self-run node or at Limetry Cloud. Cloud supplies
+scoped tokens, organization sign-in for approvals, and plan-based audit retention. OSS
+uses the same evaluate API on a node you run.
+
+This repository already runs that path:
+
+- [limetry-ci-gate.yml](https://github.com/limetry/limetry/blob/main/.github/workflows/limetry-ci-gate.yml)
+  — allow `ci_privilege`, **deny** `deploy` (the deny step is supposed to fail)
+- [deploy-infra.yml](https://github.com/limetry/limetry/blob/main/.github/workflows/deploy-infra.yml)
+  — allow `deploy` on trusted events, **before** cloud credentials
+
+## Classify CI vs deploy
+
+| Action type | Meaning here | Policy |
+| --- | --- | --- |
+| `ci_privilege` | Typecheck, unit tests, example tests | Allow on PRs and pushes |
+| `deploy` | Production infra deploy (and later npm publish) | Deny on the PR demo policy; allow on the deploy policy + `require_trusted` |
+
+<Warning>
+Treat fork pull requests as `untrusted`. Set `require_trusted: true` on deploy
+jobs so they fail even if someone later adds a `pull_request` trigger to the
+infra workflow. Resource format is `limetry/limetry@<sha>`, not a GitHub ref URL.
+</Warning>
+
+## Apply policies in Actions
+
+Jobs boot `@limetry/server` in-process and apply JSON from the tree:
+
+```bash
+limetry policy apply --file packages/ci/policies/ci-privilege.json
+limetry policy apply --file packages/ci/policies/deploy.json
+```
+
+Those files pin stable `policy_id` values so evaluate and apply stay in sync.
+
+## Point the workflow at your server
+
+```bash
+limetry setup
+limetry policy apply --file packages/ci/policies/deploy.json
+```
+
+Set GitHub Actions secrets/variables:
+
+- `secrets.LIMETRY_API_KEY` — bearer token (or an API token) for your evaluation server
+- `vars.LIMETRY_BASE_URL` — your node origin (for example `https://api.example.com`)
+- `vars.LIMETRY_CI_POLICY_ID` / `vars.LIMETRY_DEPLOY_POLICY_ID` — ids from the JSON files
+
+Then call the action (see `packages/ci/examples/workflow.yml`).
+
+`dist/` is gitignored, so this repo's live demo **builds `@limetry/ci` from source**. After
+`npm publish` (`ci-v*` tags), customers can drop in:
+
+```yaml
+- uses: limetry/limetry/packages/ci@main
+  with:
+    limetry_api_key: ${{ secrets.LIMETRY_API_KEY }}
+    limetry_base_url: ${{ vars.LIMETRY_BASE_URL }}
+    policy_id: ${{ vars.LIMETRY_DEPLOY_POLICY_ID }}
+    action_type: deploy
+    require_trusted: "true"
+```
+
+That composite action runs `npx @limetry/ci@0.1.0` when `dist/` is not in the checkout.
+GitHub Marketplace is optional: it wants `action.yml` at a **public repo root**, so list a thin
+`limetry/ci-gate` repo later. Design partners can use the subdirectory `uses:` line above.
+
+<Note>
+`approval_required` fails the job by default until a reviewer approves via CLI,
+MCP, or `POST /v1/approvals/:id/approve` on your evaluation server.
+</Note>
