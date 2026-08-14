@@ -1,0 +1,42 @@
+name: Governed release gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  privilege:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Evaluate CI privilege
+        uses: limetry/limetry/packages/ci@main
+        with:
+          limetry_api_key: ${{ secrets.LIMETRY_API_KEY }}
+          limetry_base_url: ${{ vars.LIMETRY_BASE_URL }}
+          policy_id: ${{ vars.LIMETRY_CI_POLICY_ID }}
+          action_type: ci_privilege
+          require_trusted: "false"
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: privilege
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Evaluate deploy
+        id: limetry
+        uses: limetry/limetry/packages/ci@main
+        with:
+          limetry_api_key: ${{ secrets.LIMETRY_API_KEY }}
+          limetry_base_url: ${{ vars.LIMETRY_BASE_URL }}
+          policy_id: ${{ vars.LIMETRY_DEPLOY_POLICY_ID }}
+          action_type: deploy
+          require_trusted: "true"
+      - name: Use production secrets only after allow
+        if: steps.limetry.outputs.decision == 'allow'
+        run: echo "Deploying ${{ github.sha }}"

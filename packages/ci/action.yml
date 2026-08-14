@@ -1,0 +1,78 @@
+name: Limetry CI Privilege Gate
+description: Evaluate CI privilege and deploy intents with Limetry before secrets or deploys
+author: Limetry
+branding:
+  icon: shield
+  color: orange
+inputs:
+  limetry_base_url:
+    description: Limetry API base URL
+    required: false
+    default: https://api.limetry.com
+  limetry_api_key:
+    description: Limetry bearer token
+    required: true
+  policy_id:
+    description: ActionPolicy id for CI evaluate
+    required: true
+  agent_id:
+    description: Agent id recorded on the ActionIntent
+    required: false
+    default: github_actions
+  action_type:
+    description: ci_privilege or deploy
+    required: false
+    default: ci_privilege
+  require_trusted:
+    description: Fail when the GitHub event is untrusted (pull_request, issues, etc.)
+    required: false
+    default: "true"
+  fail_on_approval_required:
+    description: Fail the job when Limetry returns approval_required
+    required: false
+    default: "true"
+  package:
+    description: npm spec for @limetry/ci when dist/ is not in this checkout
+    required: false
+    default: "@limetry/ci@0.1.0"
+outputs:
+  decision:
+    description: allow, deny, or approval_required
+    value: ${{ steps.evaluate.outputs.decision }}
+  approval_id:
+    description: Pending approval id when decision is approval_required
+    value: ${{ steps.evaluate.outputs.approval_id }}
+  decision_id:
+    description: Limetry decision id
+    value: ${{ steps.evaluate.outputs.decision_id }}
+  receipt_digest:
+    description: HMAC receipt digest bound to the evaluated intent
+    value: ${{ steps.evaluate.outputs.receipt_digest }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v5
+      with:
+        node-version: "22"
+
+    - name: Evaluate CI intent
+      id: evaluate
+      shell: bash
+      env:
+        INPUT_LIMETRY_API_KEY: ${{ inputs.limetry_api_key }}
+        INPUT_LIMETRY_BASE_URL: ${{ inputs.limetry_base_url }}
+        INPUT_POLICY_ID: ${{ inputs.policy_id }}
+        INPUT_AGENT_ID: ${{ inputs.agent_id }}
+        INPUT_ACTION_TYPE: ${{ inputs.action_type }}
+        INPUT_REQUIRE_TRUSTED: ${{ inputs.require_trusted }}
+        INPUT_FAIL_ON_APPROVAL_REQUIRED: ${{ inputs.fail_on_approval_required }}
+        LIMETRY_CI_PACKAGE: ${{ inputs.package }}
+      run: |
+        set -euo pipefail
+        ACTION_DIST="${GITHUB_ACTION_PATH}/dist/run-action.js"
+        if [ -f "$ACTION_DIST" ]; then
+          node "$ACTION_DIST"
+        else
+          npx --yes "$LIMETRY_CI_PACKAGE"
+        fi
