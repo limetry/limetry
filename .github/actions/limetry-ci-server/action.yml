@@ -1,0 +1,44 @@
+name: Start Limetry CI server
+description: Boot a local Limetry node in this job and apply an ActionPolicy JSON file
+inputs:
+  policy_file:
+    description: Path to ActionPolicy JSON relative to the repo root
+    required: true
+outputs:
+  policy_id:
+    description: policy_id from the applied JSON
+    value: ${{ steps.apply.outputs.policy_id }}
+  base_url:
+    description: Local server URL
+    value: http://127.0.0.1:3810
+runs:
+  using: composite
+  steps:
+    - name: Start Limetry server
+      shell: bash
+      run: |
+        set -euo pipefail
+        nohup node packages/server/dist/index.js > /tmp/limetry-server.log 2>&1 &
+        echo $! > /tmp/limetry-server.pid
+        for _ in $(seq 1 40); do
+          if curl -sf http://127.0.0.1:3810/health >/dev/null; then
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "Limetry server failed to become healthy"
+        cat /tmp/limetry-server.log
+        exit 1
+
+    - name: Apply ActionPolicy
+      id: apply
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "$HOME/.limetry"
+        node -e "require('fs').writeFileSync(require('path').join(require('os').homedir(),'.limetry','config.json'), JSON.stringify({baseUrl:'http://127.0.0.1:3810',apiKey:process.env.LIMETRY_BEARER_TOKEN,tenantId:'default'}))"
+        POLICY_FILE="${{ inputs.policy_file }}"
+        POLICY_ID="$(node -p "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).policy_id" "$POLICY_FILE")"
+        node packages/cli/dist/index.js policy apply --file "$POLICY_FILE"
+        echo "policy_id=${POLICY_ID}" >> "$GITHUB_OUTPUT"
+        echo "Applied ${POLICY_ID} from ${POLICY_FILE}"

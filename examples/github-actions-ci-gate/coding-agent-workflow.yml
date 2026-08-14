@@ -1,0 +1,57 @@
+name: Copilot coding agent with Limetry CI gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Evaluate ci_privilege
+        env:
+          LIMETRY_API_KEY: ${{ secrets.LIMETRY_API_KEY }}
+        run: |
+          node --import tsx -e "
+            import { dispatchCodingAgentTool } from './src/coding-agent.ts'
+            const result = await dispatchCodingAgentTool({
+              eventName: process.env.GITHUB_EVENT_NAME,
+              ref: process.env.GITHUB_REF,
+              repository: process.env.GITHUB_REPOSITORY,
+              sha: process.env.GITHUB_SHA,
+              apiKey: process.env.LIMETRY_API_KEY,
+            }, 'run_ci_privilege')
+            if (result.decision !== 'allow') {
+              console.error(result)
+              process.exit(1)
+            }
+          "
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Evaluate deploy (approval required)
+        env:
+          LIMETRY_API_KEY: ${{ secrets.LIMETRY_API_KEY }}
+        run: |
+          node --import tsx -e "
+            import { dispatchCodingAgentTool } from './src/coding-agent.ts'
+            const result = await dispatchCodingAgentTool({
+              eventName: process.env.GITHUB_EVENT_NAME,
+              ref: process.env.GITHUB_REF,
+              repository: process.env.GITHUB_REPOSITORY,
+              sha: process.env.GITHUB_SHA,
+              apiKey: process.env.LIMETRY_API_KEY,
+            }, 'request_production_deploy')
+            console.log(JSON.stringify(result, null, 2))
+            if (result.decision === 'deny') process.exit(1)
+            if (result.decision === 'approval_required') {
+              console.log('Waiting on operator approval', result.approval_id)
+              process.exit(78)
+            }
+          "

@@ -1,0 +1,34 @@
+name: "Limetry CI Action Privilege Gate"
+description: "Evaluates action privileges and gates privileged workflow steps with Limetry AI action governance."
+author: "Limetry AI"
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  limetry_api_key:
+    description: "Limetry bearer token or scoped agent API key"
+    required: true
+  policy_id:
+    description: "UUID of the registered ActionPolicy to evaluate against"
+    required: true
+  limetry_base_url:
+    description: "Base URL for the Limetry API server (default: https://api.limetry.com)"
+    required: false
+    default: "https://api.limetry.com"
+  action_type:
+    description: "Type of privileged action being performed (e.g. deploy, publish, release)"
+    required: false
+    default: "deploy"
+
+outputs:
+  decision:
+    description: "Decision result from Limetry policy engine ('allow', 'deny', 'approval_required')"
+  decision_id:
+    description: "Unique decision UUID for audit and release receipt verification"
+  approved:
+    description: "Boolean string ('true' or 'false') indicating whether action was approved"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
