@@ -1,0 +1,57 @@
+---
+title: Gate Shopify mutations
+description: Hold SHOPIFY_ADMIN_TOKEN in @limetry/shopify and call Admin API only after Limetry returns allow.
+---
+
+`@limetry/shopify` is a Limetry library in your agent runtime, not a Shopify App
+or Admin/Checkout extension. Credentials stay inside the package. Each call
+builds an ActionIntent (`shopify.refund`, `shopify.discount`,
+`shopify.inventory`), evaluates with Limetry, and hits Admin API on `allow`
+only when dry-run is off.
+
+Point evaluate at your self-run Limetry node. Approvals for
+`approval_required` refunds resolve through your server's approval API.
+
+<Note>
+You do not need to publish a Shopify App or an Admin / Checkout / Theme extension.
+An App Store listing would be a different product. Skip that until you want store
+install review.
+</Note>
+
+## Run the live demo
+
+This repository runs the firewall on every PR without a Shopify store:
+
+- [limetry-shopify-gate.yml](https://github.com/limetry/limetry/blob/main/.github/workflows/limetry-shopify-gate.yml)
+  — allow a $10 dry-run refund; **deny** a $500 refund and an inventory wipe
+- Policy: [`packages/shopify/policies/refunds.json`](https://github.com/limetry/limetry/blob/main/packages/shopify/policies/refunds.json)
+
+## Construct the firewall
+
+```ts
+import { ShopifyActionFirewall, createShopifyActionPolicy } from "@limetry/shopify"
+
+const firewall = new ShopifyActionFirewall({
+  shopDomain: "acme.myshopify.com",
+  adminToken: process.env.SHOPIFY_ADMIN_TOKEN!,
+  apiKey: process.env.LIMETRY_API_KEY!,
+  policyId: process.env.LIMETRY_POLICY_ID!,
+  dryRun: true,
+})
+```
+
+## Apply the repo policy
+
+```bash
+limetry setup
+limetry policy apply --file packages/shopify/policies/refunds.json
+```
+
+`createShopifyActionPolicy` is a broader template (inventory allowed; refunds
+routed to approval). The CI demo policy denies inventory outright. Pick one
+deliberately.
+
+<Warning>
+A Partner development store with `dryRun: false` is optional later. Run it only
+on trusted `push`, never on fork pull requests.
+</Warning>

@@ -1,0 +1,80 @@
+name: Limetry Shopify gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    name: Allow $10 refund, deny $500 and inventory wipe
+    runs-on: ubuntu-latest
+    env:
+      LIMETRY_BEARER_TOKEN: ci-limetry-bearer-token-min-32-chars
+      JWT_SECRET: ci-limetry-jwt-secret-min-32-characters
+      DECISION_HMAC_SECRET: ci-limetry-decision-hmac-secret-32ch
+      THROTTLE_MAX_REQUESTS_PER_MINUTE: "60"
+      INPUT_LIMETRY_API_KEY: ci-limetry-bearer-token-min-32-chars
+      INPUT_LIMETRY_BASE_URL: http://127.0.0.1:3810
+      INPUT_AGENT_ID: shopify_agent
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build SDK, server, CLI, and Shopify firewall
+        run: yarn build:sdk && yarn build:server && yarn build:cli && yarn build:shopify
+
+      - name: Start Limetry and apply refunds policy
+        id: boot
+        uses: ./.github/actions/limetry-ci-server
+        with:
+          policy_file: packages/shopify/policies/refunds.json
+
+      - name: Allow $10 goodwill refund (dry-run, no Admin API)
+        env:
+          INPUT_POLICY_ID: ${{ steps.boot.outputs.policy_id }}
+          INPUT_ACTION: refund
+        run: node packages/shopify/dist/run-ci-demo.js
+
+      - name: Deny $500 refund over max_cost_minor
+        id: deny-refund
+        continue-on-error: true
+        env:
+          INPUT_POLICY_ID: ${{ steps.boot.outputs.policy_id }}
+          INPUT_ACTION: large_refund
+        run: node packages/shopify/dist/run-ci-demo.js
+
+      - name: Deny inventory wipe
+        id: deny-inventory
+        continue-on-error: true
+        env:
+          INPUT_POLICY_ID: ${{ steps.boot.outputs.policy_id }}
+          INPUT_ACTION: inventory
+        run: node packages/shopify/dist/run-ci-demo.js
+
+      - name: Confirm Limetry stopped the destructive mutations
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.deny-refund.outcome }}" != "failure" ]; then
+            echo "Expected large_refund to be denied by packages/shopify/policies/refunds.json"
+            exit 1
+          fi
+          if [ "${{ steps.deny-inventory.outcome }}" != "failure" ]; then
+            echo "Expected shopify.inventory to be denied by packages/shopify/policies/refunds.json"
+            exit 1
+          fi
+          echo "Limetry allowed a $10 refund and denied $500 refund plus inventory wipe"
