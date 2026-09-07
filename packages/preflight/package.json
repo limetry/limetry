@@ -1,0 +1,73 @@
+{
+  "name": "@limetry/preflight",
+  "description": "Startup preflight checks with secret masking, connectivity probes, and formatted listen URLs",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/limetry/limetry.git",
+    "directory": "packages/preflight"
+  },
+  "keywords": [
+    "preflight",
+    "startup",
+    "health-check",
+    "pino",
+    "postgres",
+    "redis",
+    "sentry",
+    "posthog",
+    "dotenv"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "prepack": "yarn build",
+    "test": "vitest run --coverage",
+    "typecheck": "tsgo -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "pino": "^10.3.1"
+  },
+  "peerDependencies": {
+    "ioredis": "^5.0.0",
+    "pg": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ioredis": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/pg": "^8.20.0",
+    "@vitest/coverage-v8": "4.1.11",
+    "ioredis": "^5.11.1",
+    "pg": "^8.22.0",
+    "typescript": "^5.8.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
