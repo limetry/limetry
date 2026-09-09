@@ -1,27 +1,34 @@
 config:
   aws:region: us-west-2
-  limetry-oss:domain: dev.limetry.org
   limetry-oss:apiHostname: api.dev.limetry.org
-  limetry-oss:appHostname: app.dev.limetry.org
-  limetry-oss:manageRoute53: "false"
-  limetry-oss:createHostedZone: "false"
-  limetry-oss:manageCloudflare: "true"
-  limetry-oss:cloudflareZoneName: limetry.org
-  limetry-oss:cloudflareProxied: "true"
-  limetry-oss:invalidateOnDeploy: "true"
-  limetry-oss:serverArtifactPath: ../server/lambda-bundle
-  limetry-oss:webDistPath: ../web/out
+  limetry-oss:auditRetentionDays: "90"
+  limetry-oss:budgetActualCriticalPercent: "100"
+  limetry-oss:budgetActualWarningPercent: "80"
+  limetry-oss:budgetAmount: "5"
+  limetry-oss:budgetForecastedPercent: "100"
   limetry-oss:buildArtifacts: "true"
-  limetry-oss:syncWebAssets: "true"
-  limetry-oss:githubUrl: https://github.com/limetry/limetry
-  limetry-oss:discordUrl: https://discord.gg/limetry
+  limetry-oss:cloudflareProxied: "false"
+  limetry-oss:cloudflareZoneName: limetry.org
   limetry-oss:contactEmail: hello@limetry.org
+  limetry-oss:createHostedZone: "false"
+  limetry-oss:defaultAuditMode: minimal
+  limetry-oss:discordUrl: https://discord.gg/limetry
+  limetry-oss:domain: dev.limetry.org
+  limetry-oss:enableCostAnomalyDetection: "true"
+  limetry-oss:enableCostMonitoring: "true"
+  limetry-oss:githubUrl: https://github.com/limetry/limetry
+  limetry-oss:invalidateOnDeploy: "true"
   limetry-oss:legalEmail: legal@limetry.org
+  limetry-oss:manageCloudflare: "true"
+  limetry-oss:manageRoute53: "false"
+  limetry-oss:notificationEmail: hello@limetry.org
+  limetry-oss:portalHostname: dev.app.limetry.com
   limetry-oss:privacyEmail: privacy@limetry.org
   limetry-oss:replayWindowMs: "300000"
+  limetry-oss:serverArtifactPath: ../server/lambda-bundle
+  limetry-oss:syncWebAssets: "true"
   limetry-oss:throttleMaxRequestsPerMinute: "5"
-  limetry-oss:defaultAuditMode: minimal
-  limetry-oss:auditRetentionDays: "90"
+  limetry-oss:webDistPath: ../web/out
   limetry-oss:databaseUrl:
     secure: AAABAKni3OxXuVMdvK1Crgm/dAEd9d7P09vkWaUPB0YdS1RXIG+1fyVSkLYHvXzlG9eKLkaeunid8XM+AZTHHrimPA2MU5DEqZKGzKCL4cdgi9mLPQYRLoTyX8HGAtjSdZTMBc6eP+gFBR4q0rRfUc8Z+fbuzz4Jfvuzmmscwlv6LGOMzY+Ibg2oiT5OZhLf0/0ss0uRyk713KaoePECedhbzifazzPndZGfk2nwYrTVlccq+XU=
   limetry-oss:jwtSecret:
@@ -32,3 +39,6 @@ config:
     secure: AAABAHxXin0s1+fxMjzxryeMby73clCHhyf1yW7NBi2q2jN3MqW+CAxMF3Xw69N9zj0z7ClJcLXwnH4Ag4DmSOf+9Vuc79Xv7+bA1FDDp9yO5WqaB/iYW7r8zC3rxxcy
   cloudflare:apiToken:
     secure: AAABACE8F3qCeR1WFpVYJLxhBZWFE5foUwt3NqAIS0KEdM5BVA2xzSFZzwNgdlragP/6XL07wromXOiNzs49Tp5Y9N35K1vF
+  limetry-oss:sentryDsn: https://fdb6048fa0856c915134b3433a1ad6ab@o4510920491204608.ingest.us.sentry.io/4511904213762048
+  limetry-oss:posthogApiKey: phc_sm4qkUubCdLHrzucsoDfuHD2pZBWNUvz7sfgq5gSroc
+  limetry-oss:posthogHost: https://us.i.posthog.com
