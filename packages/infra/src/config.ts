@@ -1,81 +1,24 @@
-/**
- * Typed Pulumi config loader for the Limetry OSS stack (`limetry-oss:*` keys).
- *
- * Secrets (`databaseUrl`, `jwtSecret`, `bearerToken`, `decisionHmacSecret`, and
- * optional signing / Redis URLs) are required or optional via
- * `pulumi.Config.requireSecret` / `getSecret`. Cloudflare records created by
- * this stack are always DNS-only; `cloudflareProxied` is forced to `false`.
- */
-
 import * as pulumi from "@pulumi/pulumi"
 
-import { type BudgetThresholds, resolveBudgetThresholds } from "./budget-config.js"
 import { inferCloudflareZoneName } from "./dns-names.js"
 
 /**
  * Typed stack configuration for the Limetry OSS Pulumi project.
- *
- * Config keys (namespace `limetry-oss` unless noted):
- * - `domain` — marketing apex hostname (default `limetry.com`).
- * - `apiHostname` — API custom domain (default `api.limetry.com`).
- * - `portalHostname` — cloud portal host (default `app.` + apex).
- * - `manageRoute53` / `createHostedZone` / `hostedZoneId` — optional AWS DNS.
- * - `manageCloudflare` — create DNS-only Cloudflare CNAMEs + ACM validation.
- * - `cloudflareZoneName` / `cloudflareZoneId` — zone lookup or explicit id.
- * - `cloudflareProxied` — deprecated; always `false` (grey cloud).
- * - `invalidateOnDeploy` — CloudFront `/*` invalidation on content hash change.
- * - `cloudFrontCertificateArn` / `certificateArn` — us-east-1 ACM for CloudFront.
- * - `apiCertificateArn` — regional ACM for API Gateway custom domain.
- * - `serverArtifactPath` / `webDistPath` — Lambda bundle and Next static export.
- * - `syncWebAssets` / `buildArtifacts` / `forceDestroyWebBucket` — deploy behavior.
- * - `budgetAmount` / `budget*Percent` / `notificationEmail` — AWS Budgets.
- * - `enableCostMonitoring` / `enableCostAnomalyDetection` — Cost Explorer.
- * - `githubUrl` / `discordUrl` / contact emails — baked into web `NEXT_PUBLIC_*`.
- * - `replayWindowMs` / `throttleMaxRequestsPerMinute` / audit modes — API env.
- * - Secrets: `databaseUrl`, `jwtSecret`, `bearerToken`, `decisionHmacSecret`,
- *   optional `authSigningPrivateKeyHex`, `redisUrl`, `neonProjectId`, `neonBranchId`.
  */
 export type OssStackConfig = {
-  /**
-   * Marketing apex hostname (CloudFront alias when certificates are managed).
-   */
+  namePrefix: string
   domain: string
-  /**
-   * API custom domain hostname (API Gateway domain name when cert present).
-   */
   apiHostname: string
-  /**
-   * Cloud portal hostname exported as `NEXT_PUBLIC_APP_URL`.
-   */
-  portalHostname: string
-  /**
-   * When true, create optional Route53 aliases alongside Cloudflare.
-   */
+  appHostname: string
   manageRoute53: boolean
-  /**
-   * When true with `manageRoute53`, create a new hosted zone for `domain`.
-   */
   createHostedZone: boolean
-  /**
-   * Existing Route53 hosted zone id when not creating one.
-   */
   hostedZoneId: string | undefined
   /**
    * When true, create Cloudflare CNAMEs to CloudFront / API Gateway and issue ACM certs.
-   * Records are always DNS-only (`proxied: false`); TLS terminates on AWS.
    */
   manageCloudflare: boolean
-  /**
-   * Cloudflare zone name used for lookups (inferred from `domain` when unset).
-   */
   cloudflareZoneName: string
-  /**
-   * Explicit Cloudflare zone id; skips name lookup when set.
-   */
   cloudflareZoneId: string | undefined
-  /**
-   * Deprecated. Cloudflare DNS records are always DNS-only (`proxied: false`).
-   */
   cloudflareProxied: boolean
   /**
    * When true, invalidate CloudFront `/*` when the static export hash changes.
@@ -89,17 +32,8 @@ export type OssStackConfig = {
    * ACM certificate in the stack region for API Gateway custom domain.
    */
   apiCertificateArn: string | undefined
-  /**
-   * Relative path from the Pulumi project root to the Lambda zip directory.
-   */
   serverArtifactPath: string
-  /**
-   * Relative path from the Pulumi project root to the Next static export.
-   */
   webDistPath: string
-  /**
-   * When true, sync the static export into the S3 origin on apply.
-   */
   syncWebAssets: boolean
   /**
    * When true, Pulumi builds the Lambda bundle and web static export before apply.
@@ -109,131 +43,36 @@ export type OssStackConfig = {
    * When true, `pulumi destroy` empties the CloudFront origin bucket.
    */
   forceDestroyWebBucket: boolean
-  /**
-   * Monthly USD budget limit for this stack's Project-tagged resources.
-   */
-  budgetAmount: string
-  /**
-   * AWS Budgets ACTUAL/FORECASTED notification percentages.
-   */
-  budgetThresholds: BudgetThresholds
-  /**
-   * Email for budget (and optional anomaly) notifications.
-   */
-  notificationEmail: string
-  /**
-   * When true with enableCostAnomalyDetection, create a CUSTOM Project-tag Cost Explorer anomaly monitor.
-   */
-  enableCostMonitoring: boolean
-  /**
-   * When true with enableCostMonitoring, subscribe to Cost Anomaly Detection.
-   */
-  enableCostAnomalyDetection: boolean
-  /**
-   * Public GitHub URL baked into the static web export.
-   */
   githubUrl: string
-  /**
-   * Public Discord invite URL baked into the static web export.
-   */
   discordUrl: string
-  /**
-   * Contact email baked into the static web export.
-   */
   contactEmail: string
-  /**
-   * Legal contact email baked into the static web export.
-   */
   legalEmail: string
-  /**
-   * Privacy contact email baked into the static web export.
-   */
   privacyEmail: string
-  /**
-   * API replay window in milliseconds (`REPLAY_WINDOW_MS`).
-   */
   replayWindowMs: string
-  /**
-   * API throttle ceiling (`THROTTLE_MAX_REQUESTS_PER_MINUTE`).
-   */
   throttleMaxRequestsPerMinute: string
-  /**
-   * Default audit retention mode for the API (`minimal` or `forensics`).
-   */
   defaultAuditMode: "minimal" | "forensics"
-  /**
-   * Audit retention days (`LIMETRY_AUDIT_RETENTION_DAYS`).
-   */
   auditRetentionDays: string
-  /**
-   * Neon (or other) Postgres connection string secret.
-   */
   databaseUrl: pulumi.Output<string>
-  /**
-   * JWT signing secret for the API.
-   */
   jwtSecret: pulumi.Output<string>
-  /**
-   * Bearer token accepted by the API.
-   */
   bearerToken: pulumi.Output<string>
-  /**
-   * HMAC secret for decision receipts.
-   */
   decisionHmacSecret: pulumi.Output<string>
-  /**
-   * Optional auth signing private key (hex) for the API.
-   */
   authSigningPrivateKeyHex: pulumi.Output<string> | undefined
-  /**
-   * Optional Redis / Upstash URL for the API.
-   */
   redisUrl: pulumi.Output<string> | undefined
-  /**
-   * Optional Neon project id recorded as SSM metadata.
-   */
   neonProjectId: string | undefined
-  /**
-   * Optional Neon branch id recorded as SSM metadata.
-   */
   neonBranchId: string | undefined
-  /**
-   * Optional Sentry DSN for Lambda (`SENTRY_DSN`) and static `NEXT_PUBLIC_SENTRY_DSN`.
-   * Client-visible; store as plain config or secret.
-   */
-  sentryDsn: string | undefined
-  /**
-   * Optional PostHog project API key for Lambda and static `NEXT_PUBLIC_POSTHOG_KEY`.
-   */
-  posthogApiKey: string | undefined
-  /**
-   * PostHog host origin (default US cloud).
-   */
-  posthogHost: string
 }
 
 /**
  * Cloud portal hostname derived from the marketing apex (`www.` stripped).
- *
- * @param domain - Marketing domain that may include a `www.` prefix.
- * @returns `app.` hostname for the apex.
  */
 function defaultAppHostname(domain: string): string {
   const apex = domain.replace(/^www\./, "")
   return `app.${apex}`
 }
 
-/**
- * Loads and validates `limetry-oss` Pulumi config into {@link OssStackConfig}.
- *
- * Forces `cloudflareProxied` to `false` so config cannot re-enable orange-cloud
- * proxying toward CloudFront or API Gateway.
- *
- * @returns Fully resolved stack configuration including secret Outputs.
- * @throws When `defaultAuditMode` is not `minimal` or `forensics`.
- */
 export function loadOssStackConfig(): OssStackConfig {
   const config = new pulumi.Config()
+  const stack = pulumi.getStack()
   const domain = config.get("domain") ?? "limetry.com"
   const defaultAuditMode = config.get("defaultAuditMode") ?? "minimal"
   if (defaultAuditMode !== "minimal" && defaultAuditMode !== "forensics") {
@@ -241,16 +80,17 @@ export function loadOssStackConfig(): OssStackConfig {
   }
 
   return {
+    namePrefix: `limetry-oss-${stack}`,
     domain,
     apiHostname: config.get("apiHostname") ?? "api.limetry.com",
-    portalHostname: config.get("portalHostname") ?? defaultAppHostname(domain),
+    appHostname: config.get("appHostname") ?? defaultAppHostname(domain),
     manageRoute53: config.getBoolean("manageRoute53") ?? false,
     createHostedZone: config.getBoolean("createHostedZone") ?? false,
     hostedZoneId: config.get("hostedZoneId"),
     manageCloudflare: config.getBoolean("manageCloudflare") ?? true,
     cloudflareZoneName: config.get("cloudflareZoneName") ?? inferCloudflareZoneName(domain),
     cloudflareZoneId: config.get("cloudflareZoneId"),
-    cloudflareProxied: false,
+    cloudflareProxied: config.getBoolean("cloudflareProxied") ?? true,
     invalidateOnDeploy: config.getBoolean("invalidateOnDeploy") ?? true,
     cloudFrontCertificateArn:
       config.get("cloudFrontCertificateArn") ?? config.get("certificateArn"),
@@ -259,14 +99,7 @@ export function loadOssStackConfig(): OssStackConfig {
     webDistPath: config.get("webDistPath") ?? "../web/out",
     syncWebAssets: config.getBoolean("syncWebAssets") ?? true,
     buildArtifacts: config.getBoolean("buildArtifacts") ?? true,
-    forceDestroyWebBucket: config.getBoolean("forceDestroyWebBucket") ?? true,
-    budgetAmount: config.get("budgetAmount") ?? "5",
-    budgetThresholds: resolveBudgetThresholds((key) => config.get(key)),
-    notificationEmail: config.get("notificationEmail")
-      ?? config.get("contactEmail")
-      ?? "hello@limetry.com",
-    enableCostMonitoring: config.getBoolean("enableCostMonitoring") ?? false,
-    enableCostAnomalyDetection: config.getBoolean("enableCostAnomalyDetection") ?? false,
+    forceDestroyWebBucket: config.getBoolean("forceDestroyWebBucket") ?? false,
     githubUrl: config.get("githubUrl") ?? "https://github.com/limetry/limetry",
     discordUrl: config.get("discordUrl") ?? "https://discord.gg/limetry",
     contactEmail: config.get("contactEmail") ?? "hello@limetry.com",
@@ -284,14 +117,5 @@ export function loadOssStackConfig(): OssStackConfig {
     redisUrl: config.getSecret("redisUrl"),
     neonProjectId: config.get("neonProjectId"),
     neonBranchId: config.get("neonBranchId"),
-    sentryDsn: config.get("sentryDsn") ?? process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN,
-    posthogApiKey: config.get("posthogApiKey")
-      ?? process.env.POSTHOG_API_KEY
-      ?? process.env.POSTHOG_KEY
-      ?? process.env.NEXT_PUBLIC_POSTHOG_KEY,
-    posthogHost: config.get("posthogHost")
-      ?? process.env.POSTHOG_HOST
-      ?? process.env.NEXT_PUBLIC_POSTHOG_HOST
-      ?? "https://us.i.posthog.com",
   }
 }
