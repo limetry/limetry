@@ -1,0 +1,57 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Run All",
+      "configurations": [
+        "MCP",
+        "Server",
+        "Web",
+      ]
+    }
+  ],
+  "configurations": [
+    {
+      "type": "node",
+      "name": "Server",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "dev:server"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "type": "node",
+      "name": "MCP",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "dev:mcp"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "LIMETRY_API_KEY": "replace-with-secure-bearer-token",
+        "LIMETRY_BASE_URL": "http://localhost:3810"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "name": "Web",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "dev:web"
+      ],
+      "console": "integratedTerminal"
+    },
+  ]
+}
