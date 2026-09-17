@@ -1,0 +1,54 @@
+name: Publish TypeDoc
+
+# Generates TypeDoc Markdown and force-pushes an orphan `docs` branch.
+# Browse on GitHub: https://github.com/<owner>/<repo>/blob/docs/README.md
+# Optional later: also emit HTML + enable GitHub Pages from `docs`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-typedoc
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Enable Corepack
+        run: corepack enable
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build workspace packages for TypeDoc resolution
+        run: >
+          yarn build:sdk
+          && yarn build:preflight
+          && yarn build:server
+          && yarn build:cli
+          && yarn build:ci
+          && yarn build:sql
+          && yarn build:shopify
+          && yarn workspace @limetry/mcp build
+          && yarn workspace @limetry/ui build
+      - name: Generate TypeDoc
+        run: yarn docs:api
+      - name: Publish docs/api to docs branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/api
+          publish_branch: docs
+          force_orphan: true
+          commit_message: "docs: publish TypeDoc API reference"
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
