@@ -1,0 +1,45 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Limetry",
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "packages/ci",
+    "packages/cli",
+    "packages/mcp",
+    "packages/preflight",
+    "packages/sdk",
+    "packages/server",
+    "packages/shopify",
+    "packages/sql",
+    "packages/ui"
+  ],
+  "packageOptions": {
+    "entryPoints": [
+      "src/index.ts"
+    ],
+    "excludeExternals": true,
+    "excludePrivate": false,
+    "excludeInternal": true
+  },
+  "out": "docs/api",
+  "readme": "none",
+  "entryFileName": "README.md",
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/dist/**",
+    "**/node_modules/**"
+  ],
+  "skipErrorChecking": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "commentStyle": "all",
+  "includeVersion": true
+}
