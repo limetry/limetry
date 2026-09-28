@@ -19,8 +19,10 @@ const EMPHASIS_CLASS =
  * @returns Animated hero headline block.
  */
 export function RotatingHeroBlurb(): React.JSX.Element {
-  const [rotationCycle, setRotationCycle] = useState(0)
-  const [itemIndex, setItemIndex] = useState(0)
+  const [index, setIndex] = useState(0)
+
+  const rotationCycle = Math.floor(index / 5)
+  const itemIndex = index % 5
 
   const activeBatch = useMemo(
     () => getHeroRotationBatch(rotationCycle),
@@ -30,19 +32,13 @@ export function RotatingHeroBlurb(): React.JSX.Element {
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
-      setItemIndex((current) => {
-        if (current + 1 < activeBatch.length) {
-          return current + 1
-        }
-        setRotationCycle((cycle) => cycle + 1)
-        return 0
-      })
+      setIndex((current) => current + 1)
     }, HERO_ROTATE_MS)
 
     return () => {
       window.clearInterval(timerId)
     }
-  }, [activeBatch.length])
+  }, [])
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -96,7 +92,7 @@ export function RotatingHeroBlurb(): React.JSX.Element {
                 : "w-1.5 bg-border hover:bg-muted-foreground/40"
             }`}
             onClick={() => {
-              setItemIndex(dotIndex)
+              setIndex(rotationCycle * 5 + dotIndex)
             }}
           />
         ))}
