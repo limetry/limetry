@@ -28,3 +28,12 @@ docs/api
 .vercel
 
 .env.sentry-build-plugin
+
+# Pruned from this history: spend engine, WASM publish, payment-era notes
+archive/
+Cargo.toml
+Cargo.lock
+blog/
+.github/workflows/publish-wasm.yml
+scripts/build-wasm.sh
+.cursor/plans/Canvas - Limetry Cloud free tier reevaluation.md
