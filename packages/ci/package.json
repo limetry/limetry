@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/limetry/limetry.git",
+    "url": "https://github.com/limetry/sdk.git",
     "directory": "packages/ci"
   },
   "scripts": {

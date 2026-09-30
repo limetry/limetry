@@ -15,7 +15,7 @@ const sampleInputs: ArtifactBuildInputs = {
   contactEmail: "hello@limetry.org",
   discordUrl: "https://discord.gg/limetry",
   domain: "dev.limetry.org",
-  githubUrl: "https://github.com/limetry/limetry",
+  githubUrl: "https://github.com/limetry/sdk",
   legalEmail: "legal@limetry.org",
   privacyEmail: "privacy@limetry.org",
   serverArtifactPath: "../server/lambda-bundle",
