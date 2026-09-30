@@ -13,9 +13,9 @@ uses the same evaluate API on a node you run.
 
 This repository already runs that path:
 
-- [limetry-ci-gate.yml](https://github.com/limetry/limetry/blob/main/.github/workflows/limetry-ci-gate.yml)
+- [limetry-ci-gate.yml](https://github.com/limetry/sdk/blob/main/.github/workflows/limetry-ci-gate.yml)
   — allow `ci_privilege`, **deny** `deploy` (the deny step is supposed to fail)
-- [deploy-infra.yml](https://github.com/limetry/limetry/blob/main/.github/workflows/deploy-infra.yml)
+- [deploy-infra.yml](https://github.com/limetry/sdk/blob/main/.github/workflows/deploy-infra.yml)
   — allow `deploy` on trusted events, **before** cloud credentials
 
 ## Classify CI vs deploy

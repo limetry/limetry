@@ -86,7 +86,7 @@ Agent / SDK / MCP / adapter ──→ action intent
 See [INSTALL.md](INSTALL.md) for the platform matrix.
 
 ```bash
-git clone https://github.com/limetry/limetry.git
+git clone https://github.com/limetry/sdk.git
 cd limetry
 corepack enable
 yarn install

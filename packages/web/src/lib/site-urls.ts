@@ -88,7 +88,7 @@ export const siteUrls = {
     CANONICAL_ORIGINS.ossApi,
     LOCAL_API,
   ),
-  github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/limetry"),
+  github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/sdk"),
   discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/limetry"),
   contactEmail: publicEmail("NEXT_PUBLIC_CONTACT_EMAIL", "hello@limetry.org"),
   legalEmail: publicEmail("NEXT_PUBLIC_LEGAL_EMAIL", "legal@limetry.org"),
