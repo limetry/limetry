@@ -12,7 +12,7 @@ config:
   limetry-oss:contactEmail: hello@limetry.org
   limetry-oss:createHostedZone: "false"
   limetry-oss:defaultAuditMode: minimal
-  limetry-oss:discordUrl: https://discord.gg/limetry
+  limetry-oss:discordUrl: https://discord.gg/VxUWz7cZP
   limetry-oss:domain: limetry.org
   limetry-oss:enableCostAnomalyDetection: "true"
   limetry-oss:enableCostMonitoring: "true"

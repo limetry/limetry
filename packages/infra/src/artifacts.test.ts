@@ -13,7 +13,7 @@ const sampleInputs: ArtifactBuildInputs = {
   portalHostname: "app.dev.limetry.org",
   buildArtifacts: true,
   contactEmail: "hello@limetry.org",
-  discordUrl: "https://discord.gg/limetry",
+  discordUrl: "https://discord.gg/VxUWz7cZP",
   domain: "dev.limetry.org",
   githubUrl: "https://github.com/limetry/sdk",
   legalEmail: "legal@limetry.org",
