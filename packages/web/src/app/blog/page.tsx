@@ -41,7 +41,7 @@ export default function BlogPage(): React.JSX.Element {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="relative flex-1 overflow-hidden py-16 sm:py-24">
-        <IconAccent className="-left-48 top-32 h-[460px] w-[460px] opacity-[0.05] -rotate-6" />
+        <IconAccent className="-left-48 top-32 h-115 w-115 opacity-[0.05] -rotate-6" />
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary">Blog</p>
