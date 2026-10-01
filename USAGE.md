@@ -30,7 +30,7 @@ and `redactDetails` / `redactActionIntent` from `@limetry/sdk`.
 ## Setup
 
 ```bash
-git clone https://github.com/limetry/sdk.git
+git clone https://github.com/limetry/limetry.git
 cd limetry
 corepack enable
 yarn install

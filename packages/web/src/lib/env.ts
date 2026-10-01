@@ -30,7 +30,7 @@ const envSchema = z.object({
   ),
   NEXT_PUBLIC_GITHUB_URL: z.preprocess(
     emptyStringToUndefined,
-    z.string().url().default("https://github.com/limetry/sdk"),
+    z.string().url().default("https://github.com/limetry/limetry"),
   ),
   NEXT_PUBLIC_DISCORD_URL: z.preprocess(
     emptyStringToUndefined,
