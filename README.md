@@ -28,7 +28,6 @@ Shared core: `@limetry/sdk`, `@limetry/server`, `@limetry/cli`, `@limetry/mcp`.
 > **advisory by default**. Call `evaluateAction` (SDK), `limetry eval` (CLI), or
 > `limetry_evaluate` (MCP) and enforce the decision in your loop. Read
 > [SECURITY.md](SECURITY.md).
-
 > [!NOTE]
 > Policy matching uses the full intent. Audit stores a privacy-safe record
 > (`audit_mode=minimal` by default). Do not put secrets or chat transcripts in
@@ -115,7 +114,7 @@ Docs: [CI](packages/web/content/docs/ci/index.mdx) · [SQL](packages/web/content
 | Surface | Where | How it is produced |
 | --- | --- | --- |
 | Product docs (Fumadocs) | [limetry.org/docs](https://limetry.org/docs/introduction) · source: `packages/web/content/docs/` | Built with the marketing site (`yarn build:web` / Vercel). MDX is the source of truth. |
-| OpenAPI / Swagger | `GET /openapi` on the evaluate server (local: http://localhost:3810/openapi) | Source: `packages/server/openapi.yaml`. Synced into `public/` on `yarn workspace @limetry/server sync:openapi` (also runs in build/test). |
+| OpenAPI / Swagger | `GET /openapi` on the evaluate server (local: <http://localhost:3810/openapi>) | Source: `packages/server/openapi.yaml`. Synced into `public/` on `yarn workspace @limetry/server sync:openapi` (also runs in build/test). |
 | Package API reference (TypeDoc) | [Markdown on `docs`](https://github.com/jeremydavidson/limetry-dev/blob/docs/README.md) · local: `docs/api/` (gitignored on `main`) | CI publishes Markdown on every `main` push (`Publish TypeDoc`). GitHub renders `.md` on the branch — no Pages required. Optional later: HTML + GitHub Pages for a site theme. |
 
 TypeDoc is for library consumers browsing package exports. Product guides stay on Fumadocs.
