@@ -16,7 +16,7 @@ config:
   limetry-oss:domain: limetry.org
   limetry-oss:enableCostAnomalyDetection: "true"
   limetry-oss:enableCostMonitoring: "true"
-  limetry-oss:githubUrl: https://github.com/limetry/sdk
+  limetry-oss:githubUrl: https://github.com/limetry/limetry
   limetry-oss:invalidateOnDeploy: "true"
   limetry-oss:legalEmail: legal@limetry.org
   limetry-oss:manageCloudflare: "true"
