@@ -28,6 +28,6 @@ Whether you are here to stop an ops bot from casually issuing a $500 refund on a
 
 ### Getting Started 🚀
 
-1. Follow the [[Quick Start](https://limetry.org/docs/quick-start)](<https://www.google.com/search?q=https://limetry.org/docs/quick-start>) to test `limetry setup`, `policy apply`, and `audit tail`.
-2. Explore the [[Example Catalog](https://www.google.com/search?q=examples/)](<https://www.google.com/search?q=examples/>) for verified implementations across LangGraph, CrewAI, AutoGen, and serverless architectures.
+1. Follow the [[Quick Start](https://limetry.org/docs/quick-start)](<https://limetry.org/docs/quick-start>) to test `limetry setup`, `policy apply`, and `audit tail`.
+2. Explore the [[Example Catalog](https://limetry.org/examples)](<https://limetry.org/examples>) for verified implementations across LangGraph, CrewAI, AutoGen, and serverless architectures.
 3. Introduce yourself in the comments below: what agent workflows are you building, and what is the single most dangerous tool call you want to gate?
