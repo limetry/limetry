@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Limetry is pre-1.0. Security fixes land on `main` and in the most recent release line.
+Limetry is released. Security fixes land on `main` and in the most recent release line.
 
 ## Reporting a Vulnerability
 
