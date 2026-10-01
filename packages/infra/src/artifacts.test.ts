@@ -6,7 +6,7 @@ import {
   httpsOrigin,
   shouldBuildArtifacts,
   webPublicEnv,
-} from "./artifacts.ts"
+} from "./artifacts"
 
 const sampleInputs: ArtifactBuildInputs = {
   apiHostname: "api.dev.limetry.org",
@@ -41,7 +41,7 @@ describe("infra artifact helpers", () => {
     const env = webPublicEnv({
       ...sampleInputs,
       sentryDsn: "https://abc@o1.ingest.sentry.io/1",
-      posthogApiKey: "phc_example",
+      posthogPublicProjectToken: "phc_example",
       posthogHost: "https://us.i.posthog.com",
     })
     assert.equal(env.NEXT_PUBLIC_SENTRY_DSN, "https://abc@o1.ingest.sentry.io/1")

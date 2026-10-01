@@ -68,7 +68,7 @@ export type ArtifactBuildInputs = {
   /**
    * Optional PostHog key baked as `NEXT_PUBLIC_POSTHOG_KEY`.
    */
-  posthogApiKey?: string
+  posthogPublicProjectToken?: string
   /**
    * PostHog host baked as `NEXT_PUBLIC_POSTHOG_HOST`.
    */
@@ -159,9 +159,9 @@ export function webPublicEnv(inputs: ArtifactBuildInputs): NodeJS.ProcessEnv {
     env.NEXT_PUBLIC_SENTRY_DSN = inputs.sentryDsn
     env.SENTRY_DSN = inputs.sentryDsn
   }
-  if (inputs.posthogApiKey) {
-    env.NEXT_PUBLIC_POSTHOG_KEY = inputs.posthogApiKey
-    env.POSTHOG_API_KEY = inputs.posthogApiKey
+  if (inputs.posthogPublicProjectToken) {
+    env.NEXT_PUBLIC_POSTHOG_KEY = inputs.posthogPublicProjectToken
+    env.POSTHOG_API_KEY = inputs.posthogPublicProjectToken
   }
   if (inputs.posthogHost) {
     env.NEXT_PUBLIC_POSTHOG_HOST = inputs.posthogHost

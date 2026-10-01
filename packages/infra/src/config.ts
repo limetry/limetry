@@ -205,7 +205,7 @@ export type OssStackConfig = {
   /**
    * Optional PostHog project API key for Lambda and static `NEXT_PUBLIC_POSTHOG_KEY`.
    */
-  posthogApiKey: string | undefined
+  posthogPublicProjectToken: string | undefined
   /**
    * PostHog host origin (default US cloud).
    */
@@ -285,7 +285,7 @@ export function loadOssStackConfig(): OssStackConfig {
     neonProjectId: config.get("neonProjectId"),
     neonBranchId: config.get("neonBranchId"),
     sentryDsn: config.get("sentryDsn") ?? process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN,
-    posthogApiKey: config.get("posthogApiKey")
+    posthogPublicProjectToken: config.get("posthogPublicProjectToken")
       ?? process.env.POSTHOG_API_KEY
       ?? process.env.POSTHOG_KEY
       ?? process.env.NEXT_PUBLIC_POSTHOG_KEY,

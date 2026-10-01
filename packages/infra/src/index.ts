@@ -57,7 +57,7 @@ ensureInfraArtifacts({
   serverArtifactPath: cfg.serverArtifactPath,
   webDistPath: cfg.webDistPath,
   sentryDsn: cfg.sentryDsn,
-  posthogApiKey: cfg.posthogApiKey,
+  posthogPublicProjectToken: cfg.posthogPublicProjectToken,
   posthogHost: cfg.posthogHost,
 })
 
@@ -123,7 +123,7 @@ const api = createApi({
   redisUrl: cfg.redisUrl,
   apiCertificateArn,
   sentryDsn: cfg.sentryDsn,
-  posthogApiKey: cfg.posthogApiKey,
+  posthogPublicProjectToken: cfg.posthogPublicProjectToken,
   posthogHost: cfg.posthogHost,
 })
 
