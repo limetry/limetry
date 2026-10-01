@@ -82,7 +82,7 @@ export type ApiInputs = {
   /**
    * Optional PostHog API key for the Lambda runtime.
    */
-  posthogApiKey: string | undefined
+  posthogPublicProjectToken: string | undefined
   /**
    * PostHog host origin for the Lambda runtime.
    */
@@ -220,10 +220,10 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
     environment.NEXT_PUBLIC_SENTRY_DSN = inputs.sentryDsn
   }
 
-  if (inputs.posthogApiKey) {
-    environment.POSTHOG_API_KEY = inputs.posthogApiKey
-    environment.POSTHOG_KEY = inputs.posthogApiKey
-    environment.NEXT_PUBLIC_POSTHOG_KEY = inputs.posthogApiKey
+  if (inputs.posthogPublicProjectToken) {
+    environment.POSTHOG_API_KEY = inputs.posthogPublicProjectToken
+    environment.POSTHOG_KEY = inputs.posthogPublicProjectToken
+    environment.NEXT_PUBLIC_POSTHOG_KEY = inputs.posthogPublicProjectToken
   }
 
   if (inputs.posthogHost) {

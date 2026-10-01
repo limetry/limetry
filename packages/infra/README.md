@@ -5,7 +5,7 @@ This stack deploys those two surfaces. It does not run MCP, CLI, or adapter
 packages.
 
 | Surface | Resources |
-|---------|-----------|
+| --------- | ----------- |
 | `packages/web` | S3 + CloudFront (static export) |
 | `packages/server` | Lambda (Node 20) + API Gateway HTTP API |
 | Database | Neon serverless Postgres (you create it; URI in Pulumi + SSM) |
@@ -14,7 +14,7 @@ packages.
 **Not deployed on AWS** (and should not be):
 
 | Package | Why |
-|---------|-----|
+| --------- | ----- |
 | `@limetry/mcp` | stdio MCP server. Cursor/Claude spawn it locally; it calls `LIMETRY_BASE_URL` (the API above). |
 | `@limetry/cli` / `@limetry/sdk` / `@limetry/ci` | Client libraries and a GitHub Action. |
 | `@limetry/sql` / `@limetry/shopify` | Adapters that sit next to the resource, not on this stack. |
@@ -33,7 +33,7 @@ Run from `packages/infra` after `pulumi stack select oss-prod`. Project name is 
 > do not reuse sibling stack secrets.
 
 | Key | Maps to Lambda env | How to set |
-|-----|--------------------|------------|
+| ----- | -------------------- | ------------ |
 | `databaseUrl` | `DATABASE_URL` | Neon **pooled** URI with `sslmode=verify-full` |
 | `jwtSecret` | `JWT_SECRET` | `openssl rand -hex 32` — unique to this stack |
 | `bearerToken` | `LIMETRY_BEARER_TOKEN` | `openssl rand -hex 32` — unique to this stack |
@@ -54,7 +54,7 @@ Keep `jwtSecret`, `bearerToken`, and `decisionHmacSecret` private to this stack.
 ### Already committed in `Pulumi.oss-prod.yaml` (plain)
 
 | Key | Current oss-prod value | Notes |
-|-----|------------------------|-------|
+| ----- | ------------------------ | ------- |
 | `aws:region` | `us-west-2` | AWS provider region (API Gateway, Lambda, S3). CloudFront is global; its ACM certs must be in **us-east-1**. |
 | `domain` | `limetry.com` | Apex for the marketing/docs site |
 | `apiHostname` | `api.limetry.com` | Public evaluate API host |
@@ -70,7 +70,7 @@ Keep `jwtSecret`, `bearerToken`, and `decisionHmacSecret` private to this stack.
 ### Optional
 
 | Key | Default | Secret? | Description |
-|-----|---------|---------|-------------|
+| ----- | --------- | --------- | ------------- |
 | `authSigningPrivateKeyHex` | — | yes | 64-hex Ed25519 seed for legacy authorize artifacts |
 | `redisUrl` | — | yes | Upstash (or compatible) Redis. Not required to boot. |
 | `neonProjectId` | — | no | Metadata only (SSM `NEON_METADATA`) |
@@ -91,7 +91,7 @@ Keep `jwtSecret`, `bearerToken`, and `decisionHmacSecret` private to this stack.
 | `auditRetentionDays` | `90` | no | Lambda `LIMETRY_AUDIT_RETENTION_DAYS` |
 | `githubUrl` / `discordUrl` / `contactEmail` / `legalEmail` / `privacyEmail` | product defaults | no | Baked into the static web export |
 | `sentryDsn` | — | no | Lambda `SENTRY_DSN` + web `NEXT_PUBLIC_SENTRY_DSN` (falls back to process env) |
-| `posthogApiKey` | — | no | Lambda + web PostHog project key (falls back to process env) |
+| `posthogPublicProjectToken` | — | no | Lambda + web PostHog project key (falls back to process env) |
 | `posthogHost` | `https://us.i.posthog.com` | no | PostHog host for Lambda and static export |
 | `forceDestroyWebBucket` | `true` | no | Allow `pulumi destroy` to empty the web bucket |
 | `budgetAmount` | `5` | no | Monthly USD AWS Budget limit (Project + Stack tags) |
@@ -123,7 +123,7 @@ pulumi up
 `.github/workflows/deploy-infra.yml` also needs:
 
 | GitHub secret / var | Purpose |
-|---------------------|---------|
+| --------------------- | --------- |
 | `PULUMI_ACCESS_TOKEN` | Pulumi Service |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | `pulumi up` |
 | `CLOUDFLARE_API_TOKEN` | Zone DNS Edit + Zone Read (CNAME + ACM validation) |
@@ -212,7 +212,7 @@ Create the project in the Neon console (free/launch is enough). This stack does 
 ## Outputs
 
 | Output | Meaning |
-|--------|---------|
+| -------- | --------- |
 | `websiteUrl` | Public docs/marketing URL (`https://dev.limetry.org` on the `dev` stack) |
 | `websiteWwwUrl` | `https://www.…` when the stack is the zone apex; empty otherwise |
 | `websiteEdgeUrl` | CloudFront distribution URL |
