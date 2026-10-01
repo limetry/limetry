@@ -1,5 +1,5 @@
 /**
- * Catch-all fumadocs MDX page for `/docs/*`.
+ * Optional catch-all fumadocs MDX page for `/docs` and `/docs/*`.
  */
 
 import {
@@ -12,6 +12,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { docsMdxComponents } from "@/lib/docs-mdx-components"
+import { includeDocsRootParam, resolveDocsSlug } from "@/lib/docs-routing"
 import { source } from "@/lib/source"
 
 /**
@@ -29,7 +30,7 @@ interface PageProps {
  */
 export default async function Page({ params }: PageProps): Promise<React.JSX.Element> {
   const { slug } = await params
-  const page = source.getPage(slug ?? [])
+  const page = source.getPage(resolveDocsSlug(slug))
   if (!page) notFound()
 
   const MDX = page.data.body
@@ -51,7 +52,7 @@ export default async function Page({ params }: PageProps): Promise<React.JSX.Ele
  * @returns Slug param lists from fumadocs.
  */
 export async function generateStaticParams(): Promise<{ slug: string[] }[]> {
-  return source.generateParams()
+  return includeDocsRootParam(source.generateParams())
 }
 
 /**
@@ -62,7 +63,7 @@ export async function generateStaticParams(): Promise<{ slug: string[] }[]> {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const page = source.getPage(slug ?? [])
+  const page = source.getPage(resolveDocsSlug(slug))
   if (!page) notFound()
 
   return {
