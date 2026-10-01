@@ -34,7 +34,7 @@ const envSchema = z.object({
   ),
   NEXT_PUBLIC_DISCORD_URL: z.preprocess(
     emptyStringToUndefined,
-    z.string().url().default("https://discord.gg/limetry"),
+    z.string().url().default("https://discord.gg/VxUWz7cZP"),
   ),
   NEXT_PUBLIC_CONTACT_EMAIL: z.preprocess(
     emptyStringToUndefined,

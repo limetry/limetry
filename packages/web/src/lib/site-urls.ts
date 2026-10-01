@@ -89,7 +89,7 @@ export const siteUrls = {
     LOCAL_API,
   ),
   github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/sdk"),
-  discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/limetry"),
+  discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/VxUWz7cZP"),
   contactEmail: publicEmail("NEXT_PUBLIC_CONTACT_EMAIL", "hello@limetry.org"),
   legalEmail: publicEmail("NEXT_PUBLIC_LEGAL_EMAIL", "legal@limetry.org"),
   privacyEmail: publicEmail("NEXT_PUBLIC_PRIVACY_EMAIL", "privacy@limetry.org"),

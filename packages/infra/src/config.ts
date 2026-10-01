@@ -268,7 +268,7 @@ export function loadOssStackConfig(): OssStackConfig {
     enableCostMonitoring: config.getBoolean("enableCostMonitoring") ?? false,
     enableCostAnomalyDetection: config.getBoolean("enableCostAnomalyDetection") ?? false,
     githubUrl: config.get("githubUrl") ?? "https://github.com/limetry/sdk",
-    discordUrl: config.get("discordUrl") ?? "https://discord.gg/limetry",
+    discordUrl: config.get("discordUrl") ?? "https://discord.gg/VxUWz7cZP",
     contactEmail: config.get("contactEmail") ?? "hello@limetry.com",
     legalEmail: config.get("legalEmail") ?? "legal@limetry.com",
     privacyEmail: config.get("privacyEmail") ?? "privacy@limetry.com",
