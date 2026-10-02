@@ -104,8 +104,10 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
   }, [])
 
   useEffect(() => {
-    setSearchOpen(false)
-    setMenuOpen(false)
+    queueMicrotask(() => {
+      setSearchOpen(false)
+      setMenuOpen(false)
+    })
   }, [pathname])
 
   const dismissSearch = (): void => {
@@ -170,7 +172,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
               onClick={dismissSearch}
               className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <GitHubIcon className="h-4 w-4" />
+              <GitHubIcon className="size-4" />
               <span className="hidden xl:inline">GitHub</span>
             </Link>
             <ThemeToggle />
@@ -279,7 +281,7 @@ function SearchButton({
 
 function SearchIcon(): React.JSX.Element {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -300,7 +302,7 @@ function GitHubIcon({ className }: { className?: string }): React.JSX.Element {
 
 function MenuIcon(): React.JSX.Element {
   return (
-    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   )
@@ -308,7 +310,7 @@ function MenuIcon(): React.JSX.Element {
 
 function XIcon(): React.JSX.Element {
   return (
-    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   )

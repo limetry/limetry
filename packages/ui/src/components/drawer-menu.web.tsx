@@ -161,8 +161,7 @@ function DrawerNavItem({
             className={cn(
               "relative flex min-w-0 flex-1 items-center justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
               depth > 0 && "pl-3",
-              highlighted && depth > 0
-                && "before:absolute before:inset-y-1.5 before:-left-[9px] before:w-px before:bg-emerald-500 before:content-['']",
+              highlighted && depth > 0 && "border-l-2 border-emerald-500",
               highlighted
                 ? "bg-emerald-500/15 text-emerald-500"
                 : ancestorActive
@@ -219,8 +218,7 @@ function DrawerNavItem({
       className={cn(
         "relative flex items-center justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
         depth > 0 && "py-2 text-[13px]",
-        highlighted && depth > 0
-          && "before:absolute before:inset-y-1.5 before:-left-[9px] before:w-px before:bg-emerald-500 before:content-['']",
+        highlighted && depth > 0 && "border-l-2 border-emerald-500",
         highlighted
           ? "bg-emerald-500/15 text-emerald-500"
           : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
@@ -245,7 +243,7 @@ function DrawerNavItem({
 function ChevronIcon({ open }: { open: boolean }): JSX.Element {
   return (
     <svg
-      className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
+      className={cn("size-4 transition-transform", open && "rotate-180")}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
