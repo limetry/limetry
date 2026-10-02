@@ -58,12 +58,6 @@ jobs:
           yarn workspace @limetry/ui test
           node packages/cli/dist/index.js --help
 
-      - name: Stamp all package versions
-        run: |
-          for package in ci cli mcp preflight sdk shopify sql ui; do
-            node scripts/stamp-publish-version.mjs "packages/$package"
-          done
-
       - name: Publish all packages at the root version
         run: |
           for package in sdk ci cli mcp preflight shopify sql ui; do

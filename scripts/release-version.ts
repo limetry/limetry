@@ -1,6 +1,6 @@
 /**
- * Pure helpers for limetry release versioning: parse/format Driply-style
- * `x.y.zzz[-beta.N]` strings, compute bumps, and parse `yarn release` CLI flags.
+ * Pure helpers for limetry release versioning: parse/format semver
+ * `x.y.z[-beta.N]` strings, compute bumps, and parse `yarn release` CLI flags.
  *
  * Used by `sync-version.ts` (interactive release) and unit tests. No I/O.
  */
@@ -14,13 +14,29 @@ export type DeployTarget = "aws" | "vercel" | "skip"
 /** Branch names treated as stable (production) release branches. */
 export const STABLE_BRANCHES = new Set(["main", "master"])
 
+/**
+ * Workspace directories published to npm at the shared release version.
+ * Publish order is dependency order in `.github/workflows/publish-npm.yml`,
+ * not this list.
+ */
+export const PUBLISHABLE_WORKSPACES = [
+  "packages/ci",
+  "packages/cli",
+  "packages/mcp",
+  "packages/preflight",
+  "packages/sdk",
+  "packages/shopify",
+  "packages/sql",
+  "packages/ui",
+] as const
+
 /** Parsed components of a limetry version string. */
 export type ParsedVersion = {
   /** Prerelease beta counter, or `null` for a stable version. */
   beta: number | null
   major: number
   minor: number
-  /** Patch component (stored as integer; formatted zero-padded to 3 digits). */
+  /** Patch component, stored as an integer and formatted without leading zeros. */
   patch: number
 }
 
@@ -39,7 +55,10 @@ export type ReleaseCliArgs = {
 }
 
 /**
- * Parses `x.y.zzz` versions with optional `-beta.N` (Driply / Sprig style).
+ * Parses `x.y.z` versions with optional `-beta.N`.
+ *
+ * Leading zeros are accepted on input so older padded releases still parse.
+ * {@link formatVersion} always emits canonical semver without them.
  *
  * @param version - Raw version string (whitespace trimmed).
  * @returns Parsed major/minor/patch and optional beta counter.
@@ -60,19 +79,55 @@ export function parseVersion(version: string): ParsedVersion {
 }
 
 /**
- * Formats a {@link ParsedVersion} as `x.y.zzz` or `x.y.zzz-beta.N`.
+ * Formats a {@link ParsedVersion} as semver `x.y.z` or `x.y.z-beta.N`.
  *
  * @param version - Parsed version components.
  * @param prerelease - When true, appends `-beta.{beta ?? 0}`.
- * @returns Canonical version string (patch zero-padded to 3 digits).
+ * @returns Canonical semver string with no leading zeros.
  */
 export function formatVersion(version: ParsedVersion, prerelease: boolean): string {
-  const patch = version.patch.toString().padStart(3, "0")
-  const base = `${version.major}.${version.minor}.${patch}`
+  const base = `${version.major}.${version.minor}.${version.patch}`
   if (!prerelease) {
     return base
   }
   return `${base}-beta.${version.beta ?? 0}`
+}
+
+/**
+ * Normalizes a supported version string to canonical semver.
+ *
+ * @param version - Raw version string (padded patches are accepted).
+ * @returns Semver string with no leading zeros.
+ * @throws Error When `version` is unsupported (via {@link parseVersion}).
+ */
+export function canonicalizeVersion(version: string): string {
+  const parsed = parseVersion(version)
+  return formatVersion(parsed, parsed.beta != null)
+}
+
+/**
+ * Sets `version` in a package.json document without reformatting other fields.
+ *
+ * Inserts the field after `name` when it is missing. Padded versions are stored
+ * as canonical semver.
+ *
+ * @param source - package.json text.
+ * @param version - Version to write (padded patches are accepted).
+ * @returns Updated package.json text.
+ * @throws Error When `version` is unsupported or the result is not JSON.
+ */
+export function setPackageVersionText(source: string, version: string): string {
+  const canonical = canonicalizeVersion(version)
+  const parsed = JSON.parse(source) as { version?: unknown }
+  if (parsed.version === canonical) {
+    return source
+  }
+
+  const updated = typeof parsed.version === "string"
+    ? source.replace(/("version"\s*:\s*")[^"]*(")/, `$1${canonical}$2`)
+    : source.replace(/("name"\s*:\s*"[^"]*")/, `$1,\n  "version": "${canonical}"`)
+  JSON.parse(updated)
+  return updated
 }
 
 /**

@@ -1,10 +1,11 @@
 {
   "name": "@limetry/cli",
+  "version": "1.2.42",
   "description": "CLI for Limetry agent action governance — setup, policy apply, eval, and audit",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "limetry": "./dist/index.js"
+    "limetry": "dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,10 +18,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/limetry/limetry.git",
+    "url": "git+https://github.com/limetry/limetry.git",
     "directory": "packages/cli"
   },
   "scripts": {
+    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "dev": "node dist/index.js",
     "test": "vitest run --passWithNoTests",
