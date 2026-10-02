@@ -73,6 +73,12 @@ export type ArtifactBuildInputs = {
    * PostHog host baked as `NEXT_PUBLIC_POSTHOG_HOST`.
    */
   posthogHost?: string
+  /** `"true"` or `"false"` for `NEXT_PUBLIC_IS_SSO_ENABLED`. */
+  isSsoEnabled?: string
+  /** `"true"` or `"false"` for `NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED`. */
+  isGoogleSsoEnabled?: string
+  /** `"true"` or `"false"` for `NEXT_PUBLIC_IS_APPLE_SSO_ENABLED`. */
+  isAppleSsoEnabled?: string
 }
 
 /**
@@ -154,6 +160,12 @@ export function webPublicEnv(inputs: ArtifactBuildInputs): NodeJS.ProcessEnv {
     NEXT_PUBLIC_CONTACT_EMAIL: inputs.contactEmail,
     NEXT_PUBLIC_LEGAL_EMAIL: inputs.legalEmail,
     NEXT_PUBLIC_PRIVACY_EMAIL: inputs.privacyEmail,
+    NEXT_PUBLIC_IS_SSO_ENABLED: inputs.isSsoEnabled ?? "true",
+    NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED: inputs.isGoogleSsoEnabled ?? "true",
+    NEXT_PUBLIC_IS_APPLE_SSO_ENABLED: inputs.isAppleSsoEnabled ?? "true",
+    EXPO_PUBLIC_IS_SSO_ENABLED: inputs.isSsoEnabled ?? "true",
+    EXPO_PUBLIC_IS_GOOGLE_SSO_ENABLED: inputs.isGoogleSsoEnabled ?? "true",
+    EXPO_PUBLIC_IS_APPLE_SSO_ENABLED: inputs.isAppleSsoEnabled ?? "true",
   }
   if (inputs.sentryDsn) {
     env.NEXT_PUBLIC_SENTRY_DSN = inputs.sentryDsn

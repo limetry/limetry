@@ -35,6 +35,22 @@ describe("infra artifact helpers", () => {
     assert.equal(env.NEXT_PUBLIC_API_URL, "https://api.dev.limetry.org")
     assert.equal(env.NEXT_PUBLIC_APP_URL, "https://app.dev.limetry.org")
     assert.equal(env.NEXT_PUBLIC_CONTACT_EMAIL, "hello@limetry.org")
+    assert.equal(env.NEXT_PUBLIC_IS_SSO_ENABLED, "true")
+    assert.equal(env.NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED, "true")
+    assert.equal(env.NEXT_PUBLIC_IS_APPLE_SSO_ENABLED, "true")
+  })
+
+  it("bakes disabled social login flags into the web export env", () => {
+    const env = webPublicEnv({
+      ...sampleInputs,
+      isSsoEnabled: "false",
+      isGoogleSsoEnabled: "true",
+      isAppleSsoEnabled: "true",
+    })
+    assert.equal(env.NEXT_PUBLIC_IS_SSO_ENABLED, "false")
+    assert.equal(env.EXPO_PUBLIC_IS_SSO_ENABLED, "false")
+    assert.equal(env.NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED, "true")
+    assert.equal(env.NEXT_PUBLIC_IS_APPLE_SSO_ENABLED, "true")
   })
 
   it("bakes Sentry and PostHog into the web export env when configured", () => {
