@@ -111,35 +111,28 @@ Docs: [CI](packages/web/content/docs/ci/index.mdx) · [SQL](packages/web/content
 
 ## Publishing npm packages
 
-Interactive `yarn release` offers to trigger npm publishing for selected
-publishable workspaces. Enter package keys such as `sdk,cli,mcp`, `all`, or
-leave the answer blank to skip. Selecting a package also selects its published
-workspace dependencies (for example, `cli` includes `sdk`). The release pushes
-package-specific tags that start the matching GitHub Actions workflows. AWS
-releases push those tags only after the deploy succeeds. `yarn release --yes`
-skips package publishing.
+Every successful `yarn release` publishes all eight public packages at the
+version in the root `package.json`. The release pushes one `v<version>` tag;
+that tag triggers a single GitHub Actions workflow which builds, tests, and
+publishes the packages in dependency order. AWS releases push the tag only after
+the deploy succeeds.
 
 Publishable packages are `sdk`, `cli`, `mcp`, `preflight`, `ci`, `shopify`,
 `sql`, and `ui`. The server, web app, infra, mobile app, shared workspace, and
 skill are not published to npm.
 
-To trigger a package workflow for an already-pushed release, use
-`yarn publish:sdk`, `yarn publish:cli`, `yarn publish:mcp`,
-`yarn publish:preflight`, `yarn publish:ci`, `yarn publish:shopify`,
-`yarn publish:sql`, or `yarn publish:ui`. `yarn publish:all` triggers all eight.
-These commands require a clean `main`/`master` checkout synchronized with its
-`origin` branch and create immutable tags such as `sdk-v1.2.041`. Package
-selection is explicit; there is no automatic changed-workspace detection. Only
-selected packages (plus required publishable dependencies) are tagged. Choosing
-`all` publishes all eight on every release, even if some package sources did not
-change.
+Each release uses one immutable tag, such as `v1.2.042`; there are no
+package-specific publish tags or package change checks. All packages are
+published every release, even if some package sources did not change. To retry
+or complete a partially failed release, run **Actions → Build and publish all
+@limetry packages → Run workflow** on `main`. Already-published package versions
+are skipped, so the retry can finish the remaining packages.
 
-Each tag runs its `.github/workflows/publish-*.yml` workflow. Publishing uses
-npm Trusted Publishing via GitHub Actions OIDC; no npm write token or
-`NPM_TOKEN` Actions secret is needed. Workflows build and test packages, then
-publish with npm-generated provenance. The root release version uses a
-zero-padded patch (for example `1.2.041`); published package versions are
-normalized to valid semver (`1.2.41`).
+The `v*` tag runs `.github/workflows/publish-npm.yml`. Publishing uses npm
+Trusted Publishing via GitHub Actions OIDC; no npm write token or `NPM_TOKEN`
+Actions secret is needed. npm generates provenance. The root release version
+uses a zero-padded patch (for example `1.2.042`); published package versions
+are normalized to valid semver (`1.2.42`).
 
 ### Configure npm Trusted Publishing
 
@@ -148,19 +141,10 @@ under **Package settings → Trusted publishing**:
 
 - Organization or user: `limetry`
 - Repository: `limetry`
-- Workflow filename: the matching file below (filename only)
+- Workflow filename: `publish-npm.yml` (filename only)
 - Allow direct `npm publish`; leave Environment name empty
 
-| npm package | Workflow filename |
-| --- | --- |
-| `@limetry/ci` | `publish-ci.yml` |
-| `@limetry/cli` | `publish-cli.yml` |
-| `@limetry/mcp` | `publish-mcp.yml` |
-| `@limetry/preflight` | `publish-preflight.yml` |
-| `@limetry/sdk` | `publish-sdk.yml` |
-| `@limetry/shopify` | `publish-shopify.yml` |
-| `@limetry/sql` | `publish-sql.yml` |
-| `@limetry/ui` | `publish-ui.yml` |
+Add this same publisher configuration separately to all eight npm packages.
 
 The publisher workflows use Node 24 and npm 11.5.1, grant `id-token: write`,
 and the published package metadata points to
@@ -169,10 +153,8 @@ Test a trusted publish before removing any existing token access. Once verified,
 revoke the old npm automation token and, if desired, enable **Require two-factor
 authentication and disallow tokens** in npm publishing access settings.
 
-To retry an unpublished version whose tag already exists, use **Actions → the
-matching Publish workflow → Run workflow** on `main`; do not force-move the tag.
-If the selected package depends on `@limetry/sdk`, publish the SDK first or let
-the dependent workflow wait for its npm version to become available.
+If you previously configured per-package trusted publishers, remove those
+connections and add `publish-npm.yml` as the workflow filename for each package.
 
 ## Documentation
 

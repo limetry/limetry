@@ -1,0 +1,78 @@
+name: Build and publish all @limetry packages
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    name: Build, test, and publish all packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          package-manager-cache: false
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Enable npm Trusted Publishing support
+        run: npm install --global npm@11.5.1
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build all packages
+        run: |
+          yarn workspace @limetry/sdk build
+          yarn workspace @limetry/preflight build
+          yarn workspace @limetry/cli build
+          yarn workspace @limetry/mcp build
+          yarn workspace @limetry/ci build
+          yarn workspace @limetry/shopify build
+          yarn workspace @limetry/sql build
+          yarn workspace @limetry/ui build
+
+      - name: Test all packages
+        run: |
+          yarn workspace @limetry/sdk test
+          yarn workspace @limetry/sdk test:critical-coverage
+          yarn workspace @limetry/preflight test
+          yarn workspace @limetry/cli test
+          yarn tsgo -p packages/mcp/tsconfig.json --noEmit
+          node -e "require('node:fs').accessSync('packages/mcp/dist/index.js')"
+          yarn workspace @limetry/ci test
+          yarn workspace @limetry/shopify test
+          yarn workspace @limetry/sql test
+          yarn workspace @limetry/ui test
+          node packages/cli/dist/index.js --help
+
+      - name: Stamp all package versions
+        run: |
+          for package in ci cli mcp preflight sdk shopify sql ui; do
+            node scripts/stamp-publish-version.mjs "packages/$package"
+          done
+
+      - name: Publish all packages at the root version
+        run: |
+          for package in sdk ci cli mcp preflight shopify sql ui; do
+            name="@limetry/$package"
+            version="$(node -p "require('./packages/$package/package.json').version")"
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version is already published; skipping it."
+              continue
+            fi
+            node scripts/wait-for-npm-dependencies.mjs "packages/$package"
+            npm publish "./packages/$package" --access public
+          done
