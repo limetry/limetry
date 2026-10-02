@@ -204,6 +204,8 @@ export type OssStackConfig = {
   sentryDsn: string | undefined
   /**
    * Optional PostHog project API key for Lambda and static `NEXT_PUBLIC_POSTHOG_KEY`.
+   * Client-visible, so it stays a plaintext string for the static export even when
+   * Pulumi stores the config value as a secret.
    */
   posthogPublicProjectToken: string | undefined
   /**
@@ -285,7 +287,7 @@ export function loadOssStackConfig(): OssStackConfig {
     neonProjectId: config.get("neonProjectId"),
     neonBranchId: config.get("neonBranchId"),
     sentryDsn: config.get("sentryDsn") ?? process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN,
-    posthogPublicProjectToken: config.requireSecret("posthogPublicProjectToken")
+    posthogPublicProjectToken: config.get("posthogPublicProjectToken")
       ?? process.env.POSTHOG_API_KEY
       ?? process.env.POSTHOG_KEY
       ?? process.env.NEXT_PUBLIC_POSTHOG_KEY,
