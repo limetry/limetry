@@ -130,7 +130,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
               <Logo className="h-8 w-auto max-w-none shrink-0 object-contain" />
             </Link>
 
-            <nav className="hidden items-center gap-5 md:flex lg:gap-6">
+            <nav className="hidden min-w-0 items-center gap-4 lg:flex xl:gap-6">
               {navItems.map((link) => {
                 const active = isDesktopNavActive(pathname, link)
                 return (
@@ -155,7 +155,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             </nav>
           </div>
 
-          <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
             <SearchButton
               active={searchOpen}
               onClick={() => {
@@ -171,7 +171,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
               className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <GitHubIcon className="h-4 w-4" />
-              GitHub
+              <span className="hidden xl:inline">GitHub</span>
             </Link>
             <ThemeToggle />
             <Link
@@ -183,16 +183,9 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             >
               Cloud →
             </Link>
-            <Link
-              href="/docs/quick-start"
-              onClick={dismissSearch}
-              className="whitespace-nowrap rounded-lg border border-border px-4 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              Quick start
-            </Link>
           </div>
 
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center gap-1 lg:hidden">
             <SearchButton
               active={searchOpen}
               onClick={() => {
@@ -242,13 +235,6 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
               className="whitespace-nowrap rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center text-sm font-semibold text-white"
             >
               Cloud →
-            </Link>
-            <Link
-              href="/docs/quick-start"
-              onClick={() => setMenuOpen(false)}
-              className="whitespace-nowrap rounded-lg border border-border px-3 py-2 text-center text-sm font-semibold text-muted-foreground hover:bg-muted"
-            >
-              Quick start
             </Link>
           </div>
         }
