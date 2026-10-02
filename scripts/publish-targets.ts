@@ -14,6 +14,43 @@ export const PUBLISHABLE_PACKAGES = [
 
 export type PublishablePackage = typeof PUBLISHABLE_PACKAGES[number]
 
+const PUBLISH_DEPENDENCIES: Record<PublishablePackage, readonly PublishablePackage[]> = {
+  ci: ["sdk"],
+  cli: ["sdk"],
+  mcp: ["sdk"],
+  preflight: [],
+  sdk: [],
+  shopify: ["sdk"],
+  sql: ["sdk"],
+  ui: [],
+}
+
+/**
+ * Includes npm workspaces required by the selected packages.
+ *
+ * @param packages - Explicit package selections.
+ * @returns Selected packages and their transitive dependencies in canonical order.
+ */
+export function includePublishDependencies(
+  packages: readonly PublishablePackage[],
+): PublishablePackage[] {
+  const selected = new Set(packages)
+  const addDependencies = (packageName: PublishablePackage): void => {
+    for (const dependency of PUBLISH_DEPENDENCIES[packageName]) {
+      if (!selected.has(dependency)) {
+        selected.add(dependency)
+        addDependencies(dependency)
+      }
+    }
+  }
+
+  for (const packageName of packages) {
+    addDependencies(packageName)
+  }
+
+  return PUBLISHABLE_PACKAGES.filter((packageName) => selected.has(packageName))
+}
+
 /**
  * Checks whether a string is a known public workspace package key.
  *
@@ -46,8 +83,7 @@ export function parsePublishSelection(selection: string): PublishablePackage[] {
     throw new Error(`Unknown publish package(s): ${invalid.join(", ")}`)
   }
 
-  const selected = new Set(requested)
-  return PUBLISHABLE_PACKAGES.filter((name) => selected.has(name))
+  return includePublishDependencies(requested.filter(isPublishablePackage))
 }
 
 /**
