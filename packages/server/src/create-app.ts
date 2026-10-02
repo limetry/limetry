@@ -22,6 +22,7 @@ import { Pool } from "pg"
 import type { ServerEnv } from "./env.js"
 import {
   renderLandingHtml,
+  resolveLandingAppOrigin,
   resolveLandingWebOrigin,
 } from "./landing-links.js"
 import { createBearerAuthMiddleware, requireScopes } from "./middleware/bearer-auth.js"
@@ -152,6 +153,7 @@ export function createApp(options: CreateAppOptions) {
         readFileSync(join(publicDir, "index.html"), "utf8"),
         {
           appVersion: APP_VERSION,
+          appOrigin: resolveLandingAppOrigin(),
           webOrigin: resolveLandingWebOrigin(),
         },
       )
