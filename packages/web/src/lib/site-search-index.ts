@@ -173,8 +173,11 @@ export function blogSearchEntries(): StaticSearchEntry[] {
  * @returns Static site, example, and blog entries.
  */
 export function clientSearchCatalog(): StaticSearchEntry[] {
+  const entries = process.env.NEXT_PUBLIC_LAUNCHING_SOON === "true"
+    ? STATIC_SEARCH_ENTRIES
+    : STATIC_SEARCH_ENTRIES.filter((entry) => entry.id !== "site-cloud")
   return [
-    ...STATIC_SEARCH_ENTRIES,
+    ...entries,
     ...exampleSearchEntries(),
     ...blogSearchEntries(),
   ]

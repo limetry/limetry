@@ -7,6 +7,7 @@ import Link from "next/link"
 
 import { Logo } from "@/components/brand"
 import { CloudCtaBanner } from "@/components/cloud-cta-banner"
+import { isLaunchOpen } from "@/lib/launching-soon"
 import { siteUrls } from "@/lib/site-urls"
 
 /**
@@ -20,7 +21,7 @@ function getFooterLinks() {
       { href: "/docs/introduction", label: "Docs" },
       { href: "/examples", label: "Examples" },
       { href: "/docs/quick-start", label: "Quick start" },
-      { href: siteUrls.app, label: "Limetry Cloud" },
+      ...(isLaunchOpen() ? [{ href: siteUrls.app, label: "Limetry Cloud" }] : []),
       { href: `${siteUrls.api}/openapi`, label: "OpenAPI" },
     ],
     opensource: [
@@ -48,7 +49,7 @@ export function Footer(): React.JSX.Element {
 
   return (
     <>
-      <CloudCtaBanner />
+      {isLaunchOpen() ? <CloudCtaBanner /> : null}
       <footer className="border-t border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">

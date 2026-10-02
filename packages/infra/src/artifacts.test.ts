@@ -38,6 +38,7 @@ describe("infra artifact helpers", () => {
     assert.equal(env.NEXT_PUBLIC_IS_SSO_ENABLED, "true")
     assert.equal(env.NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED, "true")
     assert.equal(env.NEXT_PUBLIC_IS_APPLE_SSO_ENABLED, "true")
+    assert.equal(env.NEXT_PUBLIC_LAUNCHING_SOON, "false")
   })
 
   it("bakes disabled social login flags into the web export env", () => {

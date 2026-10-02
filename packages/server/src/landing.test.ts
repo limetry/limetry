@@ -53,6 +53,8 @@ describe("landing page", () => {
       expect(response.text).toContain("© ")
       expect(response.text).not.toContain("__YEAR__")
       expect(response.text).not.toContain("__APP_ORIGIN__")
+      expect(response.text).not.toContain("Try Limetry Cloud")
+      expect(response.text).not.toContain(">Limetry Cloud<")
       expect(response.text).not.toContain("https://limetry.com/docs/quick-start")
     } finally {
       if (previousWebUrl === undefined) {
