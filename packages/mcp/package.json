@@ -1,10 +1,11 @@
 {
   "name": "@limetry/mcp",
+  "version": "1.2.42",
   "description": "MCP server for Limetry agent action governance and telemetry",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "limetry-mcp": "./dist/index.js"
+    "limetry-mcp": "dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
@@ -16,10 +17,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/limetry/limetry.git",
+    "url": "git+https://github.com/limetry/limetry.git",
     "directory": "packages/mcp"
   },
   "scripts": {
+    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",

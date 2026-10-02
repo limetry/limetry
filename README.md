@@ -121,7 +121,7 @@ Publishable packages are `sdk`, `cli`, `mcp`, `preflight`, `ci`, `shopify`,
 `sql`, and `ui`. The server, web app, infra, mobile app, shared workspace, and
 skill are not published to npm.
 
-Each release uses one immutable tag, such as `v1.2.042`; there are no
+Each release uses one immutable semver tag, such as `v1.2.42`; there are no
 package-specific publish tags or package change checks. All packages are
 published every release, even if some package sources did not change. To retry
 or complete a partially failed release, run **Actions → Build and publish all
@@ -130,9 +130,9 @@ are skipped, so the retry can finish the remaining packages.
 
 The `v*` tag runs `.github/workflows/publish-npm.yml`. Publishing uses npm
 Trusted Publishing via GitHub Actions OIDC; no npm write token or `NPM_TOKEN`
-Actions secret is needed. npm generates provenance. The root release version
-uses a zero-padded patch (for example `1.2.042`); published package versions
-are normalized to valid semver (`1.2.42`).
+Actions secret is needed. npm generates provenance. Root and publishable
+package versions are the same semver (`1.2.42`). `npm publish` rewrites Yarn
+`workspace:` ranges to that semver while packing, then restores the manifests.
 
 ### Configure npm Trusted Publishing
 

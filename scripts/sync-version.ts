@@ -1,9 +1,9 @@
 /**
  * Interactive production release and version sync for the limetry monorepo.
  *
- * Bumps root `package.json` only (workspace package.jsons stay unversioned),
- * stamps `packages/sdk/src/app-version.ts`, runs a quality gate, commits/tags,
- * then deploys via AWS (Pulumi) or watches GitHub→Vercel.
+ * Bumps the root package.json and every publishable workspace package.json to
+ * the same semver, stamps `packages/sdk/src/app-version.ts`, runs a quality
+ * gate, commits/tags, then deploys via AWS (Pulumi) or watches GitHub→Vercel.
  *
  * CLI: `yarn release`, `yarn release:aws`, `yarn release:vercel`, `yarn sync-version`.
  * Exports version-stamping helpers for tests.
@@ -16,15 +16,17 @@ import readline from "node:readline"
 import { fileURLToPath } from "node:url"
 
 import {
+  canonicalizeVersion,
   computeNextVersion,
   type DeployTarget,
   deployTargetFromChoice,
   formatAppVersionSource,
   isStableReleaseBranch,
   parseReleaseCliArgs,
-  parseVersion,
+  PUBLISHABLE_WORKSPACES,
   type ReleaseBump,
   releaseTypeFromChoice,
+  setPackageVersionText,
 } from "./release-version.js"
 import { watchVercelCommit } from "./watch-vercel.js"
 
@@ -41,6 +43,7 @@ const APP_VERSION_PATH = join(ROOT_DIR, "packages/sdk/src/app-version.ts")
 /** Relative paths touched by a version stamp (for docs / tests). */
 const VERSION_FILES = [
   "package.json",
+  ...PUBLISHABLE_WORKSPACES.map((workspace) => `${workspace}/package.json`),
   "packages/sdk/src/app-version.ts",
 ]
 
@@ -58,12 +61,13 @@ function printHelp(): void {
   yarn release --minor --yes
   yarn release --major --yes
   yarn release --deploy=skip   Skip post-release deploy
-  yarn sync-version            Re-stamp APP_VERSION from root (no bump)
+  yarn sync-version            Re-stamp publishable manifests from root (no bump)
 
-Bumps the root package.json version only (workspace package.jsons stay
-unversioned), stamps packages/sdk APP_VERSION, runs a quality gate, then
+Bumps the root package.json and every publishable workspace package.json to
+the same semver, stamps packages/sdk APP_VERSION, runs a quality gate, then
 commits and tags locally. Pushing the release tag triggers npm publishing for
-all public packages at the same version.
+all public packages at the same version. npm publish rewrites workspace:
+ranges while packing and restores the manifests afterward.
 
 AWS: runs Pulumi before push; failed deploys roll back the local commit/tag.
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
@@ -124,10 +128,14 @@ function getCurrentBranch(): string {
 /**
  * Absolute paths of version-related files that exist on disk.
  *
- * @returns Paths for package.json and APP_VERSION source.
+ * @returns Paths for the root manifest, publishable manifests, and APP_VERSION.
  */
 function collectVersionFilePaths(): string[] {
-  return [PACKAGE_JSON_PATH, APP_VERSION_PATH]
+  return [
+    PACKAGE_JSON_PATH,
+    ...PUBLISHABLE_WORKSPACES.map((workspace) => join(ROOT_DIR, workspace, "package.json")),
+    APP_VERSION_PATH,
+  ]
 }
 
 /**
@@ -161,21 +169,25 @@ function restoreFiles(snapshot: Map<string, string>): void {
 }
 
 /**
- * Updates root package.json and SDK `APP_VERSION`. Workspace package.jsons are
- * intentionally left unversioned.
+ * Writes one canonical semver into the root manifest and every publishable
+ * workspace manifest, then stamps SDK `APP_VERSION`.
  *
  * Side effects: writes the version files.
  *
- * @param version - New or synced version string.
+ * @param version - New or synced version string. Padded patches are normalized.
  * @returns Absolute paths of files that were (or would be) updated.
- * @throws Error When `version` is unsupported (via {@link parseVersion}).
+ * @throws Error When `version` is unsupported (via {@link canonicalizeVersion}).
  */
 function applyReleaseVersion(version: string): string[] {
-  parseVersion(version)
-  const packageJson = JSON.parse(readFileSync(PACKAGE_JSON_PATH, "utf8")) as PackageJson
-  packageJson.version = version
-  writeFileSync(PACKAGE_JSON_PATH, `${JSON.stringify(packageJson, null, 2)}\n`)
-  writeFileSync(APP_VERSION_PATH, formatAppVersionSource(version))
+  const canonical = canonicalizeVersion(version)
+  for (const absolute of collectVersionFilePaths()) {
+    if (absolute === APP_VERSION_PATH) {
+      writeFileSync(absolute, formatAppVersionSource(canonical))
+      continue
+    }
+    const source = readFileSync(absolute, "utf8")
+    writeFileSync(absolute, setPackageVersionText(source, canonical))
+  }
   return collectVersionFilePaths()
 }
 
@@ -291,9 +303,9 @@ async function promptReleaseType(
   question: (query: string) => Promise<string>,
 ): Promise<ReleaseBump> {
   console.log("Select release type:")
-  console.log("1. Patch (x.y.zzz+1)")
-  console.log("2. Minor (x.y+1.000)")
-  console.log("3. Major (x+1.0.000)")
+  console.log("1. Patch (x.y.z+1)")
+  console.log("2. Minor (x.y+1.0)")
+  console.log("3. Major (x+1.0.0)")
 
   const choice = await question("Choice (1-3) [1]: ")
   const releaseType = releaseTypeFromChoice(choice)
@@ -365,7 +377,7 @@ async function main(): Promise<void> {
     const snapshot = snapshotFiles(collectVersionFilePaths())
     try {
       applyReleaseVersion(currentVersion)
-      console.log(`Synced APP_VERSION to ${currentVersion}.`)
+      console.log(`Synced publishable package versions to ${canonicalizeVersion(currentVersion)}.`)
     } catch (error) {
       restoreFiles(snapshot)
       console.error(error instanceof Error ? error.message : error)
@@ -440,7 +452,7 @@ async function main(): Promise<void> {
 
     try {
       versionFiles = applyReleaseVersion(newVersion)
-      console.log("Updated root package.json and APP_VERSION.")
+      console.log("Updated root and publishable package.json versions and APP_VERSION.")
       runQualityGate()
       commitAndTagRelease(newVersion, versionFiles)
       committed = true

@@ -18,7 +18,7 @@ channel as "available" when it actually works today.
 | Channel | Status | Notes |
 | --- | --- | --- |
 | Source checkout (all platforms) | **Available** | Reference path; always works |
-| npm / npx | **Ready to publish** | Release workflows in `.github/workflows/publish-*.yml`; triggered by package tags such as `sdk-v1.2.041` |
+| npm / npx | **Ready to publish** | `.github/workflows/publish-npm.yml`, triggered by semver tags such as `v1.2.42` |
 | Docker (server) | **Available** | `packages/server/Dockerfile` |
 | Homebrew (macOS / Linuxbrew) | Planned — next | Formula wrapping the npm package or release tarball |
 | Standalone binaries (GitHub Releases) | Planned — next | Node SEA multi-arch builds |
@@ -99,11 +99,16 @@ For a failed/partial publish, run **Actions → Build and publish all @limetry
 packages → Run workflow** on `main`. Package versions already present on npm are
 skipped; the workflow retries the remaining packages with the same version.
 
-The workflows build and test packages, stamp each manifest from the root release
-version, and publish using GitHub OIDC. npm requires Node 22.14+ and npm 11.5.1+
-for Trusted Publishing; the workflows use Node 24 and npm 11.5.1. npm generates
-provenance automatically. Root patch versions are zero-padded (for example
-`1.2.041`); manifests are normalized to valid npm semver (`1.2.41`).
+The workflow builds and tests packages, then publishes them with GitHub OIDC.
+npm requires Node 22.14+ and npm 11.5.1+ for Trusted Publishing; the workflow
+uses Node 24 and npm 11.5.1. npm generates provenance automatically. Release
+versions are semver (`1.2.42`) in the root manifest and in every publishable
+package.json. One-off publish from a package directory is `npm publish`; pack
+scripts rewrite `workspace:` ranges for the tarball and restore the files.
+
+```bash
+npm publish --access public
+```
 
 ### Configure Trusted Publishing on npmjs.com
 

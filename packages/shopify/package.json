@@ -1,5 +1,6 @@
 {
   "name": "@limetry/shopify",
+  "version": "1.2.42",
   "description": "Shopify Admin API mutation firewall gated by Limetry ActionIntent evaluate",
   "license": "MIT",
   "type": "module",
@@ -21,10 +22,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/limetry/limetry.git",
+    "url": "git+https://github.com/limetry/limetry.git",
     "directory": "packages/shopify"
   },
   "scripts": {
+    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --coverage",
     "typecheck": "tsgo -p tsconfig.json --noEmit"

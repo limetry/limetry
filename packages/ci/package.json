@@ -1,5 +1,6 @@
 {
   "name": "@limetry/ci",
+  "version": "1.2.42",
   "description": "Limetry GitHub Action and helpers for CI privilege and release gating",
   "license": "MIT",
   "type": "module",
@@ -12,7 +13,7 @@
     }
   },
   "bin": {
-    "limetry-ci": "./dist/run-action.js"
+    "limetry-ci": "dist/run-action.js"
   },
   "files": [
     "dist",
@@ -26,10 +27,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/limetry/limetry.git",
+    "url": "git+https://github.com/limetry/limetry.git",
     "directory": "packages/ci"
   },
   "scripts": {
+    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --coverage",
     "typecheck": "tsgo -p tsconfig.json --noEmit"
