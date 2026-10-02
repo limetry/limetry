@@ -212,6 +212,18 @@ export type OssStackConfig = {
    * PostHog host origin (default US cloud).
    */
   posthogHost: string
+  /**
+   * Master switch for Google and Apple sign-in (`"true"` or `"false"`).
+   */
+  isSsoEnabled: string
+  /**
+   * Google sign-in switch. Ignored when `isSsoEnabled` is false.
+   */
+  isGoogleSsoEnabled: string
+  /**
+   * Apple sign-in switch. Ignored when `isSsoEnabled` is false.
+   */
+  isAppleSsoEnabled: string
 }
 
 /**
@@ -291,6 +303,9 @@ export function loadOssStackConfig(): OssStackConfig {
       ?? process.env.POSTHOG_API_KEY
       ?? process.env.POSTHOG_KEY
       ?? process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    isSsoEnabled: String(config.getBoolean("isSsoEnabled") ?? true),
+    isGoogleSsoEnabled: String(config.getBoolean("isGoogleSsoEnabled") ?? true),
+    isAppleSsoEnabled: String(config.getBoolean("isAppleSsoEnabled") ?? true),
     posthogHost: config.get("posthogHost")
       ?? process.env.POSTHOG_HOST
       ?? process.env.NEXT_PUBLIC_POSTHOG_HOST

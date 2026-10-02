@@ -59,6 +59,9 @@ ensureInfraArtifacts({
   sentryDsn: cfg.sentryDsn,
   posthogPublicProjectToken: cfg.posthogPublicProjectToken,
   posthogHost: cfg.posthogHost,
+  isSsoEnabled: cfg.isSsoEnabled,
+  isGoogleSsoEnabled: cfg.isGoogleSsoEnabled,
+  isAppleSsoEnabled: cfg.isAppleSsoEnabled,
 })
 
 pulumi.log.info(describeNeonConfig({
