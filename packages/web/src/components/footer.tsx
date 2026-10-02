@@ -141,7 +141,7 @@ export function Footer(): React.JSX.Element {
 
           <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Limetry.
+              Copyright © {new Date().getFullYear()} Limetry
             </p>
             <div className="flex items-center gap-4">
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
