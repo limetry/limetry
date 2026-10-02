@@ -79,32 +79,25 @@ The CLI and SDK are not mobile apps. From a phone or tablet you can:
 
 ## npm publishing
 
-The public npm packages are configured with `publishConfig.access=public`:
-
-- `@limetry/sdk` (`yarn publish:sdk`)
-- `@limetry/cli` (`yarn publish:cli`)
-- `@limetry/mcp` (`yarn publish:mcp`)
-- `@limetry/preflight` (`yarn publish:preflight`)
-- `@limetry/ci` (`yarn publish:ci`)
-- `@limetry/shopify` (`yarn publish:shopify`)
-- `@limetry/sql` (`yarn publish:sql`)
-- `@limetry/ui` (`yarn publish:ui`)
+The public npm packages are `@limetry/sdk`, `@limetry/cli`, `@limetry/mcp`,
+`@limetry/preflight`, `@limetry/ci`, `@limetry/shopify`, `@limetry/sql`, and
+`@limetry/ui`. All are published at the same version from one release tag.
 
 ### Publish from a clean checkout (maintainers)
 
 Requires a clean `main` or `master` checkout pushed to `origin`, and npm Trusted
 Publishing configured for each package. Do not add an npm write token or
-`NPM_TOKEN` GitHub Actions secret. The root `yarn release` flow prompts for
-package keys (or `all`); alternatively, run `yarn publish:<package>` after a
-release has been pushed, or `yarn publish:all`. Selecting a package automatically
-includes its publishable workspace dependencies (for example, `cli` includes
-`sdk`). These commands push immutable `<package>-v<root-version>` tags to trigger
-GitHub Actions; they do not publish directly from the local machine.
+`NPM_TOKEN` GitHub Actions secret. Every `yarn release` pushes one immutable
+`v<root-version>` tag; that tag triggers the shared GitHub Actions workflow and
+publishes every package, whether its source changed or not.
 
 ```bash
-yarn publish:sdk
-yarn publish:all
+yarn release
 ```
+
+For a failed/partial publish, run **Actions → Build and publish all @limetry
+packages → Run workflow** on `main`. Package versions already present on npm are
+skipped; the workflow retries the remaining packages with the same version.
 
 The workflows build and test packages, stamp each manifest from the root release
 version, and publish using GitHub OIDC. npm requires Node 22.14+ and npm 11.5.1+
@@ -117,19 +110,14 @@ provenance automatically. Root patch versions are zero-padded (for example
 For every package above, open **Package settings → Trusted publishing** and add
 a GitHub Actions publisher with organization/user `limetry`, repository `limetry`,
 no Environment name, and permission for direct `npm publish`. Configure the
-matching workflow filename (filename only): `publish-ci.yml`, `publish-cli.yml`,
-`publish-mcp.yml`, `publish-preflight.yml`, `publish-sdk.yml`,
-`publish-shopify.yml`, `publish-sql.yml`, or `publish-ui.yml`.
+workflow filename `publish-npm.yml` (filename only) for all eight packages. If
+you previously added trusted publishers for the separate package workflows,
+remove those entries and recreate them with this shared workflow filename.
 
 After verifying a successful publish, revoke the old npm automation token. You
 can then enable **Require two-factor authentication and disallow tokens** in npm
 publishing access settings. Package metadata must retain the repository URL
 `https://github.com/limetry/limetry.git` for npm to validate the publisher.
-
-To retry a version whose immutable tag already exists, use **Actions → the
-matching Publish workflow → Run workflow** on `main` instead of moving the tag.
-If the package depends on `@limetry/sdk`, publish the SDK first or wait for the
-dependent workflow to see the SDK version on npm.
 
 ### Install once published
 
