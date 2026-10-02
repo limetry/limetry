@@ -29,6 +29,7 @@ export default tseslint.config(
       "**/lambda-bundle/**",
       "**/lambda-dist/**",
       "**/node_modules/**",
+      "**/next-env.d.ts",
       "**/out/**",
       "archive/**",
       "docs/api/**",
