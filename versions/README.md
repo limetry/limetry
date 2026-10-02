@@ -5,8 +5,9 @@ Limetry has two version lines.
 ## Product
 
 Packages, websites, and the Cloud checkout share one semver (`1.2.46`).
-`yarn release` bumps that version. `yarn sync-version` restamps every product
-file from the root `package.json` without bumping.
+`yarn release` bumps that version on the first stack. Releasing the other
+stack deploys that same version instead of bumping again. `yarn sync-version`
+restamps every product file from the root `package.json` without bumping.
 
 A release is compatible with other product versions on the same minor line,
 for example `>=1.2.0 <1.3.0`.

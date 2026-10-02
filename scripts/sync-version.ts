@@ -17,12 +17,12 @@ import { fileURLToPath } from "node:url"
 
 import {
   canonicalizeVersion,
-  computeNextVersion,
   type DeployTarget,
   deployTargetFromChoice,
   formatAppVersionSource,
   isStableReleaseBranch,
   parseReleaseCliArgs,
+  planSharedRelease,
   PUBLISHABLE_WORKSPACES,
   type ReleaseBump,
   releaseTypeFromChoice,
@@ -50,6 +50,7 @@ const CATALOG_PATH = join(ROOT_DIR, "versions/schemas.json")
 const COMPATIBILITY_JSON = join(ROOT_DIR, "versions/compatibility.json")
 const COMPATIBILITY_MODULE = join(ROOT_DIR, "packages/sdk/src/compatibility.ts")
 const PEER_ROOT = join(ROOT_DIR, "..", "limetry-enterprise")
+const PEER_NAME = "Limetry Cloud"
 
 /** npm package names published at the shared product version. */
 const PUBLISHED_PACKAGES = [
@@ -124,7 +125,8 @@ Bumps the root package.json, the website package, and every publishable
 workspace package.json to the same semver, stamps packages/sdk APP_VERSION,
 and writes versions/compatibility.json. Schemas stay on their own semver
 starting at 1.0.0 and bump only when their contents change. When the Cloud
-checkout is beside this repo, its product version is stamped to match.
+checkout is beside this repo, its product version is stamped to match. A
+second release on the other stack deploys that same version.
 
 Then the release runs a quality gate, commits, and tags locally. Pushing the
 release tag triggers npm publishing for all public packages at the same
@@ -335,6 +337,35 @@ function deleteLocalTag(version: string): void {
 }
 
 /**
+ * Reads a package.json version, or null when the file is missing.
+ *
+ * @param packageJsonPath - Absolute path to a package.json.
+ * @returns Trimmed version string, or null.
+ */
+function readPackageVersion(packageJsonPath: string): string | null {
+  if (!existsSync(packageJsonPath)) return null
+  const parsed = JSON.parse(readFileSync(packageJsonPath, "utf8")) as PackageJson
+  const version = parsed.version?.trim()
+  return version || null
+}
+
+/**
+ * Reports whether `v{version}` exists in a git checkout.
+ *
+ * @param cwd - Repository root.
+ * @param version - Version without the `v` prefix.
+ * @returns True when that tag is present.
+ */
+function gitHasTag(cwd: string, version: string): boolean {
+  const tag = `v${canonicalizeVersion(version)}`
+  const existing = spawnSync("git", ["tag", "-l", tag], {
+    cwd,
+    encoding: "utf8",
+  })
+  return (existing.stdout ?? "").trim() === tag
+}
+
+/**
  * Rolls back a local release: soft-reset last commit, delete tag, restore files.
  *
  * @param version - Version that was tagged.
@@ -352,16 +383,31 @@ function undoLocalRelease(version: string, snapshot: Map<string, string>): void 
  *
  * @param version - New release version.
  * @param versionFiles - Absolute paths to stage.
+ * @param options - When `tagExistingCommit` is set, tag HEAD if the version files already match.
  * @returns Nothing.
  * @throws Error When nothing staged, or the tag already exists.
  */
-function commitAndTagRelease(version: string, versionFiles: string[]): void {
+function commitAndTagRelease(
+  version: string,
+  versionFiles: string[],
+  options?: { tagExistingCommit?: boolean },
+): void {
   console.log("Committing release files...")
   const relativePaths = versionFiles.map((absolute) => relative(ROOT_DIR, absolute))
   runGit(["add", "--", ...relativePaths])
 
   const staged = runGit(["status", "--porcelain", "--", ...relativePaths])
   if (!staged) {
+    if (options?.tagExistingCommit) {
+      const tag = `v${version}`
+      const existingTag = runGit(["tag", "-l", tag])
+      if (existingTag) {
+        throw new Error(`Tag ${tag} already exists.`)
+      }
+      console.log(`Version files already match ${version}. Tagging the current commit.`)
+      runGit(["tag", tag])
+      return
+    }
     throw new Error("Release files did not change. Aborting commit.")
   }
 
@@ -537,10 +583,40 @@ async function main(): Promise<void> {
     console.log(`Current version: ${currentVersion}`)
     console.log(`Current branch: ${currentBranch}`)
 
-    const releaseType = args.bump ?? await promptReleaseType(question)
-    const newVersion = computeNextVersion(currentVersion, releaseType)
+    const peerVersion = readPackageVersion(join(PEER_ROOT, "package.json"))
+    const localTagged = gitHasTag(ROOT_DIR, currentVersion)
+    const peerTagged = peerVersion != null && gitHasTag(PEER_ROOT, peerVersion)
+    let releaseType: ReleaseBump = args.bump ?? "patch"
+    let plan = planSharedRelease({
+      localVersion: currentVersion,
+      peerVersion,
+      localTagged,
+      peerTagged,
+      bump: releaseType,
+    })
+    if (plan.action === "release-peer-first") {
+      console.error(
+        `Version ${plan.version} is already released here. Release ${PEER_NAME} at ${plan.version} before starting a newer version.`,
+      )
+      return
+    }
+    if (plan.action === "bump" && !args.bump) {
+      releaseType = await promptReleaseType(question)
+      plan = planSharedRelease({
+        localVersion: currentVersion,
+        peerVersion,
+        localTagged,
+        peerTagged,
+        bump: releaseType,
+      })
+    }
+    const newVersion = plan.version
 
-    console.log(`New version: ${newVersion}`)
+    if (plan.action === "adopt-peer") {
+      console.log(`Using ${newVersion} already released on ${PEER_NAME}.`)
+    } else {
+      console.log(`New version: ${newVersion}`)
+    }
     if (!args.yes) {
       const confirm = await question("Confirm release? (Y/n): ")
       if (confirm.toLowerCase() === "n") {
@@ -563,7 +639,9 @@ async function main(): Promise<void> {
       versionFiles = applyReleaseVersion(newVersion, args.schemaBump)
       console.log("Updated root and publishable package.json versions and APP_VERSION.")
       runQualityGate()
-      commitAndTagRelease(newVersion, versionFiles)
+      commitAndTagRelease(newVersion, versionFiles, {
+        tagExistingCommit: plan.action === "adopt-peer",
+      })
       committed = true
       if (deployTarget === "aws") {
         runAwsDeploy()

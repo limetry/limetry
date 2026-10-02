@@ -206,6 +206,85 @@ export function computeNextVersion(
 }
 
 /**
+ * Compares two versions. Stable builds sort after prereleases of the same triple.
+ *
+ * @param left - Version string.
+ * @param right - Version string.
+ * @returns Negative when `left` is older, positive when newer, zero when equal.
+ */
+export function compareVersions(left: string, right: string): number {
+  const a = parseVersion(left)
+  const b = parseVersion(right)
+  if (a.major !== b.major) return a.major - b.major
+  if (a.minor !== b.minor) return a.minor - b.minor
+  if (a.patch !== b.patch) return a.patch - b.patch
+  if (a.beta === b.beta) return 0
+  if (a.beta == null) return 1
+  if (b.beta == null) return -1
+  return a.beta - b.beta
+}
+
+/**
+ * How {@link planSharedRelease} chose the version both stacks should publish.
+ */
+export type SharedReleaseAction = "bump" | "adopt-peer" | "release-peer-first"
+
+/**
+ * Version both checkouts should publish on this release.
+ */
+export type SharedReleasePlan = {
+  version: string
+  bumped: boolean
+  action: SharedReleaseAction
+}
+
+/**
+ * Keeps both stacks on one product version.
+ *
+ * The first stack to release a version bumps. The other stack adopts that
+ * version when its checkout is already there, or already ahead. A stack that
+ * has tagged the current version waits until the other stack has tagged it too.
+ *
+ * @param input - Local and peer versions, whether each side has tagged its version, and the bump for a new release.
+ * @returns Version to stamp, commit, and deploy.
+ */
+export function planSharedRelease(input: {
+  localVersion: string
+  peerVersion: string | null
+  localTagged: boolean
+  peerTagged: boolean
+  bump: ReleaseBump
+}): SharedReleasePlan {
+  const local = canonicalizeVersion(input.localVersion)
+  const peer = input.peerVersion ? canonicalizeVersion(input.peerVersion) : null
+
+  if (peer) {
+    const order = compareVersions(peer, local)
+    if (order > 0) {
+      return { version: peer, bumped: false, action: "adopt-peer" }
+    }
+    if (order < 0) {
+      if (input.localTagged) {
+        return { version: local, bumped: false, action: "release-peer-first" }
+      }
+      return { version: local, bumped: false, action: "adopt-peer" }
+    }
+    if (input.peerTagged && !input.localTagged) {
+      return { version: local, bumped: false, action: "adopt-peer" }
+    }
+    if (input.localTagged && !input.peerTagged) {
+      return { version: local, bumped: false, action: "release-peer-first" }
+    }
+  }
+
+  return {
+    version: computeNextVersion(local, input.bump),
+    bumped: true,
+    action: "bump",
+  }
+}
+
+/**
  * Maps an interactive menu choice to a {@link ReleaseBump}.
  *
  * @param choice - User input: `"1"` / `""` → patch, `"2"` → minor, `"3"` → major.

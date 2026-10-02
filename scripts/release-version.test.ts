@@ -8,6 +8,7 @@ import {
   formatVersion,
   parseReleaseCliArgs,
   parseVersion,
+  planSharedRelease,
   releaseTypeFromChoice,
   setPackageVersionText,
 } from "./release-version.js"
@@ -36,6 +37,48 @@ describe("release-version", () => {
     expect(computeNextVersion("1.0.9", "minor")).toBe("1.1.0")
     expect(computeNextVersion("1.1.0", "major")).toBe("2.0.0")
     expect(computeNextVersion("1.2.042", "patch")).toBe("1.2.43")
+  })
+
+  it("adopts the version the other stack already released", () => {
+    expect(planSharedRelease({
+      localVersion: "1.2.47",
+      peerVersion: "1.2.47",
+      localTagged: false,
+      peerTagged: true,
+      bump: "patch",
+    })).toEqual({ version: "1.2.47", bumped: false, action: "adopt-peer" })
+
+    expect(planSharedRelease({
+      localVersion: "1.2.47",
+      peerVersion: "1.2.48",
+      localTagged: true,
+      peerTagged: true,
+      bump: "patch",
+    })).toEqual({ version: "1.2.48", bumped: false, action: "adopt-peer" })
+
+    expect(planSharedRelease({
+      localVersion: "1.2.48",
+      peerVersion: "1.2.48",
+      localTagged: true,
+      peerTagged: false,
+      bump: "patch",
+    })).toEqual({ version: "1.2.48", bumped: false, action: "release-peer-first" })
+
+    expect(planSharedRelease({
+      localVersion: "1.2.48",
+      peerVersion: "1.2.48",
+      localTagged: true,
+      peerTagged: true,
+      bump: "patch",
+    })).toEqual({ version: "1.2.49", bumped: true, action: "bump" })
+
+    expect(planSharedRelease({
+      localVersion: "1.2.47",
+      peerVersion: null,
+      localTagged: true,
+      peerTagged: false,
+      bump: "patch",
+    })).toEqual({ version: "1.2.48", bumped: true, action: "bump" })
   })
 
   it("formats APP_VERSION source", () => {
