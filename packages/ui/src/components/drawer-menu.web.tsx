@@ -223,7 +223,7 @@ export function DrawerMenu({
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-end overflow-hidden md:hidden"
+      className="limetry-mobile-drawer pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-end overflow-hidden"
       style={{ top: topOffset }}
       aria-hidden={!open}
     >

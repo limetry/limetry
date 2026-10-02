@@ -129,6 +129,12 @@
   z-index: 40;
 }
 
+@media (min-width: 1024px) {
+  .limetry-mobile-drawer {
+    display: none;
+  }
+}
+
 /* ── Gradient mesh background ──────────────────────────────────────────── */
 .gradient-mesh {
   background:
