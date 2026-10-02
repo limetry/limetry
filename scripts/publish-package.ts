@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import {
+  includePublishDependencies,
   isPublishablePackage,
   packagePublishTag,
   PUBLISHABLE_PACKAGES,
@@ -15,6 +16,12 @@ import { isStableReleaseBranch, parseVersion } from "./release-version.js"
 
 type RootPackageJson = {
   version?: string
+}
+
+type PublishRequest = {
+  packages: PublishablePackage[]
+  requestedPackages: PublishablePackage[]
+  version: string
 }
 
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -45,13 +52,13 @@ function runGit(args: string[]): string {
  * @returns Package keys and the root package version.
  * @throws If arguments, Git status, branch, or remote synchronization are invalid.
  */
-function resolvePublishRequest(): { packages: PublishablePackage[]; version: string } {
+function resolvePublishRequest(): PublishRequest {
   const requested = process.argv.slice(2)
-  let packages: PublishablePackage[]
+  let requestedPackages: PublishablePackage[]
   if (requested.length === 1 && requested[0] === "all") {
-    packages = [...PUBLISHABLE_PACKAGES]
+    requestedPackages = [...PUBLISHABLE_PACKAGES]
   } else if (requested.length > 0 && requested.every(isPublishablePackage)) {
-    packages = requested
+    requestedPackages = [...new Set(requested)]
   } else {
     throw new Error(`Choose one or more packages: ${PUBLISHABLE_PACKAGES.join(", ")}, or all.`)
   }
@@ -79,7 +86,11 @@ function resolvePublishRequest(): { packages: PublishablePackage[]; version: str
   }
   parseVersion(version)
 
-  return { packages: [...new Set(packages)], version }
+  return {
+    packages: includePublishDependencies(requestedPackages),
+    requestedPackages,
+    version,
+  }
 }
 
 /**
@@ -89,16 +100,27 @@ function resolvePublishRequest(): { packages: PublishablePackage[]; version: str
  * @throws If a publish tag already exists or Git cannot push the tags.
  */
 function main(): void {
-  const { packages, version } = resolvePublishRequest()
-  const tags = packages.map((packageName) => packagePublishTag(packageName, version))
+  const { packages, requestedPackages, version } = resolvePublishRequest()
+  const requested = new Set(requestedPackages)
+  const tags: string[] = []
 
-  for (const tag of tags) {
+  for (const packageName of packages) {
+    const tag = packagePublishTag(packageName, version)
     if (runGit(["ls-remote", "--tags", "origin", `refs/tags/${tag}`])) {
-      throw new Error(`Publish tag ${tag} already exists; npm versions cannot be republished.`)
+      if (requested.has(packageName)) {
+        throw new Error(`Publish tag ${tag} already exists; npm versions cannot be republished.`)
+      }
+      console.log(`Dependency tag ${tag} already exists; not pushing it again.`)
+      continue
     }
+    tags.push(tag)
   }
 
-  console.log(`Triggering npm publish workflows for ${packages.join(", ")} @ ${version}...`)
+  if (tags.length === 0) {
+    throw new Error("All requested publish tags already exist; npm versions cannot be republished.")
+  }
+
+  console.log(`Triggering npm publish workflows for ${tags.join(", ")} @ ${version}...`)
   runGit([
     "push",
     "--atomic",

@@ -20,6 +20,10 @@ describe("npm publish targets", () => {
     expect(parsePublishSelection("ui, sdk,ui")).toEqual(["sdk", "ui"])
   })
 
+  it("includes internal packages required by selected packages", () => {
+    expect(parsePublishSelection("cli")).toEqual(["cli", "sdk"])
+  })
+
   it("rejects unknown package keys", () => {
     expect(() => parsePublishSelection("sdk,server")).toThrow("Unknown publish package(s): server")
   })

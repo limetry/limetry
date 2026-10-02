@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "preflight-v*"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,6 +12,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     name: Build and publish @limetry/preflight
     runs-on: ubuntu-latest
     steps:
@@ -21,9 +23,12 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "22"
-          cache: yarn
+          node-version: "24"
+          package-manager-cache: false
           registry-url: "https://registry.npmjs.org"
+
+      - name: Enable npm Trusted Publishing support
+        run: npm install --global npm@11.5.1
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -38,6 +43,4 @@ jobs:
         run: node scripts/stamp-publish-version.mjs packages/preflight
 
       - name: Publish @limetry/preflight
-        run: yarn workspace @limetry/preflight npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ./packages/preflight --access public

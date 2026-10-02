@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "cli-v*"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,6 +12,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     name: Build and publish @limetry/cli
     runs-on: ubuntu-latest
     steps:
@@ -21,15 +23,18 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "22"
-          cache: yarn
+          node-version: "24"
+          package-manager-cache: false
           registry-url: "https://registry.npmjs.org"
+
+      - name: Enable npm Trusted Publishing support
+        run: npm install --global npm@11.5.1
 
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build @limetry/cli
-        run: yarn workspace @limetry/cli build
+      - name: Build dependencies and @limetry/cli
+        run: yarn workspace @limetry/sdk build && yarn workspace @limetry/cli build
 
       - name: Test @limetry/cli
         run: yarn workspace @limetry/cli test
@@ -40,7 +45,8 @@ jobs:
       - name: Stamp package version from root
         run: node scripts/stamp-publish-version.mjs packages/cli
 
+      - name: Wait for published workspace dependencies
+        run: node scripts/wait-for-npm-dependencies.mjs packages/cli
+
       - name: Publish @limetry/cli
-        run: yarn workspace @limetry/cli npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ./packages/cli --access public

@@ -92,12 +92,14 @@ The public npm packages are configured with `publishConfig.access=public`:
 
 ### Publish from a clean checkout (maintainers)
 
-Requires a clean `main` or `master` checkout pushed to `origin`. Configure the
-GitHub Actions secret `NPM_TOKEN` with publish rights to the `@limetry` scope.
-The root `yarn release` flow prompts for package keys (or `all`); alternatively,
-run `yarn publish:<package>` after a release has been pushed, or `yarn publish:all`.
-These commands push immutable `<package>-v<root-version>` tags to trigger GitHub
-Actions; they do not publish directly from the local machine.
+Requires a clean `main` or `master` checkout pushed to `origin`, and npm Trusted
+Publishing configured for each package. Do not add an npm write token or
+`NPM_TOKEN` GitHub Actions secret. The root `yarn release` flow prompts for
+package keys (or `all`); alternatively, run `yarn publish:<package>` after a
+release has been pushed, or `yarn publish:all`. Selecting a package automatically
+includes its publishable workspace dependencies (for example, `cli` includes
+`sdk`). These commands push immutable `<package>-v<root-version>` tags to trigger
+GitHub Actions; they do not publish directly from the local machine.
 
 ```bash
 yarn publish:sdk
@@ -105,8 +107,29 @@ yarn publish:all
 ```
 
 The workflows build and test packages, stamp each manifest from the root release
-version, then publish with npm provenance. Root patch versions are zero-padded
-(for example `1.2.041`); manifests are normalized to valid npm semver (`1.2.41`).
+version, and publish using GitHub OIDC. npm requires Node 22.14+ and npm 11.5.1+
+for Trusted Publishing; the workflows use Node 24 and npm 11.5.1. npm generates
+provenance automatically. Root patch versions are zero-padded (for example
+`1.2.041`); manifests are normalized to valid npm semver (`1.2.41`).
+
+### Configure Trusted Publishing on npmjs.com
+
+For every package above, open **Package settings → Trusted publishing** and add
+a GitHub Actions publisher with organization/user `limetry`, repository `limetry`,
+no Environment name, and permission for direct `npm publish`. Configure the
+matching workflow filename (filename only): `publish-ci.yml`, `publish-cli.yml`,
+`publish-mcp.yml`, `publish-preflight.yml`, `publish-sdk.yml`,
+`publish-shopify.yml`, `publish-sql.yml`, or `publish-ui.yml`.
+
+After verifying a successful publish, revoke the old npm automation token. You
+can then enable **Require two-factor authentication and disallow tokens** in npm
+publishing access settings. Package metadata must retain the repository URL
+`https://github.com/limetry/limetry.git` for npm to validate the publisher.
+
+To retry a version whose immutable tag already exists, use **Actions → the
+matching Publish workflow → Run workflow** on `main` instead of moving the tag.
+If the package depends on `@limetry/sdk`, publish the SDK first or wait for the
+dependent workflow to see the SDK version on npm.
 
 ### Install once published
 

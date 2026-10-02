@@ -71,5 +71,26 @@ const packagePath = isAbsolute(target)
 
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"))
 packageJson.version = version
+
+for (const field of ["dependencies", "optionalDependencies", "peerDependencies", "devDependencies"]) {
+  const dependencies = packageJson[field]
+  if (!dependencies || typeof dependencies !== "object" || Array.isArray(dependencies)) {
+    continue
+  }
+
+  for (const [name, range] of Object.entries(dependencies)) {
+    if (typeof range !== "string" || !range.startsWith("workspace:")) {
+      continue
+    }
+
+    const workspaceRange = range.slice("workspace:".length)
+    dependencies[name] = workspaceRange === "*" || workspaceRange === "^"
+      ? `^${version}`
+      : workspaceRange === "~"
+        ? `~${version}`
+        : workspaceRange
+  }
+}
+
 writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`)
 console.log(`Stamped ${packagePath} @ ${version} (root release ${rootVersion})`)
