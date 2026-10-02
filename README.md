@@ -109,6 +109,31 @@ limetry audit tail
 Docs: [CI](packages/web/content/docs/ci/index.mdx) · [SQL](packages/web/content/docs/sql/index.mdx) ·
 [Shopify](packages/web/content/docs/shopify/index.mdx) · [USAGE.md](USAGE.md) · [SECURITY.md](SECURITY.md)
 
+## Publishing npm packages
+
+Interactive `yarn release` offers to trigger npm publishing for selected
+publishable workspaces. Enter package keys such as `sdk,cli,mcp`, `all`, or
+leave the answer blank to skip. The release pushes package-specific tags that
+start the matching GitHub Actions workflows. AWS releases push those tags only
+after the deploy succeeds. `yarn release --yes` skips package publishing.
+
+Publishable packages are `sdk`, `cli`, `mcp`, `preflight`, `ci`, `shopify`,
+`sql`, and `ui`. The server, web app, infra, mobile app, shared workspace, and
+skill are not published to npm.
+
+To trigger a package workflow for an already-pushed release, use
+`yarn publish:sdk`, `yarn publish:cli`, `yarn publish:mcp`,
+`yarn publish:preflight`, `yarn publish:ci`, `yarn publish:shopify`,
+`yarn publish:sql`, or `yarn publish:ui`. `yarn publish:all` triggers all eight.
+These commands require a clean `main`/`master` checkout synchronized with its
+`origin` branch and create immutable tags such as `sdk-v1.2.041`.
+
+Each tag runs its `.github/workflows/publish-*.yml` workflow. Configure the
+repository Actions secret `NPM_TOKEN` with permission to publish the `@limetry`
+scope. Workflows build and test the package, then publish with npm provenance.
+The root release version uses a zero-padded patch (for example `1.2.041`);
+published package versions are normalized to valid semver (`1.2.41`).
+
 ## Documentation
 
 | Surface | Where | How it is produced |
