@@ -64,13 +64,15 @@ describe("release-version", () => {
       yes: true,
       syncOnly: false,
       help: false,
+      schemaBump: "patch",
     })
-    expect(parseReleaseCliArgs(["--deploy=aws"])).toEqual({
+    expect(parseReleaseCliArgs(["--deploy=aws", "--schema-bump=minor"])).toEqual({
       bump: null,
       deploy: "aws",
       yes: false,
       syncOnly: false,
       help: false,
+      schemaBump: "minor",
     })
     expect(parseReleaseCliArgs(["--vercel", "--yes"])).toEqual({
       bump: null,
@@ -78,6 +80,7 @@ describe("release-version", () => {
       yes: true,
       syncOnly: false,
       help: false,
+      schemaBump: "patch",
     })
     expect(parseReleaseCliArgs(["--deploy", "skip"])).toEqual({
       bump: null,
@@ -85,6 +88,7 @@ describe("release-version", () => {
       yes: false,
       syncOnly: false,
       help: false,
+      schemaBump: "patch",
     })
   })
 

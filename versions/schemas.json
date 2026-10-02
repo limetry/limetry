@@ -1,0 +1,19 @@
+{
+  "schemas": [
+    {
+      "id": "openapi.evaluate",
+      "version": "1.0.0",
+      "fingerprint": "1cd1950e8bbaed93c8707474c8fb164a7c50b1f4f5e8ad7f1b465ed2294efa88"
+    },
+    {
+      "id": "openapi.custom-gpt",
+      "version": "1.0.0",
+      "fingerprint": "656c1dab2207696ecb5525a65bcc90372aa47245365dddd7e0aa46746fa00a9c"
+    },
+    {
+      "id": "json.evaluate",
+      "version": "1.0.0",
+      "fingerprint": "0324c4a1c06f972a2bd2cb7bc66ee779d2a28bf885662157a5c3eb5c59c871b6"
+    }
+  ]
+}

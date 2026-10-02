@@ -9,6 +9,7 @@
  */
 
 export { APP_VERSION } from "./app-version.js"
+export { COMPATIBILITY } from "./compatibility.js"
 export type { PolicyEngine } from "./engine/policy-engine.js"
 export type { RemotePolicyEngineOptions } from "./engine/remote-engine.js"
 export { createRemoteEngine,RemotePolicyEngine } from "./engine/remote-engine.js"

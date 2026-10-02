@@ -3,7 +3,7 @@
   "info": {
     "title": "Limetry Action Governance API",
     "description": "Server-authoritative policy evaluation and scrubbed audit for AI agent actions. Upsert ActionPolicies (prefer audit_mode=minimal), evaluate ActionIntents, and record outcomes. Do not put secrets or chat transcripts in metadata/details. Legacy payment authorize/settle paths remain for rail handoff demos.",
-    "version": "3.0.0"
+    "version": "1.0.0"
   },
   "servers": [
     {
