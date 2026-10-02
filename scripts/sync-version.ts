@@ -10,7 +10,7 @@
  */
 
 import { spawnSync } from "node:child_process"
-import { readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join, relative, resolve } from "node:path"
 import readline from "node:readline"
 import { fileURLToPath } from "node:url"
@@ -28,6 +28,13 @@ import {
   releaseTypeFromChoice,
   setPackageVersionText,
 } from "./release-version.js"
+import {
+  buildCompatibility,
+  publishCompatibility,
+  type SchemaSpec,
+  stampPeerProduct,
+  syncSchemaFiles,
+} from "./schema-versions.js"
 import { watchVercelCommit } from "./watch-vercel.js"
 
 /** Loose package.json shape used when reading/writing the root version. */
@@ -39,12 +46,60 @@ type PackageJson = {
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json")
 const APP_VERSION_PATH = join(ROOT_DIR, "packages/sdk/src/app-version.ts")
+const CATALOG_PATH = join(ROOT_DIR, "versions/schemas.json")
+const COMPATIBILITY_JSON = join(ROOT_DIR, "versions/compatibility.json")
+const COMPATIBILITY_MODULE = join(ROOT_DIR, "packages/sdk/src/compatibility.ts")
+const PEER_ROOT = join(ROOT_DIR, "..", "limetry-enterprise")
+
+/** npm package names published at the shared product version. */
+const PUBLISHED_PACKAGES = [
+  "@limetry/ci",
+  "@limetry/cli",
+  "@limetry/mcp",
+  "@limetry/preflight",
+  "@limetry/sdk",
+  "@limetry/shopify",
+  "@limetry/sql",
+  "@limetry/ui",
+] as const
+
+/**
+ * Schemas versioned independently of the product semver.
+ */
+const SCHEMA_SPECS: SchemaSpec[] = [
+  {
+    id: "openapi.evaluate",
+    path: "packages/server/openapi.yaml",
+    kind: "openapi-yaml",
+    mirrors: [
+      { path: "packages/server/public/openapi.yaml", kind: "openapi-yaml" },
+      { path: "packages/server/public/openapi.json", kind: "openapi-json" },
+    ],
+  },
+  {
+    id: "openapi.custom-gpt",
+    path: "examples/chatgpt-custom-gpt-payment-governance/openapi.json",
+    kind: "openapi-json",
+  },
+  {
+    id: "json.evaluate",
+    path: "packages/server/src/schemas/action.ts",
+    kind: "text",
+    versionFile: "packages/server/src/schemas/schema-version.ts",
+    versionConst: "JSON_SCHEMA_VERSION",
+  },
+]
 
 /** Relative paths touched by a version stamp (for docs / tests). */
 const VERSION_FILES = [
   "package.json",
+  "packages/web/package.json",
   ...PUBLISHABLE_WORKSPACES.map((workspace) => `${workspace}/package.json`),
   "packages/sdk/src/app-version.ts",
+  "versions/schemas.json",
+  "versions/compatibility.json",
+  "packages/sdk/src/compatibility.ts",
+  "packages/web/public/compatibility.json",
 ]
 
 /**
@@ -61,13 +116,20 @@ function printHelp(): void {
   yarn release --minor --yes
   yarn release --major --yes
   yarn release --deploy=skip   Skip post-release deploy
-  yarn sync-version            Re-stamp publishable manifests from root (no bump)
+  yarn sync-version            Re-stamp product versions from root (no product bump)
+  yarn sync-version --schema-bump=minor
+                               Use when a changed schema is not a patch
 
-Bumps the root package.json and every publishable workspace package.json to
-the same semver, stamps packages/sdk APP_VERSION, runs a quality gate, then
-commits and tags locally. Pushing the release tag triggers npm publishing for
-all public packages at the same version. npm publish rewrites workspace:
-ranges while packing and restores the manifests afterward.
+Bumps the root package.json, the website package, and every publishable
+workspace package.json to the same semver, stamps packages/sdk APP_VERSION,
+and writes versions/compatibility.json. Schemas stay on their own semver
+starting at 1.0.0 and bump only when their contents change. When the Cloud
+checkout is beside this repo, its product version is stamped to match.
+
+Then the release runs a quality gate, commits, and tags locally. Pushing the
+release tag triggers npm publishing for all public packages at the same
+version. npm publish rewrites workspace: ranges while packing and restores
+the manifests afterward.
 
 AWS: runs Pulumi before push; failed deploys roll back the local commit/tag.
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
@@ -131,10 +193,21 @@ function getCurrentBranch(): string {
  * @returns Paths for the root manifest, publishable manifests, and APP_VERSION.
  */
 function collectVersionFilePaths(): string[] {
+  const schemaPaths = SCHEMA_SPECS.flatMap((spec) => [
+    join(ROOT_DIR, spec.path),
+    ...spec.versionFile ? [join(ROOT_DIR, spec.versionFile)] : [],
+    ...(spec.mirrors ?? []).map((mirror) => join(ROOT_DIR, mirror.path)),
+  ])
   return [
     PACKAGE_JSON_PATH,
+    join(ROOT_DIR, "packages/web/package.json"),
     ...PUBLISHABLE_WORKSPACES.map((workspace) => join(ROOT_DIR, workspace, "package.json")),
     APP_VERSION_PATH,
+    CATALOG_PATH,
+    COMPATIBILITY_JSON,
+    COMPATIBILITY_MODULE,
+    join(ROOT_DIR, "packages/web/public/compatibility.json"),
+    ...schemaPaths,
   ]
 }
 
@@ -147,6 +220,9 @@ function collectVersionFilePaths(): string[] {
 function snapshotFiles(paths: string[]): Map<string, string> {
   const snapshot = new Map<string, string>()
   for (const absolute of paths) {
+    if (!existsSync(absolute)) {
+      continue
+    }
     snapshot.set(absolute, readFileSync(absolute, "utf8"))
   }
   return snapshot
@@ -175,19 +251,52 @@ function restoreFiles(snapshot: Map<string, string>): void {
  * Side effects: writes the version files.
  *
  * @param version - New or synced version string. Padded patches are normalized.
- * @returns Absolute paths of files that were (or would be) updated.
+ * @param schemaBump - Bump used only for schemas whose content changed.
+ * @returns Absolute paths of files that participate in the release commit.
  * @throws Error When `version` is unsupported (via {@link canonicalizeVersion}).
  */
-function applyReleaseVersion(version: string): string[] {
+function applyReleaseVersion(version: string, schemaBump: ReleaseBump = "patch"): string[] {
   const canonical = canonicalizeVersion(version)
-  for (const absolute of collectVersionFilePaths()) {
-    if (absolute === APP_VERSION_PATH) {
-      writeFileSync(absolute, formatAppVersionSource(canonical))
-      continue
-    }
+  const productPaths = [
+    PACKAGE_JSON_PATH,
+    join(ROOT_DIR, "packages/web/package.json"),
+    ...PUBLISHABLE_WORKSPACES.map((workspace) => join(ROOT_DIR, workspace, "package.json")),
+  ]
+  for (const absolute of productPaths) {
     const source = readFileSync(absolute, "utf8")
     writeFileSync(absolute, setPackageVersionText(source, canonical))
   }
+  writeFileSync(APP_VERSION_PATH, formatAppVersionSource(canonical))
+
+  const schemas = syncSchemaFiles({
+    rootDir: ROOT_DIR,
+    catalogPath: CATALOG_PATH,
+    specs: SCHEMA_SPECS,
+    bump: schemaBump,
+  })
+  const document = buildCompatibility({
+    product: canonical,
+    packages: PUBLISHED_PACKAGES,
+    websites: ["oss", "cloud"],
+    schemas: schemas.catalog.schemas,
+  })
+  publishCompatibility({
+    document,
+    jsonPaths: [COMPATIBILITY_JSON, join(ROOT_DIR, "packages/web/public/compatibility.json")],
+    modulePath: COMPATIBILITY_MODULE,
+  })
+
+  const peer = stampPeerProduct(PEER_ROOT, canonical, [
+    { path: "package.json", kind: "package" },
+    { path: "packages/web/package.json", kind: "package" },
+    { path: "packages/portal/package.json", kind: "package" },
+    { path: "packages/shared/src/app-version.ts", kind: "app-version" },
+    { path: "packages/mobile/app.json", kind: "expo" },
+  ])
+  if (peer.length > 0) {
+    console.log(`Stamped Cloud product files to ${canonical}. Commit that checkout to keep both stacks aligned.`)
+  }
+  console.log(schemas.catalog.schemas.map((record) => `${record.id}@${record.version}`).join(", "))
   return collectVersionFilePaths()
 }
 
@@ -451,7 +560,7 @@ async function main(): Promise<void> {
     closeReadline()
 
     try {
-      versionFiles = applyReleaseVersion(newVersion)
+      versionFiles = applyReleaseVersion(newVersion, args.schemaBump)
       console.log("Updated root and publishable package.json versions and APP_VERSION.")
       runQualityGate()
       commitAndTagRelease(newVersion, versionFiles)

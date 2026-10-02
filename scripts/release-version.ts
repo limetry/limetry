@@ -52,6 +52,10 @@ export type ReleaseCliArgs = {
   syncOnly: boolean
   /** True when `--yes` / `-y` (non-interactive confirmations). */
   yes: boolean
+  /**
+   * Bump applied only to schemas whose content changed. Defaults to patch.
+   */
+  schemaBump: ReleaseBump
 }
 
 /**
@@ -289,7 +293,14 @@ function parseDeployFlag(argv: string[]): DeployTarget | null {
  */
 export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
   if (argv.includes("--help") || argv.includes("-h")) {
-    return { bump: null, deploy: null, yes: false, syncOnly: false, help: true }
+    return {
+      bump: null,
+      deploy: null,
+      yes: false,
+      syncOnly: false,
+      help: true,
+      schemaBump: "patch",
+    }
   }
 
   const yes = argv.includes("--yes") || argv.includes("-y")
@@ -311,7 +322,27 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
     yes,
     syncOnly,
     help: false,
+    schemaBump: parseSchemaBump(argv),
   }
+}
+
+/**
+ * Reads `--schema-bump=patch|minor|major`.
+ *
+ * @param argv - CLI arguments.
+ * @returns Schema bump, defaulting to patch.
+ * @throws Error When the flag value is not a bump kind.
+ */
+function parseSchemaBump(argv: string[]): ReleaseBump {
+  const flag = argv.find((arg) => arg.startsWith("--schema-bump="))
+  if (!flag) {
+    return "patch"
+  }
+  const value = flag.slice("--schema-bump=".length).trim().toLowerCase()
+  if (value === "patch" || value === "minor" || value === "major") {
+    return value
+  }
+  throw new Error("Pass --schema-bump=patch, --schema-bump=minor, or --schema-bump=major.")
 }
 
 /**
@@ -322,6 +353,5 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
  * @throws Error When `version` is unsupported (via {@link parseVersion}).
  */
 export function formatAppVersionSource(version: string): string {
-  parseVersion(version)
-  return `export const APP_VERSION = "${version}"\n`
+  return `export const APP_VERSION = "${canonicalizeVersion(version)}"\n`
 }
