@@ -40,5 +40,6 @@ config:
   cloudflare:apiToken:
     secure: AAABACE8F3qCeR1WFpVYJLxhBZWFE5foUwt3NqAIS0KEdM5BVA2xzSFZzwNgdlragP/6XL07wromXOiNzs49Tp5Y9N35K1vF
   limetry-oss:sentryDsn: https://fdb6048fa0856c915134b3433a1ad6ab@o4510920491204608.ingest.us.sentry.io/4511904213762048
-  limetry-oss:posthogPublicProjectToken: phc_sm4qkUubCdLHrzucsoDfuHD2pZBWNUvz7sfgq5gSroc
+  limetry-oss:posthogPublicProjectToken:
+    secure: AAABAA9wrayFCf0+8cm2LdMuccCabKEX1lyNYfPJkuRoPmZg26/B8/X/fOFY+k7X05dXxvko8hgTBalBhgLiWWYpWohNaND8y4xbolMjbg==
   limetry-oss:posthogHost: https://us.i.posthog.com
