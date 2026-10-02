@@ -1,6 +1,6 @@
 {
   "name": "@limetry/cli",
-  "version": "1.2.45",
+  "version": "1.2.46",
   "description": "CLI for Limetry agent action governance — setup, policy apply, eval, and audit",
   "license": "MIT",
   "type": "module",
