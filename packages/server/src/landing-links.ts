@@ -11,9 +11,19 @@
 export const CANONICAL_WEB_ORIGIN = "https://limetry.org"
 
 /**
+ * Canonical Limetry Cloud origin used by the shared site footer.
+ */
+export const CANONICAL_APP_ORIGIN = "https://app.limetry.com"
+
+/**
  * Local marketing site origin used when not in a deployed runtime.
  */
 export const LOCAL_WEB_ORIGIN = "http://localhost:3800"
+
+/**
+ * Local Limetry Cloud origin used when not in a deployed runtime.
+ */
+export const LOCAL_APP_ORIGIN = "http://localhost:3830"
 
 /**
  * Strips a trailing slash from an origin URL.
@@ -59,6 +69,24 @@ export function resolveLandingWebOrigin(
 }
 
 /**
+ * Resolves the Limetry Cloud origin for the shared site footer.
+ *
+ * Priority: `NEXT_PUBLIC_APP_URL` → canonical / local.
+ *
+ * @param source - Process env bag; defaults to `process.env`.
+ * @returns Absolute origin without a trailing slash.
+ */
+export function resolveLandingAppOrigin(
+  source: NodeJS.ProcessEnv = process.env,
+): string {
+  const explicit = source.NEXT_PUBLIC_APP_URL
+  if (explicit && explicit.trim().length > 0) {
+    return trimOrigin(explicit.trim())
+  }
+  return isDeployedRuntime(source) ? CANONICAL_APP_ORIGIN : LOCAL_APP_ORIGIN
+}
+
+/**
  * Builds the quick-start docs URL for the API landing page.
  *
  * @param webOrigin - Absolute marketing origin from {@link resolveLandingWebOrigin}.
@@ -69,18 +97,21 @@ export function docsQuickStartUrl(webOrigin: string): string {
 }
 
 /**
- * Substitutes landing-page placeholders (`__APP_VERSION__`, `__WEB_ORIGIN__`).
+ * Substitutes landing-page placeholders (`__APP_VERSION__`, `__WEB_ORIGIN__`, `__APP_ORIGIN__`, `__YEAR__`).
  *
  * @param html - Raw `public/index.html` contents.
- * @param input - Version and marketing origin for substitution.
+ * @param input - Version and marketing origins for substitution.
  * @returns HTML ready to send to the client.
  */
 export function renderLandingHtml(
   html: string,
-  input: { appVersion: string, webOrigin: string },
+  input: { appVersion: string, appOrigin?: string, webOrigin: string },
 ): string {
   const origin = trimOrigin(input.webOrigin)
+  const appOrigin = trimOrigin(input.appOrigin ?? resolveLandingAppOrigin())
   return html
     .replaceAll("__APP_VERSION__", input.appVersion)
     .replaceAll("__WEB_ORIGIN__", origin)
+    .replaceAll("__APP_ORIGIN__", appOrigin)
+    .replaceAll("__YEAR__", String(new Date().getFullYear()))
 }
