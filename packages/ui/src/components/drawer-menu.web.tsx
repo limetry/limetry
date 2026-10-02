@@ -9,7 +9,7 @@
 "use client"
 
 import type { JSX } from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { cn } from "../lib/cn"
 import {
@@ -32,12 +32,6 @@ export type { DrawerLinkProps, DrawerMenuProps, NavItem } from "./drawer-menu.ty
  * Default pixel offset below a sticky site header on web.
  */
 const DEFAULT_TOP_OFFSET = 64
-
-/**
- * Docs sidebar width used as the drawer floor on larger phones / small tablets.
- * Matches fumadocs `--fd-sidebar-width: 286px`.
- */
-const DOCS_SIDEBAR_WIDTH_CLASS = "sm:w-[286px]"
 
 /**
  * Props for a single recursive drawer row.
@@ -221,6 +215,38 @@ export function DrawerMenu({
 }: DrawerMenuProps): JSX.Element {
   const activeHref = findActiveNavHref(pathname, items)
 
+  /**
+   * Keeps a sideways swipe from moving the page while the drawer is open.
+   */
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const html = document.documentElement
+    const previousOverflow = html.style.overflowX
+    const previousOverscroll = html.style.overscrollBehaviorX
+    const previousTouchAction = html.style.touchAction
+    html.style.overflowX = "clip"
+    html.style.overscrollBehaviorX = "none"
+    html.style.touchAction = "pan-y"
+    const blockHorizontalScroll = (event: WheelEvent): void => {
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) {
+        return
+      }
+      event.preventDefault()
+      window.scrollTo({ left: 0 })
+    }
+    window.scrollTo({ left: 0 })
+    window.addEventListener("wheel", blockHorizontalScroll, { passive: false })
+    return () => {
+      window.removeEventListener("wheel", blockHorizontalScroll)
+      html.style.overflowX = previousOverflow
+      html.style.overscrollBehaviorX = previousOverscroll
+      html.style.touchAction = previousTouchAction
+      window.scrollTo({ left: 0 })
+    }
+  }, [open])
+
   return (
     <div
       className="limetry-mobile-drawer pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-end overflow-hidden"
@@ -230,8 +256,7 @@ export function DrawerMenu({
       <nav
         inert={!open}
         className={cn(
-          "pointer-events-auto flex h-full flex-col items-stretch gap-1 overflow-y-auto border-l border-slate-200 bg-white p-4 shadow-xl transition-transform duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900",
-          DOCS_SIDEBAR_WIDTH_CLASS,
+          "pointer-events-auto flex h-full w-72 max-w-[85vw] shrink-0 flex-col items-stretch gap-1 overflow-y-auto overscroll-y-contain border-l border-slate-200 bg-white p-4 shadow-xl transition-transform duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900",
           open ? "translate-x-0" : "translate-x-full",
           className,
         )}
