@@ -16,6 +16,12 @@ import readline from "node:readline"
 import { fileURLToPath } from "node:url"
 
 import {
+  packagePublishTag,
+  parsePublishSelection,
+  PUBLISHABLE_PACKAGES,
+  type PublishablePackage,
+} from "./publish-targets.js"
+import {
   computeNextVersion,
   type DeployTarget,
   deployTargetFromChoice,
@@ -58,11 +64,14 @@ function printHelp(): void {
   yarn release --minor --yes
   yarn release --major --yes
   yarn release --deploy=skip   Skip post-release deploy
+  yarn publish:sdk             Trigger npm publishing for a pushed release commit
+  yarn publish:all             Trigger every package's npm publish workflow
   yarn sync-version            Re-stamp APP_VERSION from root (no bump)
 
 Bumps the root package.json version only (workspace package.jsons stay
 unversioned), stamps packages/sdk APP_VERSION, runs a quality gate, then
-commits and tags locally.
+commits and tags locally. Interactive releases can also trigger selected npm
+publish workflows; --yes skips package publishing.
 
 AWS: runs Pulumi before push; failed deploys roll back the local commit/tag.
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
@@ -261,9 +270,37 @@ function commitAndTagRelease(version: string, versionFiles: string[]): void {
  * @returns Nothing.
  * @throws Error When the push fails.
  */
-function pushRelease(branch: string, version: string): void {
+function pushRelease(
+  branch: string,
+  version: string,
+  publishPackages: PublishablePackage[] = [],
+): void {
   console.log("Pushing commit and tag...")
-  runGit(["push", "--atomic", "origin", branch, `v${version}`])
+  const publishTagRefs = publishPackages.map((packageName) => {
+    const tag = packagePublishTag(packageName, version)
+    return `HEAD:refs/tags/${tag}`
+  })
+  runGit(["push", "--atomic", "origin", branch, `v${version}`, ...publishTagRefs])
+}
+
+/**
+ * Prevents a requested package publish when its immutable workflow tag exists.
+ *
+ * @param version - Root release version.
+ * @param publishPackages - Selected package keys.
+ * @returns Nothing.
+ * @throws If any selected package's tag already exists on origin.
+ */
+function assertPublishTagsAvailable(
+  version: string,
+  publishPackages: PublishablePackage[],
+): void {
+  for (const packageName of publishPackages) {
+    const tag = packagePublishTag(packageName, version)
+    if (runGit(["ls-remote", "--tags", "origin", `refs/tags/${tag}`])) {
+      throw new Error(`Publish tag ${tag} already exists; npm versions cannot be republished.`)
+    }
+  }
 }
 
 /**
@@ -323,6 +360,22 @@ async function promptDeployTarget(
     throw new Error("Invalid deploy choice")
   }
   return deployTarget
+}
+
+/**
+ * Prompts for npm packages to publish via their tag-triggered GitHub workflows.
+ *
+ * @param question - Readline question helper returning the raw answer.
+ * @returns Selected package keys.
+ * @throws If a package key is unknown.
+ */
+async function promptPublishPackages(
+  question: (query: string) => Promise<string>,
+): Promise<PublishablePackage[]> {
+  console.log("Select npm packages to publish (GitHub Actions):")
+  console.log(`   ${PUBLISHABLE_PACKAGES.join(", ")}`)
+  console.log("   Enter comma-separated package keys, all, or leave blank to skip.")
+  return parsePublishSelection(await question("Packages to publish [none]: "))
 }
 
 /**
@@ -434,6 +487,8 @@ async function main(): Promise<void> {
     let versionFiles: string[] = trackedPaths
     const deployTarget = args.deploy
       ?? (args.yes ? "aws" : await promptDeployTarget(question))
+    const publishPackages = args.yes ? [] : await promptPublishPackages(question)
+    assertPublishTagsAvailable(newVersion, publishPackages)
 
     closeReadline()
 
@@ -443,15 +498,18 @@ async function main(): Promise<void> {
       runQualityGate()
       commitAndTagRelease(newVersion, versionFiles)
       committed = true
+      if (publishPackages.length > 0) {
+        console.log(`npm publish workflows selected: ${publishPackages.join(", ")}`)
+      }
       if (deployTarget === "aws") {
         runAwsDeploy()
-        pushRelease(currentBranch, newVersion)
+        pushRelease(currentBranch, newVersion, publishPackages)
         pushed = true
         console.log("")
         console.log(`✨ Successfully released version ${newVersion}.`)
         console.log("🚀 Tag pushed after successful AWS (Pulumi) deploy.")
       } else if (deployTarget === "vercel") {
-        pushRelease(currentBranch, newVersion)
+        pushRelease(currentBranch, newVersion, publishPackages)
         pushed = true
         const sha = runGit(["rev-parse", "HEAD"])
         await watchVercelCommit({ sha })
@@ -460,7 +518,7 @@ async function main(): Promise<void> {
         console.log("🚀 GitHub→Vercel production deploys READY for this commit.")
       } else {
         console.log("⏭️  Skipping deploy.")
-        pushRelease(currentBranch, newVersion)
+        pushRelease(currentBranch, newVersion, publishPackages)
         pushed = true
         console.log("")
         console.log(`✨ Successfully released version ${newVersion}.`)

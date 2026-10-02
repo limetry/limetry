@@ -18,7 +18,7 @@ channel as "available" when it actually works today.
 | Channel | Status | Notes |
 | --- | --- | --- |
 | Source checkout (all platforms) | **Available** | Reference path; always works |
-| npm / npx | **Ready to publish** | Release workflows in `.github/workflows/publish-*.yml`; live after the first `cli-v*` / `sdk-v*` / `mcp-v*` tags |
+| npm / npx | **Ready to publish** | Release workflows in `.github/workflows/publish-*.yml`; triggered by package tags such as `sdk-v1.2.041` |
 | Docker (server) | **Available** | `packages/server/Dockerfile` |
 | Homebrew (macOS / Linuxbrew) | Planned — next | Formula wrapping the npm package or release tarball |
 | Standalone binaries (GitHub Releases) | Planned — next | Node SEA multi-arch builds |
@@ -77,30 +77,36 @@ The CLI and SDK are not mobile apps. From a phone or tablet you can:
 - On Android, run the CLI under [Termux](https://termux.dev/) with Node.js 20+ (community-supported,
   not part of CI).
 
-## npm (0.x publish)
+## npm publishing
 
-Packages are publish-ready at version `0.1.0` with `publishConfig.access=public`:
+The public npm packages are configured with `publishConfig.access=public`:
 
-- `@limetry/sdk`
-- `@limetry/cli`
-- `@limetry/mcp`
+- `@limetry/sdk` (`yarn publish:sdk`)
+- `@limetry/cli` (`yarn publish:cli`)
+- `@limetry/mcp` (`yarn publish:mcp`)
+- `@limetry/preflight` (`yarn publish:preflight`)
+- `@limetry/ci` (`yarn publish:ci`)
+- `@limetry/shopify` (`yarn publish:shopify`)
+- `@limetry/sql` (`yarn publish:sql`)
+- `@limetry/ui` (`yarn publish:ui`)
 
 ### Publish from a clean checkout (maintainers)
 
-Requires npm auth (`npm login` or `NPM_TOKEN`) with publish rights to the `@limetry` scope:
+Requires a clean `main` or `master` checkout pushed to `origin`. Configure the
+GitHub Actions secret `NPM_TOKEN` with publish rights to the `@limetry` scope.
+The root `yarn release` flow prompts for package keys (or `all`); alternatively,
+run `yarn publish:<package>` after a release has been pushed, or `yarn publish:all`.
+These commands push immutable `<package>-v<root-version>` tags to trigger GitHub
+Actions; they do not publish directly from the local machine.
 
 ```bash
-yarn install
-yarn build:sdk && yarn build:cli && yarn workspace @limetry/mcp build
-
-# Prefer Yarn so workspace:^ dependencies are rewritten for the registry
-yarn workspace @limetry/sdk npm publish --access public
-yarn workspace @limetry/cli npm publish --access public
-yarn workspace @limetry/mcp npm publish --access public
+yarn publish:sdk
+yarn publish:all
 ```
 
-Tag-driven GitHub Actions also exist under `.github/workflows/publish-*.yml` (tags like `sdk-v0.1.0`,
-`cli-v0.1.0`, `mcp-v0.1.0`).
+The workflows build and test packages, stamp each manifest from the root release
+version, then publish with npm provenance. Root patch versions are zero-padded
+(for example `1.2.041`); manifests are normalized to valid npm semver (`1.2.41`).
 
 ### Install once published
 
@@ -134,8 +140,8 @@ secrets — see [packages/infra/README.md](packages/infra/README.md).
 
 ## Distribution Roadmap
 
-1. **npm publish** (`@limetry/sdk`, `@limetry/cli`, `@limetry/mcp`) — workflows are in place;
-   awaiting first release tags.
+1. **npm publish** (`@limetry/sdk`, `@limetry/cli`, `@limetry/mcp`, `@limetry/preflight`,
+  `@limetry/ci`, `@limetry/shopify`, `@limetry/sql`, `@limetry/ui`) — workflows are in place.
 2. **GitHub Release binaries** — self-contained CLI executables (macOS arm64/x64, Linux arm64/x64,
    Windows x64) built with Node SEA.
 3. **Homebrew** — `brew install limetrydev/tap/limetry`, wrapping the release artifacts.
