@@ -97,21 +97,51 @@ export function docsQuickStartUrl(webOrigin: string): string {
 }
 
 /**
+ * True when Cloud links should stay on the API landing page.
+ *
+ * @param source - Process env. Defaults to `process.env`.
+ * @returns Whether `NEXT_PUBLIC_LAUNCHING_SOON` is exactly `"true"`.
+ */
+export function isLandingLaunchOpen(source: NodeJS.ProcessEnv = process.env): boolean {
+  return source.NEXT_PUBLIC_LAUNCHING_SOON === "true"
+}
+
+/**
+ * Removes Cloud CTA and footer blocks while launch is closed.
+ *
+ * @param html - Landing HTML that may contain `launching-soon:cloud` markers.
+ * @param source - Process env used to read the launch flag.
+ * @returns HTML with those blocks removed when launch is closed.
+ */
+export function stripHiddenLaunchBlocks(
+  html: string,
+  source: NodeJS.ProcessEnv = process.env,
+): string {
+  if (isLandingLaunchOpen(source)) {
+    return html
+  }
+  return html.replace(/<!-- launching-soon:cloud -->[\s\S]*?<!-- \/launching-soon:cloud -->/g, "")
+}
+
+/**
  * Substitutes landing-page placeholders (`__APP_VERSION__`, `__WEB_ORIGIN__`, `__APP_ORIGIN__`, `__YEAR__`).
  *
  * @param html - Raw `public/index.html` contents.
  * @param input - Version and marketing origins for substitution.
+ * @param source - Process env used for the launch flag.
  * @returns HTML ready to send to the client.
  */
 export function renderLandingHtml(
   html: string,
   input: { appVersion: string, appOrigin?: string, webOrigin: string },
+  source: NodeJS.ProcessEnv = process.env,
 ): string {
   const origin = trimOrigin(input.webOrigin)
-  const appOrigin = trimOrigin(input.appOrigin ?? resolveLandingAppOrigin())
-  return html
+  const appOrigin = trimOrigin(input.appOrigin ?? resolveLandingAppOrigin(source))
+  const rendered = stripHiddenLaunchBlocks(html, source)
     .replaceAll("__APP_VERSION__", input.appVersion)
     .replaceAll("__WEB_ORIGIN__", origin)
     .replaceAll("__APP_ORIGIN__", appOrigin)
     .replaceAll("__YEAR__", String(new Date().getFullYear()))
+  return rendered
 }

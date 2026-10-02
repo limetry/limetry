@@ -82,11 +82,15 @@ const config: NextConfig = {
             destination: "/docs/introduction",
             permanent: false,
           },
-          {
-            source: "/pricing",
-            destination: process.env.NEXT_PUBLIC_APP_URL || "https://app.limetry.com",
-            permanent: true,
-          },
+          ...(process.env.NEXT_PUBLIC_LAUNCHING_SOON === "true"
+            ? [
+              {
+                source: "/pricing",
+                destination: process.env.NEXT_PUBLIC_APP_URL || "https://app.limetry.com",
+                permanent: false,
+              },
+            ]
+            : []),
         ]
       },
     }),

@@ -9,6 +9,7 @@
 
 import { useEffect } from "react"
 
+import { isLaunchOpen } from "@/lib/launching-soon"
 import { siteUrls } from "@/lib/site-urls"
 
 /**
@@ -18,8 +19,16 @@ import { siteUrls } from "@/lib/site-urls"
  */
 export default function PricingRedirectPage(): React.JSX.Element {
   useEffect(() => {
-    window.location.replace(siteUrls.app)
+    window.location.replace(isLaunchOpen() ? siteUrls.app : "/")
   }, [])
+
+  if (!isLaunchOpen()) {
+    return (
+      <main className="mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-sm text-muted-foreground">Returning home…</p>
+      </main>
+    )
+  }
 
   return (
     <main className="mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
