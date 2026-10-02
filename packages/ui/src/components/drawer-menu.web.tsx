@@ -34,6 +34,68 @@ export type { DrawerLinkProps, DrawerMenuProps, NavItem } from "./drawer-menu.ty
 const DEFAULT_TOP_OFFSET = 64
 
 /**
+ * Page-root styles this drawer toggles while it is open.
+ */
+type PageScrollStyle = {
+  overflowX: string
+  overscrollBehaviorX: string
+  touchAction: string
+}
+
+/**
+ * Horizontal wheel payload. Kept local so it does not use the DOM `WheelEvent`.
+ */
+type HorizontalWheel = {
+  deltaX: number
+  deltaY: number
+  preventDefault: () => void
+}
+
+/**
+ * Browser host used to lock sideways scrolling. The UI typecheck has no DOM lib.
+ */
+type BrowserHost = {
+  document: {
+    documentElement: {
+      style: PageScrollStyle
+    }
+  }
+  scrollTo: (options: { left: number }) => void
+  addEventListener: (
+    type: "wheel",
+    listener: (event: HorizontalWheel) => void,
+    options: { passive: boolean },
+  ) => void
+  removeEventListener: (
+    type: "wheel",
+    listener: (event: HorizontalWheel) => void,
+  ) => void
+}
+
+/**
+ * Reads browser globals when this file runs in a document.
+ *
+ * @returns The host, or null outside a browser.
+ */
+function readBrowserHost(): BrowserHost | null {
+  const host = globalThis as {
+    document?: BrowserHost["document"]
+    scrollTo?: BrowserHost["scrollTo"]
+    addEventListener?: BrowserHost["addEventListener"]
+    removeEventListener?: BrowserHost["removeEventListener"]
+  }
+  if (
+    !host.document
+    || typeof host.scrollTo !== "function"
+    || typeof host.addEventListener !== "function"
+    || typeof host.removeEventListener !== "function"
+  ) {
+    return null
+  }
+  return host as BrowserHost
+}
+
+/**
  * Props for a single recursive drawer row.
  */
 type DrawerItemProps = {
@@ -222,28 +284,32 @@ export function DrawerMenu({
     if (!open) {
       return
     }
-    const html = document.documentElement
+    const host = readBrowserHost()
+    if (!host) {
+      return
+    }
+    const html = host.document.documentElement
     const previousOverflow = html.style.overflowX
     const previousOverscroll = html.style.overscrollBehaviorX
     const previousTouchAction = html.style.touchAction
     html.style.overflowX = "clip"
     html.style.overscrollBehaviorX = "none"
     html.style.touchAction = "pan-y"
-    const blockHorizontalScroll = (event: WheelEvent): void => {
+    const blockHorizontalScroll = (event: HorizontalWheel): void => {
       if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) {
         return
       }
       event.preventDefault()
-      window.scrollTo({ left: 0 })
+      host.scrollTo({ left: 0 })
     }
-    window.scrollTo({ left: 0 })
-    window.addEventListener("wheel", blockHorizontalScroll, { passive: false })
+    host.scrollTo({ left: 0 })
+    host.addEventListener("wheel", blockHorizontalScroll, { passive: false })
     return () => {
-      window.removeEventListener("wheel", blockHorizontalScroll)
+      host.removeEventListener("wheel", blockHorizontalScroll)
       html.style.overflowX = previousOverflow
       html.style.overscrollBehaviorX = previousOverscroll
       html.style.touchAction = previousTouchAction
-      window.scrollTo({ left: 0 })
+      host.scrollTo({ left: 0 })
     }
   }, [open])
 
