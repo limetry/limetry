@@ -133,7 +133,8 @@ release tag triggers npm publishing for all public packages at the same
 version. npm publish rewrites workspace: ranges while packing and restores
 the manifests afterward.
 
-AWS: runs Pulumi before push; failed deploys roll back the local commit/tag.
+AWS: runs Pulumi against the prod stack (limetry.org) before push, ignoring the
+locally selected stack. Failed deploys roll back the local commit/tag.
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
 that commit SHA until READY. Failed Vercel builds cannot un-push; fix forward
 or revert. Use yarn deploy:vercel only as a CLI escape hatch.`)
@@ -494,16 +495,30 @@ async function promptDeployTarget(
 }
 
 /**
- * Runs `yarn deploy:infra` (Pulumi) for the AWS release path.
+ * Pulumi stack that serves the public site (`limetry.org`).
+ * Releases ignore whichever stack happens to be selected locally.
+ */
+const RELEASE_PULUMI_STACK = "prod"
+
+/**
+ * Runs the production Pulumi update for a release.
  *
  * @returns Nothing.
- * @throws Error When deploy fails.
+ * @throws Error When typecheck or `pulumi up` fails.
  */
 function runAwsDeploy(): void {
   console.log("")
   console.log("▶ AWS deploy (Pulumi)")
-  console.log("   Running yarn deploy:infra → pulumi up --yes")
-  runYarn(["deploy:infra"])
+  console.log(`   Running yarn typecheck:infra && pulumi up --yes --stack ${RELEASE_PULUMI_STACK}`)
+  runYarn(["typecheck:infra"])
+  const result = spawnSync("pulumi", ["up", "--yes", "--stack", RELEASE_PULUMI_STACK], {
+    cwd: join(ROOT_DIR, "packages/infra"),
+    stdio: "inherit",
+    env: process.env,
+  })
+  if (result.status !== 0) {
+    throw new Error(`pulumi up --stack ${RELEASE_PULUMI_STACK} failed (exit ${result.status ?? 1})`)
+  }
   console.log("✨ AWS deploy succeeded.")
 }
 
