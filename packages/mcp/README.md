@@ -5,8 +5,8 @@ list privacy-safe audit events, and upsert action policies.
 
 ## Quickstart
 
-1. Run a Limetry governance server (`yarn dev:server` from the monorepo root).
-2. Point the MCP host at this package with `LIMETRY_BEARER_TOKEN` and `LIMETRY_BASE_URL`.
+1. Run `npx -y @limetry/mcp` from your MCP host configuration.
+2. Point the MCP host at the published package with `LIMETRY_API_KEY` and `LIMETRY_BASE_URL`.
 3. Ask the agent to call `limetry_evaluate` before irreversible tool calls; enforce deny in the loop.
 4. Call `limetry_record_action` after execute/skip/block.
 
@@ -27,7 +27,7 @@ list privacy-safe audit events, and upsert action policies.
 
 ## Run from source
 
-`@limetry/mcp` may not be published to npm yet. From a checkout:
+For local development or unreleased changes, build from a checkout:
 
 ```bash
 yarn build:sdk && yarn workspace @limetry/mcp build
@@ -51,4 +51,4 @@ Cursor / Claude config example:
 }
 ```
 
-When the package is published, `npx -y @limetry/mcp` can replace the `node …/dist/index.js` command.
+For normal use, prefer the published `npx -y @limetry/mcp` command above.

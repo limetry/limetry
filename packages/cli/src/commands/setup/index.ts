@@ -119,7 +119,7 @@ export async function setupCommand(): Promise<void> {
   console.log(chalk.dim("  1. limetry policy apply --allow http_get --deny http_post --block-resource https://prod.example.com/*"))
   console.log(chalk.dim("  2. echo '{...ActionIntent...}' | limetry eval"))
   console.log(chalk.dim("  3. limetry audit tail"))
-  console.log(chalk.dim("  4. Or add MCP: npx @limetry/mcp with LIMETRY_BASE_URL + LIMETRY_API_KEY\n"))
+  console.log(chalk.dim("  4. Or add MCP: npx -y @limetry/mcp with LIMETRY_BASE_URL + LIMETRY_API_KEY\n"))
   console.log(chalk.dim("  Docs: https://limetry.org/docs/quick-start"))
   console.log()
 }

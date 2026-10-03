@@ -8,9 +8,9 @@ channel as "available" when it actually works today.
 
 | You are a… | Install this | How |
 | --- | --- | --- |
-| Agent developer | `@limetry/sdk` | From source today; npm once published |
-| Terminal user | `@limetry/cli` | From source today; npm/Homebrew planned |
-| MCP user (Claude/Cursor) | `@limetry/mcp` | From source today; `npx -y @limetry/mcp` once published |
+| Agent developer | `@limetry/sdk` | `npm install @limetry/sdk` |
+| Terminal user | `@limetry/cli` | `npm install -g @limetry/cli` |
+| MCP user (Claude/Cursor) | `@limetry/mcp` | `npx -y @limetry/mcp` |
 | Operator (self-hosting) | `@limetry/server` | From source or Docker (`packages/server/Dockerfile`) |
 
 ## Channel Status
@@ -18,7 +18,7 @@ channel as "available" when it actually works today.
 | Channel | Status | Notes |
 | --- | --- | --- |
 | Source checkout (all platforms) | **Available** | Reference path; always works |
-| npm / npx | **Ready to publish** | `.github/workflows/publish-npm.yml`, triggered by semver tags such as `v1.2.42` |
+| npm / npx | **Published** | Install published packages directly; releases use `.github/workflows/publish-npm.yml` |
 | Docker (server) | **Available** | `packages/server/Dockerfile` |
 | Homebrew (macOS / Linuxbrew) | Planned — next | Formula wrapping the npm package or release tarball |
 | Standalone binaries (GitHub Releases) | Planned — next | Node SEA multi-arch builds |
@@ -27,7 +27,27 @@ channel as "available" when it actually works today.
 | macOS DMG, Windows MSI, AppImage, Snap | Not planned | Limetry's CLI is a terminal tool; desktop-app installers do not fit. Package managers above cover every platform |
 | iOS / Android native apps | Not planned here | Use the web dashboard and HTTP API from mobile; native approval apps are part of the separate commercial offering |
 
-## Install from Source (All Platforms)
+## Install the published packages
+
+Use the package manager you prefer. The examples use npm; the equivalent Yarn
+or pnpm command is the same script with that tool name.
+
+```bash
+npm install -g @limetry/cli
+npm install @limetry/sdk
+npx -y @limetry/mcp
+```
+
+For an adapter, install only what you use:
+
+```bash
+npm install @limetry/ci @limetry/sql @limetry/shopify
+```
+
+## Build from Source (Secondary)
+
+Clone and build from source when developing Limetry itself, testing unreleased
+changes, or running a fully local governance server.
 
 ### Prerequisites
 
@@ -48,29 +68,15 @@ git clone https://github.com/limetrydev/limetry.git
 cd limetry
 ```
 
-Install and build with your chosen tool:
+Install and build with your chosen tool. Replace `npm` with the tool you prefer
+(`yarn` or `pnpm`) while keeping the same script names:
 
 ```bash
-# npm
 npm install
 npm run build:sdk
 npm run build:preflight
 npm run build:server
 npm run build:cli
-
-# Yarn Classic 1.x or Yarn Berry 4.x
-yarn install
-yarn build:sdk
-yarn build:preflight
-yarn build:server
-yarn build:cli
-
-# pnpm
-pnpm install
-pnpm build:sdk
-pnpm build:preflight
-pnpm build:server
-pnpm build:cli
 ```
 
 Run the CLI:
@@ -89,8 +95,7 @@ git clone https://github.com/limetrydev/limetry.git
 cd limetry
 ```
 
-Then use the equivalent install and build commands above with `npm`, `yarn`, or
-`pnpm`. For example:
+Then use the same scripts with the tool you prefer. For example:
 
 ```powershell
 npm install
@@ -127,12 +132,10 @@ Publishing configured for each package. Do not add an npm write token or
 publishes every package, whether its source changed or not.
 
 ```bash
-# npm
 npm run release
 
-# Yarn Classic, Yarn Berry, or pnpm
-yarn release
-pnpm release
+Use the package manager you prefer; the equivalent Yarn or pnpm release script
+works the same way.
 ```
 
 For a failed/partial publish, run **Actions → Build and publish all @limetry
@@ -164,18 +167,18 @@ can then enable **Require two-factor authentication and disallow tokens** in npm
 publishing access settings. Package metadata must retain the repository URL
 `https://github.com/limetry/limetry.git` for npm to validate the publisher.
 
-### Install once published
+### Install from npm
 
 ```bash
 npm install -g @limetry/cli
-npx @limetry/cli setup
+npx -y @limetry/cli setup
 
 npm install @limetry/sdk
 
 npx -y @limetry/mcp
 ```
 
-Until the packages resolve on the npm registry, use the source instructions above.
+Use the source instructions above only when you are developing the repository itself.
 
 ## Docker (Server)
 
@@ -196,12 +199,10 @@ secrets — see [packages/infra/README.md](packages/infra/README.md).
 
 ## Distribution Roadmap
 
-1. **npm publish** (`@limetry/sdk`, `@limetry/cli`, `@limetry/mcp`, `@limetry/preflight`,
-  `@limetry/ci`, `@limetry/shopify`, `@limetry/sql`, `@limetry/ui`) — workflows are in place.
-2. **GitHub Release binaries** — self-contained CLI executables (macOS arm64/x64, Linux arm64/x64,
+1. **GitHub Release binaries** — self-contained CLI executables (macOS arm64/x64, Linux arm64/x64,
    Windows x64) built with Node SEA.
-3. **Homebrew** — `brew install limetrydev/tap/limetry`, wrapping the release artifacts.
-4. **Windows package managers** — winget and Scoop manifests referencing the release binaries.
-5. **Linux packages** — deb/rpm via nfpm if operator demand warrants it.
+2. **Homebrew** — `brew install limetrydev/tap/limetry`, wrapping the release artifacts.
+3. **Windows package managers** — winget and Scoop manifests referencing the release binaries.
+4. **Linux packages** — deb/rpm via nfpm if operator demand warrants it.
 
 Each channel is added to this page — and only to this page — when it actually works.

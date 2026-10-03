@@ -6,18 +6,20 @@ description: Self-host the evaluation server, apply a policy, deny a production 
 Run this path against a **self-run Limetry node**. Point the CLI at your local
 API and use `LIMETRY_BEARER_TOKEN` (or scoped API tokens you issue on that node).
 
-## Install the toolchain
+## Install the published toolchain
 
-- Node.js ≥ 20 and npm 10+, Yarn Classic 1.x, Yarn Berry 4.x, or pnpm 9/10
-- A source checkout (or published packages once released)
+- Node.js ≥ 20 and a package manager you prefer
+- A self-run Limetry node, or Limetry Cloud
+
+For the CLI and MCP host, install the published packages:
 
 ```bash
-git clone https://github.com/limetry/limetry.git
-cd limetry
-npm install
-npm run build:server
-npm run build:cli
+npm install -g @limetry/cli
 ```
+
+Use the package manager you prefer; the equivalent Yarn or pnpm commands work
+the same way. To self-host the server, use the source checkout instructions in
+[Run the server yourself](/docs/server/self-hosting).
 
 <Steps>
 <Step title="Start the server">
@@ -53,7 +55,7 @@ curl -s http://localhost:3810/health
 Point the CLI at your self-run server:
 
 ```bash
-node packages/cli/dist/index.js setup
+limetry setup
 ```
 
 Enter `http://localhost:3810` and paste the same `LIMETRY_BEARER_TOKEN`.
@@ -61,7 +63,7 @@ Enter `http://localhost:3810` and paste the same `LIMETRY_BEARER_TOKEN`.
 Run doctor to confirm connectivity:
 
 ```bash
-node packages/cli/dist/index.js doctor
+limetry doctor
 ```
 
 </Step>
@@ -71,7 +73,7 @@ node packages/cli/dist/index.js doctor
 Deny `http_post` to a production URL pattern (allow GET for contrast):
 
 ```bash
-node packages/cli/dist/index.js policy apply \
+limetry policy apply \
   --allow http_get \
   --deny http_post \
   --block-resource "https://prod.example.com/*"
@@ -94,7 +96,7 @@ echo '{
   "agent_id": "demo_agent",
   "action_type": "http_post",
   "resource": "https://prod.example.com/api/deploy"
-}' | node packages/cli/dist/index.js eval
+}' | limetry eval
 ```
 
 Expect **DENY** with reasons referencing the blocked resource or denied action type.
@@ -106,7 +108,7 @@ Evaluate an allowed GET to the same host (adjust policy if needed) to see **ALLO
 <Step title="Tail the audit log">
 
 ```bash
-node packages/cli/dist/index.js audit tail --event-type policy.evaluated
+limetry audit tail --event-type policy.evaluated
 ```
 
 Look for `policy.evaluated` events with your agent id and decision outcome.
@@ -119,18 +121,12 @@ or record `details`. See [Minimize audit data](/docs/server/data-minimization).
 
 ## Connect Cursor MCP (optional)
 
-Build the MCP server and add to `.cursor/mcp.json`:
-
-```bash
-npm run build --workspace=@limetry/mcp
-```
-
 ```json
 {
   "mcpServers": {
     "limetry": {
-      "command": "node",
-      "args": ["/path/to/limetry/packages/mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@limetry/mcp"],
       "env": {
         "LIMETRY_API_KEY": "dev-local-bearer-token-min-32-chars",
         "LIMETRY_BASE_URL": "http://localhost:3810"

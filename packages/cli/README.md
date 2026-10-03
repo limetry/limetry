@@ -8,6 +8,9 @@ Command-line tool for Limetry agent action governance: setup, policy apply, eval
 npm install -g @limetry/cli
 ```
 
+Use the package manager you prefer; the equivalent Yarn or pnpm command works
+the same way.
+
 Requires Node.js 20 or newer. The `limetry` command is the package bin.
 
 ## Setup

@@ -82,42 +82,27 @@ Agent / SDK / MCP / adapter ──→ action intent
 
 ## Installation
 
-See [INSTALL.md](INSTALL.md) for the platform matrix.
+Published packages are the normal installation path. Use the package manager
+you prefer; these examples use npm.
 
 ```bash
-git clone https://github.com/limetry/limetry.git
-cd limetry
+npm install -g @limetry/cli
+npm install @limetry/sdk
+npx -y @limetry/mcp
 ```
 
-Install and build with one supported package manager:
+Use [INSTALL.md](INSTALL.md) for local source development, self-hosting, and
+the distribution matrix. For a source checkout, replace `npm` with `yarn` or
+`pnpm` for the same scripts.
 
 ```bash
-# npm
-npm install
 npm run build:sdk
 npm run build:preflight
 npm run build:server
 npm run build:cli
-
-# Yarn Classic 1.x or Yarn Berry 4.x
-yarn install
-yarn build:sdk
-yarn build:preflight
-yarn build:server
-yarn build:cli
-
-# pnpm
-pnpm install
-pnpm build:sdk
-pnpm build:preflight
-pnpm build:server
-pnpm build:cli
-
-cp .env.example .env
 ```
 
-Start the server with `npm run dev:server`, `yarn dev:server`, or
-`pnpm dev:server`.
+Start a locally built server with `npm run dev:server`.
 
 ## Quickstart
 

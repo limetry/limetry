@@ -8,6 +8,9 @@ TypeScript SDK for Limetry agent action governance. Evaluate an action before it
 npm install @limetry/sdk
 ```
 
+Use the package manager you prefer; the equivalent Yarn or pnpm command works
+the same way.
+
 Requires Node.js 20 or newer.
 
 ## Evaluate an action
