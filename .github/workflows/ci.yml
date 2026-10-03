@@ -80,7 +80,7 @@ jobs:
           node-version: "22"
           cache: yarn
       - run: yarn install --immutable
-      - run: yarn build:sdk && yarn build:server
+      - run: yarn build:sdk && yarn build:preflight && yarn build:server
       - name: Run critical-path coverage gates
         env:
           DATABASE_URL: postgresql://limetry:limetry@localhost:5432/limetry

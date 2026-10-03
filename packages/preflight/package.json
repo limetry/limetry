@@ -44,7 +44,7 @@
     "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
     "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "test": "vitest run --coverage",
-    "typecheck": "tsgo -p tsconfig.json --noEmit"
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "pino": "^10.3.1"

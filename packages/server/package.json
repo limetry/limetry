@@ -12,7 +12,7 @@
     "dev": "tsx watch src/index.ts",
     "test": "yarn sync:openapi && vitest run",
     "test:critical-coverage": "vitest run src/services/action-evaluator.test.ts src/services/decision-receipt.test.ts src/routes/actions.test.ts --coverage",
-    "typecheck": "tsgo -p tsconfig.json --noEmit"
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@codegenie/serverless-express": "^5.0.0",

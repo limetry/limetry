@@ -36,7 +36,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build SDK, server, CLI, and CI gate
-        run: yarn build:sdk && yarn build:server && yarn build:cli && yarn build:ci
+        run: yarn build:sdk && yarn build:preflight && yarn build:server && yarn build:cli && yarn build:ci
 
       - name: Start Limetry and apply ci-privilege policy
         id: boot
