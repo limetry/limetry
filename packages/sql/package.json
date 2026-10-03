@@ -1,6 +1,6 @@
 {
   "name": "@limetry/sql",
-  "version": "1.2.48",
+  "version": "1.2.49",
   "description": "Postgres/Supabase MCP write gate that evaluates SQL intents with Limetry",
   "license": "MIT",
   "type": "module",
@@ -30,7 +30,8 @@
   },
   "scripts": {
     "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
-    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
+    "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --coverage",
     "typecheck": "tsgo -p tsconfig.json --noEmit"

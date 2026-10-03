@@ -1,6 +1,6 @@
 {
   "name": "@limetry/sdk",
-  "version": "1.2.48",
+  "version": "1.2.49",
   "description": "TypeScript SDK for Limetry agent action governance and telemetry",
   "license": "MIT",
   "type": "module",
@@ -26,7 +26,8 @@
   },
   "scripts": {
     "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
-    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
+    "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:critical-coverage": "vitest run src/privacy/redact.test.ts src/policy/slim-policy.test.ts --coverage",

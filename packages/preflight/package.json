@@ -1,6 +1,6 @@
 {
   "name": "@limetry/preflight",
-  "version": "1.2.48",
+  "version": "1.2.49",
   "description": "Startup preflight checks with secret masking, connectivity probes, and formatted listen URLs",
   "license": "MIT",
   "type": "module",
@@ -41,7 +41,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
     "prepack": "yarn build && node ../../scripts/rewrite-workspace-protocol.mjs prepare",
-    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
+    "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "test": "vitest run --coverage",
     "typecheck": "tsgo -p tsconfig.json --noEmit"
   },
