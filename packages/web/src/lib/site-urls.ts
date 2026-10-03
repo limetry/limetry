@@ -23,21 +23,6 @@ function trimTrailingSlash(value: string): string {
 }
 
 /**
- * Reads a public email from `process.env` with a fallback.
- *
- * @param name - Env var name.
- * @param fallback - Default address when unset.
- * @returns Trimmed email.
- */
-function publicEmail(name: string, fallback: string): string {
-  const raw = process.env[name]
-  if (!raw || raw.trim().length === 0) {
-    return fallback
-  }
-  return raw.trim()
-}
-
-/**
  * Picks env, canonical production, or local origin for client bundles.
  *
  * Dynamic `process.env[key]` lookups must not be used — Next will not inline them.
@@ -70,7 +55,7 @@ const LOCAL_APP = "http://localhost:3830"
 const LOCAL_API = "http://localhost:3810"
 
 /**
- * Client-inlined public URLs and contact emails for limetry.org.
+ * Client-inlined public URLs for limetry.org.
  */
 export const siteUrls = {
   web: clientSafeOrigin(
@@ -90,9 +75,11 @@ export const siteUrls = {
   ),
   github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/limetry"),
   discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/VxUWz7cZP"),
-  contactEmail: publicEmail("NEXT_PUBLIC_CONTACT_EMAIL", "hello@limetry.org"),
-  legalEmail: publicEmail("NEXT_PUBLIC_LEGAL_EMAIL", "legal@limetry.org"),
-  privacyEmail: publicEmail("NEXT_PUBLIC_PRIVACY_EMAIL", "privacy@limetry.org"),
+  contactUrl: clientSafeOrigin(
+    process.env.NEXT_PUBLIC_CONTACT_FORM_URL,
+    "https://app.limetry.com/contact",
+    `${LOCAL_APP}/contact`,
+  ),
 } as const
 
 /**
@@ -119,12 +106,3 @@ export function githubPath(path: string): string {
   return `${siteUrls.github}${normalized}`
 }
 
-/**
- * Builds a `mailto:` href.
- *
- * @param email - Email address.
- * @returns `mailto:` URL.
- */
-export function mailto(email: string): string {
-  return `mailto:${email}`
-}

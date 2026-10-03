@@ -8,7 +8,7 @@ import Link from "next/link"
 import { IconAccent } from "@/components/brand"
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
-import { mailto, siteUrls } from "@/lib/site-urls"
+import { siteUrls } from "@/lib/site-urls"
 
 /**
  * Terms of Service page SEO metadata.
@@ -80,10 +80,11 @@ export default function TermsPage(): React.JSX.Element {
 
             <h2>Contact</h2>
             <p>
-              Legal inquiries:{" "}
-              <Link href={mailto(siteUrls.legalEmail)} className="text-primary underline hover:no-underline">
-                {siteUrls.legalEmail}
+              For legal inquiries, please use the{" "}
+              <Link href={siteUrls.contactUrl} className="text-primary underline hover:no-underline">
+                contact form
               </Link>
+              .
             </p>
           </div>
         </article>

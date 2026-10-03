@@ -9,7 +9,6 @@ config:
   limetry-oss:buildArtifacts: "true"
   limetry-oss:cloudflareProxied: "false"
   limetry-oss:cloudflareZoneName: limetry.org
-  limetry-oss:contactEmail: hello@limetry.org
   limetry-oss:createHostedZone: "false"
   limetry-oss:defaultAuditMode: minimal
   limetry-oss:discordUrl: https://discord.gg/VxUWz7cZP
@@ -23,12 +22,10 @@ config:
   limetry-oss:isSsoEnabled: "false"
   limetry-oss:isCloudEnabled: "false"
   limetry-oss:launchingSoon: "false"
-  limetry-oss:legalEmail: legal@limetry.org
   limetry-oss:manageCloudflare: "true"
   limetry-oss:manageRoute53: "false"
   limetry-oss:notificationEmail: hello@limetry.org
   limetry-oss:portalHostname: dev.app.limetry.com
-  limetry-oss:privacyEmail: privacy@limetry.org
   limetry-oss:replayWindowMs: "300000"
   limetry-oss:serverArtifactPath: ../server/lambda-bundle
   limetry-oss:syncWebAssets: "true"

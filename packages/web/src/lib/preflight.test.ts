@@ -5,7 +5,7 @@ import { loadWebEnv } from "./env"
 import { collectWebEnvChecks, runWebPreflight } from "./preflight"
 
 describe("Limetry web preflight", () => {
-  it("reports public site URLs and emails without Clerk, Stripe, or API pings", async () => {
+  it("reports public site URLs and contact form without Clerk, Stripe, or API pings", async () => {
     const env = loadWebEnv({})
     const names = collectWebEnvChecks(env).map((check) => check.name)
     assert.deepEqual(names, [
@@ -14,9 +14,7 @@ describe("Limetry web preflight", () => {
       "NEXT_PUBLIC_API_URL",
       "NEXT_PUBLIC_GITHUB_URL",
       "NEXT_PUBLIC_DISCORD_URL",
-      "NEXT_PUBLIC_CONTACT_EMAIL",
-      "NEXT_PUBLIC_LEGAL_EMAIL",
-      "NEXT_PUBLIC_PRIVACY_EMAIL",
+      "NEXT_PUBLIC_CONTACT_FORM_URL",
     ])
     assert.equal(names.includes("CLERK_SECRET_KEY"), false)
     assert.equal(names.includes("DATABASE_URL"), false)
