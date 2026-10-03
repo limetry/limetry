@@ -76,7 +76,7 @@ export function RotatingHeroBlurb(): React.JSX.Element {
     >
       <h1
         aria-live="polite"
-        className="min-h-[8.5rem] overflow-hidden text-4xl font-black tracking-tight text-foreground sm:min-h-[7.5rem] sm:text-5xl lg:min-h-[9.5rem] lg:text-6xl"
+        className="min-h-34 overflow-hidden text-4xl font-black tracking-tight text-foreground sm:min-h-30 sm:text-5xl lg:min-h-38 lg:text-6xl"
       >
         <AnimatePresence mode="wait" custom={direction}>
           <motion.span
