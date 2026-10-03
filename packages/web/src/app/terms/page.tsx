@@ -28,7 +28,7 @@ export default function TermsPage(): React.JSX.Element {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="relative flex-1 overflow-hidden py-16 sm:py-24">
-        <IconAccent className="-right-40 top-16 h-[440px] w-[440px] opacity-[0.05] rotate-12" />
+        <IconAccent className="-right-40 top-16 h-110 w-110 opacity-[0.05] rotate-12" />
         <article className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary">Legal</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
