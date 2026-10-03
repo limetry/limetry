@@ -8,6 +8,7 @@ import {
   formatVersion,
   parseReleaseCliArgs,
   parseVersion,
+  planPeerFollowUp,
   planSharedRelease,
   releaseTypeFromChoice,
   setPackageVersionText,
@@ -104,35 +105,60 @@ describe("release-version", () => {
     expect(parseReleaseCliArgs(["--patch", "--yes"])).toEqual({
       bump: "patch",
       deploy: null,
+      deployOnly: null,
       yes: true,
       syncOnly: false,
       help: false,
+      peer: true,
       schemaBump: "patch",
     })
     expect(parseReleaseCliArgs(["--deploy=aws", "--schema-bump=minor"])).toEqual({
       bump: null,
       deploy: "aws",
+      deployOnly: null,
       yes: false,
       syncOnly: false,
       help: false,
+      peer: true,
       schemaBump: "minor",
     })
-    expect(parseReleaseCliArgs(["--vercel", "--yes"])).toEqual({
+    expect(parseReleaseCliArgs(["--vercel", "--yes", "--no-peer"])).toEqual({
       bump: null,
       deploy: "vercel",
+      deployOnly: null,
       yes: true,
       syncOnly: false,
       help: false,
+      peer: false,
       schemaBump: "patch",
     })
     expect(parseReleaseCliArgs(["--deploy", "skip"])).toEqual({
       bump: null,
       deploy: "skip",
+      deployOnly: null,
       yes: false,
       syncOnly: false,
       help: false,
+      peer: true,
       schemaBump: "patch",
     })
+    expect(parseReleaseCliArgs(["--deploy-only=aws"])).toEqual({
+      bump: null,
+      deploy: null,
+      deployOnly: "aws",
+      yes: false,
+      syncOnly: false,
+      help: false,
+      peer: true,
+      schemaBump: "patch",
+    })
+  })
+
+  it("releases an untagged sibling and only redeploys a tagged one", () => {
+    expect(planPeerFollowUp({ peerTagged: false, deploy: "aws" })).toBe("release")
+    expect(planPeerFollowUp({ peerTagged: false, deploy: "vercel" })).toBe("release")
+    expect(planPeerFollowUp({ peerTagged: true, deploy: "aws" })).toBe("deploy-aws")
+    expect(planPeerFollowUp({ peerTagged: true, deploy: "vercel" })).toBe("already-shipped")
   })
 
   it("maps deploy prompt choices", () => {

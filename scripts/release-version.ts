@@ -46,8 +46,18 @@ export type ReleaseCliArgs = {
   bump: ReleaseBump | null
   /** Explicit deploy target from flags, else `null` (prompt or default). */
   deploy: DeployTarget | null
+  /**
+   * When set, skip version planning and only deploy this checkout.
+   * Used by the sibling release so an already-tagged stack still gets Pulumi.
+   */
+  deployOnly: DeployTarget | null
   /** True when `--help` / `-h` was passed. */
   help: boolean
+  /**
+   * When true, this release also releases and deploys the sibling checkout.
+   * `--no-peer` sets this false so the sibling does not call back.
+   */
+  peer: boolean
   /** True when `--sync-only` (re-stamp without bumping). */
   syncOnly: boolean
   /** True when `--yes` / `-y` (non-interactive confirmations). */
@@ -230,6 +240,15 @@ export function compareVersions(left: string, right: string): number {
 export type SharedReleaseAction = "bump" | "adopt-peer" | "release-peer-first"
 
 /**
+ * What to do with the sibling checkout after this stack's own deploy.
+ *
+ * `release` runs the sibling's release script. `deploy-aws` only updates
+ * Pulumi prod when that version is already tagged. `already-shipped` means
+ * Vercel already deployed that tag.
+ */
+export type PeerFollowUp = "release" | "deploy-aws" | "already-shipped"
+
+/**
  * Version both checkouts should publish on this release.
  */
 export type SharedReleasePlan = {
@@ -282,6 +301,29 @@ export function planSharedRelease(input: {
     bumped: true,
     action: "bump",
   }
+}
+
+/**
+ * Chooses how the sibling checkout is shipped with this release.
+ *
+ * An untagged sibling gets its own release. A sibling already tagged at this
+ * version still receives a prod Pulumi update. Vercel already ran when that
+ * tag was pushed.
+ *
+ * @param input - Whether the sibling tag exists, and the deploy target in use.
+ * @returns Follow-up action for the sibling checkout.
+ */
+export function planPeerFollowUp(input: {
+  peerTagged: boolean
+  deploy: DeployTarget
+}): PeerFollowUp {
+  if (!input.peerTagged) {
+    return "release"
+  }
+  if (input.deploy === "aws") {
+    return "deploy-aws"
+  }
+  return "already-shipped"
 }
 
 /**
@@ -375,9 +417,11 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
     return {
       bump: null,
       deploy: null,
+      deployOnly: null,
       yes: false,
       syncOnly: false,
       help: true,
+      peer: true,
       schemaBump: "patch",
     }
   }
@@ -385,6 +429,8 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
   const yes = argv.includes("--yes") || argv.includes("-y")
   const syncOnly = argv.includes("--sync-only")
   const deploy = parseDeployFlag(argv)
+  const deployOnly = parseDeployOnly(argv)
+  const peer = !argv.includes("--no-peer")
   const bumpFlags = [
     argv.includes("--major") ? "major" : null,
     argv.includes("--minor") ? "minor" : null,
@@ -398,11 +444,35 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
   return {
     bump: bumpFlags[0] ?? null,
     deploy,
+    deployOnly,
     yes,
     syncOnly,
     help: false,
+    peer,
     schemaBump: parseSchemaBump(argv),
   }
+}
+
+/**
+ * Reads `--deploy-only=aws`, used when the sibling release only needs Pulumi.
+ *
+ * @param argv - CLI arguments.
+ * @returns `aws` when the flag is present, otherwise `null`.
+ * @throws Error When the flag value is not `aws`.
+ */
+function parseDeployOnly(argv: string[]): DeployTarget | null {
+  const inline = argv.find((arg) => arg.startsWith("--deploy-only="))
+  const spaced = argv.indexOf("--deploy-only")
+  if (!inline && spaced < 0) {
+    return null
+  }
+  const value = inline
+    ? inline.slice("--deploy-only=".length).trim().toLowerCase()
+    : (argv[spaced + 1] ?? "").trim().toLowerCase()
+  if (value === "aws") {
+    return "aws"
+  }
+  throw new Error("Pass --deploy-only=aws.")
 }
 
 /**

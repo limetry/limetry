@@ -22,6 +22,7 @@ import {
   formatAppVersionSource,
   isStableReleaseBranch,
   parseReleaseCliArgs,
+  planPeerFollowUp,
   planSharedRelease,
   PUBLISHABLE_WORKSPACES,
   type ReleaseBump,
@@ -117,6 +118,7 @@ function printHelp(): void {
   yarn release --minor --yes
   yarn release --major --yes
   yarn release --deploy=skip   Skip post-release deploy
+  yarn release --no-peer       Release and deploy this stack only
   yarn sync-version            Re-stamp product versions from root (no product bump)
   yarn sync-version --schema-bump=minor
                                Use when a changed schema is not a patch
@@ -125,13 +127,17 @@ Bumps the root package.json, the website package, and every publishable
 workspace package.json to the same semver, stamps packages/sdk APP_VERSION,
 and writes versions/compatibility.json. Schemas stay on their own semver
 starting at 1.0.0 and bump only when their contents change. When the Cloud
-checkout is beside this repo, its product version is stamped to match. A
-second release on the other stack deploys that same version.
+checkout is beside this repo, its product version is stamped to match.
 
 Then the release runs a quality gate, commits, and tags locally. Pushing the
 release tag triggers npm publishing for all public packages at the same
 version. npm publish rewrites workspace: ranges while packing and restores
 the manifests afterward.
+
+AWS and Vercel also release and deploy Limetry Cloud when that checkout is
+beside this repo. The Cloud script does its own stamp, commit, and prod
+deploy, then this repo pushes. --no-peer stays on this stack. A Cloud
+checkout already tagged at this version still gets a prod Pulumi update.
 
 AWS: runs Pulumi against the prod stack (limetry.org) before push, ignoring the
 locally selected stack. Failed deploys roll back the local commit/tag.
@@ -297,7 +303,7 @@ function applyReleaseVersion(version: string, schemaBump: ReleaseBump = "patch")
     { path: "packages/mobile/app.json", kind: "expo" },
   ])
   if (peer.length > 0) {
-    console.log(`Stamped Cloud product files to ${canonical}. Commit that checkout to keep both stacks aligned.`)
+    console.log(`Stamped Cloud product files to ${canonical}.`)
   }
   console.log(schemas.catalog.schemas.map((record) => `${record.id}@${record.version}`).join(", "))
   return collectVersionFilePaths()
@@ -523,6 +529,120 @@ function runAwsDeploy(): void {
 }
 
 /**
+ * Releases or deploys the sibling checkout at the same product version.
+ *
+ * The sibling runs its own script with `--no-peer`, so it cannot call back.
+ * An already-tagged sibling only receives a prod Pulumi update.
+ *
+ * @param deployTarget - Deploy selected for this release.
+ * @param version - Product version this release is publishing.
+ * @param schemaBump - Schema bump forwarded when the sibling still needs a release.
+ * @returns Nothing.
+ * @throws Error When the sibling checkout is missing or its command fails.
+ */
+function runPeerFollowUp(
+  deployTarget: DeployTarget,
+  version: string,
+  schemaBump: ReleaseBump,
+): void {
+  if (!existsSync(join(PEER_ROOT, "package.json"))) {
+    throw new Error(
+      `${PEER_NAME} is not checked out at ${PEER_ROOT}. Clone it beside this repo so one release can deploy both stacks.`,
+    )
+  }
+
+  const followUp = planPeerFollowUp({
+    peerTagged: gitHasTag(PEER_ROOT, version),
+    deploy: deployTarget,
+  })
+  if (followUp === "already-shipped") {
+    console.log(`${PEER_NAME} is already tagged v${version}. Its Vercel deploy ran with that tag.`)
+    return
+  }
+
+  const args = followUp === "deploy-aws"
+    ? ["tsx", "scripts/sync-version.ts", "--deploy-only=aws"]
+    : [
+      "tsx",
+      "scripts/sync-version.ts",
+      "--yes",
+      `--deploy=${deployTarget}`,
+      "--no-peer",
+      `--schema-bump=${schemaBump}`,
+    ]
+  console.log("")
+  console.log(followUp === "deploy-aws"
+    ? `▶ ${PEER_NAME} prod deploy`
+    : `▶ ${PEER_NAME} release and deploy`)
+  const result = spawnSync("yarn", args, {
+    cwd: PEER_ROOT,
+    stdio: "inherit",
+    env: process.env,
+  })
+  if (result.status !== 0) {
+    const label = followUp === "deploy-aws" ? "deploy" : "release"
+    throw new Error(`${PEER_NAME} ${label} failed (exit ${result.status ?? 1})`)
+  }
+}
+
+/**
+ * Releases or deploys the sibling checkout at the same product version.
+ *
+ * The sibling runs its own script with `--no-peer`, so it cannot call back.
+ * An already-tagged sibling only receives `--deploy-only=aws`.
+ *
+ * @param deployTarget - Deploy selected for this release.
+ * @param version - Product version being published.
+ * @param schemaBump - Schema bump forwarded when the sibling still needs a release.
+ * @returns Nothing.
+ * @throws Error When the sibling checkout is missing or its command fails.
+ */
+function runPeerFollowUp(
+  deployTarget: DeployTarget,
+  version: string,
+  schemaBump: ReleaseBump,
+): void {
+  if (!existsSync(join(PEER_ROOT, "package.json"))) {
+    throw new Error(
+      `${PEER_NAME} is not checked out at ${PEER_ROOT}. Clone it beside this repo so one release can deploy both stacks.`,
+    )
+  }
+
+  const followUp = planPeerFollowUp({
+    peerTagged: gitHasTag(PEER_ROOT, version),
+    deploy: deployTarget,
+  })
+  if (followUp === "already-shipped") {
+    console.log(`${PEER_NAME} is already tagged v${version}. Its Vercel deploy ran with that tag.`)
+    return
+  }
+
+  const args = followUp === "deploy-aws"
+    ? ["tsx", "scripts/sync-version.ts", "--deploy-only=aws"]
+    : [
+      "tsx",
+      "scripts/sync-version.ts",
+      "--yes",
+      `--deploy=${deployTarget}`,
+      "--no-peer",
+      `--schema-bump=${schemaBump}`,
+    ]
+  console.log("")
+  console.log(followUp === "deploy-aws"
+    ? `▶ ${PEER_NAME} prod deploy`
+    : `▶ ${PEER_NAME} release and deploy`)
+  const result = spawnSync("yarn", args, {
+    cwd: PEER_ROOT,
+    stdio: "inherit",
+    env: process.env,
+  })
+  if (result.status !== 0) {
+    const action = followUp === "deploy-aws" ? "deploy" : "release"
+    throw new Error(`${PEER_NAME} ${action} failed (exit ${result.status ?? 1})`)
+  }
+}
+
+/**
  * CLI entry: sync-only stamp, or full release + deploy flow.
  *
  * Side effects: git, yarn, file writes, optional Vercel watch; may set exit code.
@@ -559,6 +679,11 @@ async function main(): Promise<void> {
   if (!isStableReleaseBranch(currentBranch)) {
     console.error(`Release requires main or master (current: ${currentBranch}).`)
     process.exit(1)
+  }
+
+  if (args.deployOnly === "aws") {
+    runAwsDeploy()
+    return
   }
 
   const rl = readline.createInterface({
@@ -613,6 +738,7 @@ async function main(): Promise<void> {
       console.error(
         `Version ${plan.version} is already released here. Release ${PEER_NAME} at ${plan.version} before starting a newer version.`,
       )
+      process.exitCode = 1
       return
     }
     if (plan.action === "bump" && !args.bump) {
@@ -660,12 +786,18 @@ async function main(): Promise<void> {
       committed = true
       if (deployTarget === "aws") {
         runAwsDeploy()
+        if (args.peer) {
+          runPeerFollowUp(deployTarget, newVersion, args.schemaBump)
+        }
         pushRelease(currentBranch, newVersion)
         pushed = true
         console.log("")
         console.log(`✨ Successfully released version ${newVersion}.`)
         console.log("🚀 Release tag pushed after successful AWS (Pulumi) deploy.")
       } else if (deployTarget === "vercel") {
+        if (args.peer) {
+          runPeerFollowUp(deployTarget, newVersion, args.schemaBump)
+        }
         pushRelease(currentBranch, newVersion)
         pushed = true
         const sha = runGit(["rev-parse", "HEAD"])
