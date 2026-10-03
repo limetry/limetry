@@ -22,6 +22,7 @@ config:
   limetry-oss:isGoogleSsoEnabled: "true"
   limetry-oss:isSsoEnabled: "false"
   limetry-oss:isCloudEnabled: "false"
+  limetry-oss:launchingSoon: "false"
   limetry-oss:legalEmail: legal@limetry.org
   limetry-oss:manageCloudflare: "true"
   limetry-oss:manageRoute53: "false"

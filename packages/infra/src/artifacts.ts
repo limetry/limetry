@@ -83,6 +83,8 @@ export type ArtifactBuildInputs = {
    * `"true"` shows Cloud links. Anything else hides them (`NEXT_PUBLIC_IS_CLOUD_ENABLED`).
    */
   isCloudEnabled?: string
+  /** `"true"` enables public Cloud and auth links after launch. */
+  launchingSoon?: string
 }
 
 /**
@@ -168,6 +170,7 @@ export function webPublicEnv(inputs: ArtifactBuildInputs): NodeJS.ProcessEnv {
     NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED: inputs.isGoogleSsoEnabled ?? "true",
     NEXT_PUBLIC_IS_APPLE_SSO_ENABLED: inputs.isAppleSsoEnabled ?? "true",
     NEXT_PUBLIC_IS_CLOUD_ENABLED: inputs.isCloudEnabled ?? "false",
+    NEXT_PUBLIC_LAUNCHING_SOON: inputs.launchingSoon ?? "false",
     EXPO_PUBLIC_IS_SSO_ENABLED: inputs.isSsoEnabled ?? "true",
     EXPO_PUBLIC_IS_GOOGLE_SSO_ENABLED: inputs.isGoogleSsoEnabled ?? "true",
     EXPO_PUBLIC_IS_APPLE_SSO_ENABLED: inputs.isAppleSsoEnabled ?? "true",

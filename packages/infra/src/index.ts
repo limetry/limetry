@@ -63,6 +63,7 @@ ensureInfraArtifacts({
   isGoogleSsoEnabled: cfg.isGoogleSsoEnabled,
   isAppleSsoEnabled: cfg.isAppleSsoEnabled,
   isCloudEnabled: cfg.isCloudEnabled,
+  launchingSoon: cfg.launchingSoon,
 })
 
 pulumi.log.info(describeNeonConfig({
@@ -115,6 +116,7 @@ const api = createApi({
   apiHostname: cfg.apiHostname,
   webHostname: cfg.domain,
   isCloudEnabled: cfg.isCloudEnabled,
+  launchingSoon: cfg.launchingSoon,
   serverArtifactPath: cfg.serverArtifactPath,
   databaseUrl: cfg.databaseUrl,
   jwtSecret: cfg.jwtSecret,
