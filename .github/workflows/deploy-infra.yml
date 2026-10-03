@@ -2,21 +2,35 @@ name: Deploy OSS Infra
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "packages/infra/**"
-      - "packages/server/**"
-      - "packages/web/**"
-      - "packages/sdk/**"
-      - ".github/workflows/deploy-infra.yml"
-  workflow_dispatch:
+    tags:
+      - "v*"
 
 concurrency:
   group: deploy-infra-oss-prod
   cancel-in-progress: false
 
 jobs:
+  credentials:
+    name: Check Pulumi credentials
+    runs-on: ubuntu-latest
+    outputs:
+      available: ${{ steps.check.outputs.available }}
+    steps:
+      - id: check
+        name: Check PULUMI_ACCESS_TOKEN
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          if [ -n "$PULUMI_ACCESS_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "PULUMI_ACCESS_TOKEN is not configured; skipping OSS infra deployment."
+          fi
+
   pulumi-up:
+    needs: credentials
+    if: needs.credentials.outputs.available == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
