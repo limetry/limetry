@@ -43,9 +43,11 @@ describe("stripManagedS3Objects", () => {
       ["aws:s3/bucket:Bucket", "aws:s3/bucketPolicy:BucketPolicy"],
     )
     const policy = result.deployment.deployment.resources[1]
+    assert.ok(policy)
     assert.deepEqual(policy.dependencies, [
       "urn:pulumi:dev::limetry-oss::aws:s3/bucket:Bucket::web",
     ])
+    assert.ok(policy.propertyDependencies)
     assert.deepEqual(policy.propertyDependencies.policy, [])
   })
 })
