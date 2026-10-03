@@ -2314,7 +2314,7 @@ __metadata:
   peerDependencies:
     "@limetry/sdk": "*"
   bin:
-    limetry-ci: ./dist/run-action.js
+    limetry-ci: dist/run-action.js
   languageName: unknown
   linkType: soft
 
@@ -2334,7 +2334,7 @@ __metadata:
     typescript: "npm:^5.8.2"
     vitest: "npm:4.1.11"
   bin:
-    limetry: ./dist/index.js
+    limetry: dist/index.js
   languageName: unknown
   linkType: soft
 
@@ -2348,7 +2348,7 @@ __metadata:
     typescript: "npm:^5.8.2"
     zod: "npm:^4.5.4"
   bin:
-    limetry-mcp: ./dist/index.js
+    limetry-mcp: dist/index.js
   languageName: unknown
   linkType: soft
 
@@ -2460,7 +2460,7 @@ __metadata:
     "@limetry/sdk": "*"
     "@modelcontextprotocol/sdk": ^1.30.0
   bin:
-    limetry-sql-mcp: ./dist/mcp-server.js
+    limetry-sql-mcp: dist/mcp-server.js
   languageName: unknown
   linkType: soft
 
