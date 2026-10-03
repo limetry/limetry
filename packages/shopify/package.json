@@ -1,6 +1,6 @@
 {
   "name": "@limetry/shopify",
-  "version": "1.2.50",
+  "version": "1.2.51",
   "description": "Shopify Admin API mutation firewall gated by Limetry ActionIntent evaluate",
   "license": "MIT",
   "type": "module",
