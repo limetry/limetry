@@ -36,17 +36,9 @@ const envSchema = z.object({
     emptyStringToUndefined,
     z.string().url().default("https://discord.gg/VxUWz7cZP"),
   ),
-  NEXT_PUBLIC_CONTACT_EMAIL: z.preprocess(
+  NEXT_PUBLIC_CONTACT_FORM_URL: z.preprocess(
     emptyStringToUndefined,
-    z.string().email().default("hello@limetry.com"),
-  ),
-  NEXT_PUBLIC_LEGAL_EMAIL: z.preprocess(
-    emptyStringToUndefined,
-    z.string().email().default("legal@limetry.com"),
-  ),
-  NEXT_PUBLIC_PRIVACY_EMAIL: z.preprocess(
-    emptyStringToUndefined,
-    z.string().email().default("privacy@limetry.com"),
+    z.string().url().default("https://app.limetry.com/contact"),
   ),
 })
 

@@ -30,7 +30,7 @@ import { inferCloudflareZoneName } from "./dns-names.js"
  * - `syncWebAssets` / `buildArtifacts` / `forceDestroyWebBucket` — deploy behavior.
  * - `budgetAmount` / `budget*Percent` / `notificationEmail` — AWS Budgets.
  * - `enableCostMonitoring` / `enableCostAnomalyDetection` — Cost Explorer.
- * - `githubUrl` / `discordUrl` / contact emails — baked into web `NEXT_PUBLIC_*`.
+ * - `githubUrl` / `discordUrl` — baked into web `NEXT_PUBLIC_*`.
  * - `replayWindowMs` / `throttleMaxRequestsPerMinute` / audit modes — API env.
  * - Secrets: `databaseUrl`, `jwtSecret`, `bearerToken`, `decisionHmacSecret`,
  *   optional `authSigningPrivateKeyHex`, `redisUrl`, `neonProjectId`, `neonBranchId`.
@@ -137,18 +137,6 @@ export type OssStackConfig = {
    * Public Discord invite URL baked into the static web export.
    */
   discordUrl: string
-  /**
-   * Contact email baked into the static web export.
-   */
-  contactEmail: string
-  /**
-   * Legal contact email baked into the static web export.
-   */
-  legalEmail: string
-  /**
-   * Privacy contact email baked into the static web export.
-   */
-  privacyEmail: string
   /**
    * API replay window in milliseconds (`REPLAY_WINDOW_MS`).
    */
@@ -284,16 +272,11 @@ export function loadOssStackConfig(): OssStackConfig {
     forceDestroyWebBucket: config.getBoolean("forceDestroyWebBucket") ?? true,
     budgetAmount: config.get("budgetAmount") ?? "5",
     budgetThresholds: resolveBudgetThresholds((key) => config.get(key)),
-    notificationEmail: config.get("notificationEmail")
-      ?? config.get("contactEmail")
-      ?? "hello@limetry.com",
+    notificationEmail: config.require("notificationEmail"),
     enableCostMonitoring: config.getBoolean("enableCostMonitoring") ?? false,
     enableCostAnomalyDetection: config.getBoolean("enableCostAnomalyDetection") ?? false,
     githubUrl: config.get("githubUrl") ?? "https://github.com/limetry/limetry",
     discordUrl: config.get("discordUrl") ?? "https://discord.gg/VxUWz7cZP",
-    contactEmail: config.get("contactEmail") ?? "hello@limetry.com",
-    legalEmail: config.get("legalEmail") ?? "legal@limetry.com",
-    privacyEmail: config.get("privacyEmail") ?? "privacy@limetry.com",
     replayWindowMs: config.get("replayWindowMs") ?? "300000",
     throttleMaxRequestsPerMinute: config.get("throttleMaxRequestsPerMinute") ?? "5",
     defaultAuditMode,

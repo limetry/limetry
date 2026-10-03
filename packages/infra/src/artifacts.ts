@@ -30,10 +30,6 @@ export type ArtifactBuildInputs = {
    */
   buildArtifacts: boolean
   /**
-   * Contact email for the static export.
-   */
-  contactEmail: string
-  /**
    * Discord invite URL for the static export.
    */
   discordUrl: string
@@ -45,14 +41,6 @@ export type ArtifactBuildInputs = {
    * GitHub URL for the static export.
    */
   githubUrl: string
-  /**
-   * Legal contact email for the static export.
-   */
-  legalEmail: string
-  /**
-   * Privacy contact email for the static export.
-   */
-  privacyEmail: string
   /**
    * Relative Lambda artifact path from the Pulumi project root.
    */
@@ -163,9 +151,7 @@ export function webPublicEnv(inputs: ArtifactBuildInputs): NodeJS.ProcessEnv {
     NEXT_PUBLIC_APP_URL: httpsOrigin(inputs.portalHostname),
     NEXT_PUBLIC_GITHUB_URL: httpsOrigin(inputs.githubUrl),
     NEXT_PUBLIC_DISCORD_URL: httpsOrigin(inputs.discordUrl),
-    NEXT_PUBLIC_CONTACT_EMAIL: inputs.contactEmail,
-    NEXT_PUBLIC_LEGAL_EMAIL: inputs.legalEmail,
-    NEXT_PUBLIC_PRIVACY_EMAIL: inputs.privacyEmail,
+    NEXT_PUBLIC_CONTACT_FORM_URL: `https://${inputs.portalHostname}/contact`,
     NEXT_PUBLIC_IS_SSO_ENABLED: inputs.isSsoEnabled ?? "true",
     NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED: inputs.isGoogleSsoEnabled ?? "true",
     NEXT_PUBLIC_IS_APPLE_SSO_ENABLED: inputs.isAppleSsoEnabled ?? "true",

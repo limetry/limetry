@@ -8,7 +8,7 @@ import Link from "next/link"
 import { IconAccent } from "@/components/brand"
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
-import { mailto, siteUrls } from "@/lib/site-urls"
+import { siteUrls } from "@/lib/site-urls"
 
 /**
  * Privacy Policy page SEO metadata.
@@ -103,10 +103,11 @@ export default function PrivacyPage(): React.JSX.Element {
 
             <h2>Contact</h2>
             <p>
-              Privacy questions:{" "}
-              <Link href={mailto(siteUrls.privacyEmail)} className="text-primary underline hover:no-underline">
-                {siteUrls.privacyEmail}
+              For privacy questions, please use the{" "}
+              <Link href={siteUrls.contactUrl} className="text-primary underline hover:no-underline">
+                contact form
               </Link>
+              .
             </p>
           </div>
         </article>

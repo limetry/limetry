@@ -45,7 +45,7 @@ function hostnameOf(value: string): string {
 }
 
 /**
- * Builds env preflight checks for marketing-site public URLs and contact emails.
+ * Builds env preflight checks for marketing-site public URLs and contact routing.
  *
  * @param env - Validated {@link WebEnv}.
  * @param source - Process env used for production/build phase detection.
@@ -91,23 +91,9 @@ export function collectWebEnvChecks(
       critical: false,
     }),
     envCheck({
-      name: "NEXT_PUBLIC_CONTACT_EMAIL",
-      value: env.NEXT_PUBLIC_CONTACT_EMAIL,
-      ok: env.NEXT_PUBLIC_CONTACT_EMAIL.includes("@"),
-      required: false,
-      critical: false,
-    }),
-    envCheck({
-      name: "NEXT_PUBLIC_LEGAL_EMAIL",
-      value: env.NEXT_PUBLIC_LEGAL_EMAIL,
-      ok: env.NEXT_PUBLIC_LEGAL_EMAIL.includes("@"),
-      required: false,
-      critical: false,
-    }),
-    envCheck({
-      name: "NEXT_PUBLIC_PRIVACY_EMAIL",
-      value: env.NEXT_PUBLIC_PRIVACY_EMAIL,
-      ok: env.NEXT_PUBLIC_PRIVACY_EMAIL.includes("@"),
+      name: "NEXT_PUBLIC_CONTACT_FORM_URL",
+      value: env.NEXT_PUBLIC_CONTACT_FORM_URL,
+      ok: Boolean(env.NEXT_PUBLIC_CONTACT_FORM_URL),
       required: false,
       critical: false,
     }),

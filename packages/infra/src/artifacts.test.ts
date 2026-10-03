@@ -12,12 +12,9 @@ const sampleInputs: ArtifactBuildInputs = {
   apiHostname: "api.dev.limetry.org",
   portalHostname: "app.dev.limetry.org",
   buildArtifacts: true,
-  contactEmail: "hello@limetry.org",
   discordUrl: "https://discord.gg/VxUWz7cZP",
   domain: "dev.limetry.org",
   githubUrl: "https://github.com/limetry/limetry",
-  legalEmail: "legal@limetry.org",
-  privacyEmail: "privacy@limetry.org",
   serverArtifactPath: "../server/lambda-bundle",
   webDistPath: "../web/out",
 }
@@ -34,7 +31,7 @@ describe("infra artifact helpers", () => {
     assert.equal(env.NEXT_PUBLIC_WEB_URL, "https://dev.limetry.org")
     assert.equal(env.NEXT_PUBLIC_API_URL, "https://api.dev.limetry.org")
     assert.equal(env.NEXT_PUBLIC_APP_URL, "https://app.dev.limetry.org")
-    assert.equal(env.NEXT_PUBLIC_CONTACT_EMAIL, "hello@limetry.org")
+    assert.equal(env.NEXT_PUBLIC_CONTACT_FORM_URL, "https://app.dev.limetry.org/contact")
     assert.equal(env.NEXT_PUBLIC_IS_SSO_ENABLED, "true")
     assert.equal(env.NEXT_PUBLIC_IS_GOOGLE_SSO_ENABLED, "true")
     assert.equal(env.NEXT_PUBLIC_IS_APPLE_SSO_ENABLED, "true")

@@ -89,7 +89,7 @@ Keep `jwtSecret`, `bearerToken`, and `decisionHmacSecret` private to this stack.
 | `throttleMaxRequestsPerMinute` | `5` | no | Lambda `THROTTLE_MAX_REQUESTS_PER_MINUTE` |
 | `defaultAuditMode` | `minimal` | no | Lambda `LIMETRY_DEFAULT_AUDIT_MODE` |
 | `auditRetentionDays` | `90` | no | Lambda `LIMETRY_AUDIT_RETENTION_DAYS` |
-| `githubUrl` / `discordUrl` / `contactEmail` / `legalEmail` / `privacyEmail` | product defaults | no | Baked into the static web export |
+| `githubUrl` / `discordUrl` | product defaults | no | Baked into the static web export |
 | `sentryDsn` | — | no | Lambda `SENTRY_DSN` + web `NEXT_PUBLIC_SENTRY_DSN` (falls back to process env) |
 | `posthogPublicProjectToken` | — | no | Lambda + web PostHog project key (falls back to process env) |
 | `posthogHost` | `https://us.i.posthog.com` | no | PostHog host for Lambda and static export |
