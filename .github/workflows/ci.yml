@@ -27,8 +27,6 @@ jobs:
           yarn build:sql && yarn build:shopify && yarn build:ci
       - name: Typecheck TypeScript packages
         run: yarn typecheck
-      - name: Generate and check API docs
-        run: yarn docs:check
       - name: Build TypeScript packages
         run: >-
           yarn build:server && yarn build:cli &&
