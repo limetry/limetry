@@ -8,12 +8,10 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  publish:
-    if: github.event_name == 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    name: Build, test, and publish all packages
+  verify:
+    name: Build and test all packages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -25,10 +23,6 @@ jobs:
         with:
           node-version: "24"
           package-manager-cache: false
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Enable npm Trusted Publishing support
-        run: npm install --global npm@11.5.1
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -58,22 +52,64 @@ jobs:
           yarn workspace @limetry/ui test
           node packages/cli/dist/index.js --help
 
-      - name: Publish all packages at the root version
+      - name: Upload package builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-dist
+          if-no-files-found: error
+          path: |
+            packages/sdk/dist
+            packages/preflight/dist
+            packages/cli/dist
+            packages/mcp/dist
+            packages/ci/dist
+            packages/shopify/dist
+            packages/sql/dist
+            packages/ui/dist
+
+  publish:
+    name: Publish @limetry/${{ matrix.package }}
+    needs: verify
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [sdk, ci, cli, mcp, preflight, shopify, sql, ui]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Enable npm Trusted Publishing support
+        run: npm install --global npm@11.21.0
+
+      - name: Download package builds
+        uses: actions/download-artifact@v4
+        with:
+          name: package-dist
+
+      - name: Publish one package
         run: |
-          packages="sdk ci cli mcp preflight shopify sql ui"
-          restore_pack_manifests() {
-            for package in $packages; do
-              node scripts/rewrite-workspace-protocol.mjs restore "packages/$package" || true
-            done
+          package="${{ matrix.package }}"
+          name="@limetry/$package"
+          version="$(node -p "require('./packages/${package}/package.json').version")"
+          restore_pack_manifest() {
+            node scripts/rewrite-workspace-protocol.mjs restore "packages/$package" || true
           }
-          trap restore_pack_manifests EXIT
-          for package in $packages; do
-            name="@limetry/$package"
-            version="$(node -p "require('./packages/$package/package.json').version")"
-            if npm view "$name@$version" version >/dev/null 2>&1; then
-              echo "$name@$version is already published; skipping it."
-              continue
-            fi
-            node scripts/wait-for-npm-dependencies.mjs "packages/$package"
-            npm publish "./packages/$package" --access public
-          done
+          trap restore_pack_manifest EXIT
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "$name@$version is already published; skipping it."
+            exit 0
+          fi
+          node scripts/wait-for-npm-dependencies.mjs "packages/$package"
+          npm publish "./packages/$package" --access public
