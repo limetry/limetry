@@ -119,7 +119,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
     <>
       <header
         className={`sticky top-0 border-b border-border/60 bg-background/95 backdrop-blur-xl ${
-          searchOpen ? "z-[70]" : "z-50"
+          searchOpen ? "z-70" : "z-50"
         }`}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -183,7 +183,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={dismissSearch}
-                className="whitespace-nowrap rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-emerald-400 hover:to-cyan-400 hover:shadow-md"
+                className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-emerald-400 hover:to-cyan-400 hover:shadow-md"
               >
                 Cloud →
               </Link>
@@ -238,7 +238,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMenuOpen(false)}
-                className="whitespace-nowrap rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center text-sm font-semibold text-white"
+                className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center text-sm font-semibold text-white"
               >
                 Cloud →
               </Link>
