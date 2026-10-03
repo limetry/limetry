@@ -86,9 +86,6 @@ void redactDetails({ path: "/ok" })
 void safeForLogs
 ```
 
-Spend-domain tooling (`GuardedAgentWallet`, Rust `LimetryEngine` FFI) is optional
-for payment-shaped `TransactionIntent` flows — not the primary product path.
-
 ---
 
 ## MCP tools
@@ -127,10 +124,6 @@ Prefer slim builders. Required ideas:
 
 Do **not** invent `mpc`, FROST, or threshold-signing blocks — they are not part of
 the shipped product.
-
-Optional spend-domain `SpendingPolicy` (limits, velocity, replay, destination
-rules) still exists for wallet/FFI demos; generate it only when the user asks for
-spend-policy governance.
 
 ---
 

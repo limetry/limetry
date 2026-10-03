@@ -30,10 +30,8 @@ package.json.pack-backup
 
 .env.sentry-build-plugin
 
-# Pruned from this history: spend engine, WASM publish, payment-era notes
+# Pruned from this history: spend engine and payment-era notes
 archive/
-Cargo.toml
-Cargo.lock
 blog/
 .github/workflows/publish-wasm.yml
 scripts/build-wasm.sh
