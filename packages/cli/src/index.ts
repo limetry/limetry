@@ -25,6 +25,9 @@ import { tokenCreateCommand } from "./commands/token/create.js"
 import { tokenListCommand } from "./commands/token/list.js"
 import { tokenRevokeCommand } from "./commands/token/revoke.js"
 import { tokenScopeCommand } from "./commands/token/scope.js"
+import { installCliErrorHandlers } from "./utils/errors.js"
+
+installCliErrorHandlers()
 
 const program = new Command()
 
