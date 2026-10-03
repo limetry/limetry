@@ -1,6 +1,6 @@
 {
   "name": "@limetry/sdk",
-  "version": "1.2.50",
+  "version": "1.2.51",
   "description": "TypeScript SDK for Limetry agent action governance and telemetry",
   "license": "MIT",
   "type": "module",
