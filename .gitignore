@@ -38,3 +38,5 @@ blog/
 .github/workflows/publish-wasm.yml
 scripts/build-wasm.sh
 .cursor/plans/Canvas - Limetry Cloud free tier reevaluation.md
+.cursor/plans/
+.cursor/rules/package-manager-plans.mdc
