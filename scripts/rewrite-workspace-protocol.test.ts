@@ -9,6 +9,8 @@ import {
   preparePackageDir,
   restorePackageDir,
   rewriteWorkspaceDependencyRanges,
+  shouldRestoreAfterPack,
+  workspaceDependency,
 } from "./rewrite-workspace-protocol.mjs"
 
 describe("rewrite-workspace-protocol", () => {
@@ -62,5 +64,17 @@ describe("rewrite-workspace-protocol", () => {
     expect(restorePackageDir(cliDir)).toBe(true)
     expect(readFileSync(join(cliDir, "package.json"), "utf8")).toBe(original)
     expect(restorePackageDir(cliDir)).toBe(false)
+  })
+
+  it("keeps the rewritten manifest until npm publish has re-read it", () => {
+    expect(shouldRestoreAfterPack("pack")).toBe(true)
+    expect(shouldRestoreAfterPack("publish")).toBe(false)
+    expect(shouldRestoreAfterPack(undefined)).toBe(true)
+    expect(workspaceDependency({
+      dependencies: { "@limetry/sdk": "workspace:*" },
+    })).toBe("@limetry/sdk@workspace:*")
+    expect(workspaceDependency({
+      dependencies: { "@limetry/sdk": "^1.2.49" },
+    })).toBe(null)
   })
 })

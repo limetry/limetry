@@ -1,6 +1,6 @@
 {
   "name": "@limetry/ui",
-  "version": "1.2.48",
+  "version": "1.2.49",
   "description": "Shared design system for Limetry — components, icons, and design tokens.",
   "license": "MIT",
   "type": "module",
@@ -34,7 +34,8 @@
     "typecheck": "tsgo -p tsconfig.json --noEmit",
     "test": "vitest run",
     "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
-    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
+    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
+    "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "prepublishOnly": "yarn build"
   },
   "publishConfig": {

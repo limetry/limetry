@@ -60,7 +60,14 @@ jobs:
 
       - name: Publish all packages at the root version
         run: |
-          for package in sdk ci cli mcp preflight shopify sql ui; do
+          packages="sdk ci cli mcp preflight shopify sql ui"
+          restore_pack_manifests() {
+            for package in $packages; do
+              node scripts/rewrite-workspace-protocol.mjs restore "packages/$package" || true
+            done
+          }
+          trap restore_pack_manifests EXIT
+          for package in $packages; do
             name="@limetry/$package"
             version="$(node -p "require('./packages/$package/package.json').version")"
             if npm view "$name@$version" version >/dev/null 2>&1; then

@@ -3,13 +3,15 @@
  * then restores the original manifest.
  *
  * Yarn needs `workspace:` in git. npm publish does not understand it, and a
- * lasting stamp would have to be reverted by hand. `prepack` calls `prepare`
- * and `postpack` calls `restore`, so `npm publish` packs real semver ranges
- * and leaves the working tree unchanged.
+ * lasting stamp would have to be reverted by hand. `prepack` calls `prepare`.
+ * `npm pack` restores in `postpack`. `npm publish` must not restore there:
+ * it re-reads package.json after `postpack` and sends that manifest to the
+ * registry. `postpublish` restores after that read.
  *
  * @example
  * ```bash
  * node scripts/rewrite-workspace-protocol.mjs prepare
+ * node scripts/rewrite-workspace-protocol.mjs restore-after-pack
  * node scripts/rewrite-workspace-protocol.mjs restore
  * ```
  */
@@ -161,6 +163,38 @@ export function preparePackageDir(packageDir, rootDir) {
 }
 
 /**
+ * `npm publish` re-reads package.json after `postpack`. Restoring in that
+ * hook puts `workspace:` back into the manifest the registry stores.
+ *
+ * @param {string | undefined} npmCommand - `npm_command` from the lifecycle env.
+ * @returns {boolean} True when the working tree should be restored now.
+ */
+export function shouldRestoreAfterPack(npmCommand) {
+  return npmCommand !== "publish"
+}
+
+/**
+ * Reports whether a manifest still contains a `workspace:` range.
+ *
+ * @param {Record<string, unknown>} manifest - Parsed package.json.
+ * @returns {string | null} `name@range` of the first workspace dependency, if any.
+ */
+export function workspaceDependency(manifest) {
+  for (const field of DEPENDENCY_FIELDS) {
+    const dependencies = manifest[field]
+    if (!dependencies || typeof dependencies !== "object" || Array.isArray(dependencies)) {
+      continue
+    }
+    for (const [name, range] of Object.entries(dependencies)) {
+      if (typeof range === "string" && range.startsWith("workspace:")) {
+        return `${name}@${range}`
+      }
+    }
+  }
+  return null
+}
+
+/**
  * Restores package.json from the pack backup when one exists.
  *
  * @param {string} packageDir - Directory that may contain a pack backup.
@@ -193,13 +227,30 @@ function isDirectRun() {
 if (isDirectRun()) {
   const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..")
   const command = process.argv[2]
+  const packageDir = process.argv[3] ? resolve(process.argv[3]) : process.cwd()
   try {
     if (command === "prepare") {
-      preparePackageDir(process.cwd(), rootDir)
+      preparePackageDir(packageDir, rootDir)
+    } else if (command === "restore-after-pack") {
+      if (shouldRestoreAfterPack(process.env.npm_command)) {
+        restorePackageDir(packageDir)
+      }
     } else if (command === "restore") {
-      restorePackageDir(process.cwd())
+      if (process.env.npm_lifecycle_event === "postpublish") {
+        const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"))
+        const workspaceRange = workspaceDependency(manifest)
+        if (workspaceRange) {
+          restorePackageDir(packageDir)
+          throw new Error(
+            `${manifest.name ?? packageDir} would publish ${workspaceRange}. The registry manifest was read after workspace ranges were restored.`,
+          )
+        }
+      }
+      restorePackageDir(packageDir)
     } else {
-      console.error("Usage: node scripts/rewrite-workspace-protocol.mjs <prepare|restore>")
+      console.error(
+        "Usage: node scripts/rewrite-workspace-protocol.mjs <prepare|restore-after-pack|restore> [package-dir]",
+      )
       process.exit(1)
     }
   } catch (error) {
