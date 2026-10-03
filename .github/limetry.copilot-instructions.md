@@ -59,8 +59,6 @@ Key exports:
 - `RemotePolicyEngine` / `createRemoteEngine()` — HTTP ActionIntent evaluate
 - `createSlimActionPolicy` — slim `ActionPolicy` with `auditMode`
 - `redactActionIntent`, `redactDetails`, `projectIntentForAudit` — privacy helpers
-- `LimetryEngine` — optional local FFI for spend-domain `TransactionIntent`
-- `GuardedAgentWallet` — optional OpenAI-compatible wallet wrapper for spend tools
 - `PolicyViolationError`, `RateLimitExceededError` — typed errors
 
 Self-hosters must set `LIMETRY_BASE_URL` (default server `http://localhost:3810`).
@@ -70,7 +68,6 @@ Self-hosters must set `LIMETRY_BASE_URL` (default server `http://localhost:3810`
 - Do not put API keys, bearer tokens, passwords, or chat transcripts in
   `metadata` or record `details`.
 - Do not invent FROST, MPC, `/v1/mpc/co-sign`, or threshold-signing APIs.
-- Do not claim the SDK auto-falls back to WASM when native FFI fails.
 - Do not log private keys or bearer tokens.
 
 ## API server endpoints

@@ -8,19 +8,15 @@ standards, and how to get a change merged.
 Follow the source installation in [INSTALL.md](INSTALL.md), then verify your toolchain:
 
 ```bash
-cargo test -p limetry-core -p limetry-ffi
-yarn test:sdk
-yarn test:server
-yarn test:cli
+npm run test:sdk
+npm run test:server
+npm run test:cli
 ```
 
 ## Repository Layout
 
 | Path | Contents |
 | --- | --- |
-| `crates/limetry-core` | Policy evaluation, velocity/replay stores |
-| `crates/limetry-ffi` | C ABI consumed by the Node SDK via koffi |
-| `crates/limetry-wasm` | wasm-bindgen exports (evaluation only) |
 | `packages/sdk` | TypeScript SDK (ActionIntent + optional payment helpers) |
 | `packages/server` | Action governance + telemetry HTTP API |
 | `packages/cli` | `limetry` CLI |
@@ -38,12 +34,6 @@ yarn test:cli
 - Imports grouped and alphabetized (built-ins, external, aliases)
 - Explicit return types on exported functions
 - Run `yarn typecheck` in every workspace you touch before pushing
-
-### Rust
-
-- `cargo fmt` and `cargo clippy` clean
-- Public APIs documented with rustdoc comments
-- Edition 2024; MSRV 1.85
 
 ### Security-Sensitive Code
 

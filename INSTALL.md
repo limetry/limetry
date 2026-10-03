@@ -133,10 +133,11 @@ publishes every package, whether its source changed or not.
 
 ```bash
 npm run release
-
-Use the package manager you prefer; the equivalent Yarn or pnpm release script
-works the same way.
 ```
+
+Use the equivalent `yarn release` or `pnpm release` command when those are your
+selected package manager. Publishing itself is performed by npm Trusted
+Publishing in GitHub Actions.
 
 For a failed/partial publish, run **Actions → Build and publish all @limetry
 packages → Run workflow** on `main`. Package versions already present on npm are
@@ -192,7 +193,9 @@ docker run --rm -p 3810:3810 \
   limetry-server
 ```
 
-See [USAGE.md](USAGE.md), `.env.example`, and `.env.production.example` for production environment
+The image contains the TypeScript server and its compiled dependencies; it does
+not require Rust or a separate native library. See [USAGE.md](USAGE.md),
+`.env.example`, and `.env.production.example` for production environment
 requirements (`USE_POSTGRES_STORE=true`, unique `JWT_SECRET` / `LIMETRY_BEARER_TOKEN` /
 `DECISION_HMAC_SECRET`, and a non-loopback `DATABASE_URL`). Pulumi injects those keys from stack
 secrets — see [packages/infra/README.md](packages/infra/README.md).

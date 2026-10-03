@@ -9,7 +9,6 @@
     "examples/*"
   ],
   "scripts": {
-    "build:archive-rust": "cargo build --release --manifest-path archive/Cargo.toml -p limetry-ffi",
     "build:ci": "yarn workspace @limetry/ci build",
     "build:cli": "yarn workspace @limetry/cli build",
     "build:infra:artifacts": "yarn build:sdk && yarn build:preflight && yarn build:lambda && yarn build:web:static",
@@ -44,7 +43,6 @@
     "release": "tsx scripts/sync-version.ts",
     "start": "yarn workspace @limetry/web start",
     "sync-version": "tsx scripts/sync-version.ts --sync-only",
-    "test:archive-rust": "cargo test --manifest-path archive/Cargo.toml",
     "test:ci": "yarn workspace @limetry/ci test",
     "test:cli": "yarn workspace @limetry/cli test",
     "test:e2e": "tsx scripts/run-workspaces.ts test:e2e --exclude limetry --exclude @limetry/skill",
