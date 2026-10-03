@@ -94,7 +94,7 @@ function DrawerNavItem({
           <LinkComponent href={item.href} onPress={onNavigate}>
             <View
               className={cn(
-                "relative mb-1 flex-1 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
+                "relative mb-1 min-h-11 flex-1 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
                 highlighted
                   ? "bg-emerald-500/15"
                   : ancestorActive
@@ -129,7 +129,7 @@ function DrawerNavItem({
             onPress={() => {
               setExpanded((value) => !value)
             }}
-            className="items-center justify-center rounded-xl px-2.5 active:bg-slate-100 dark:active:bg-slate-800"
+            className="min-h-11 min-w-11 items-center justify-center rounded-xl px-2.5 active:bg-slate-100 dark:active:bg-slate-800"
           >
             <Text className={cn("text-slate-500", (ancestorActive || highlighted) && "text-emerald-500")}>
               {open ? "▾" : "▸"}
@@ -160,7 +160,7 @@ function DrawerNavItem({
     <LinkComponent href={item.href} onPress={onNavigate}>
       <View
         className={cn(
-          "relative mb-1 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
+          "relative mb-1 min-h-11 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
           highlighted ? "bg-emerald-500/15" : "active:bg-slate-100 dark:active:bg-slate-800",
         )}
       >
