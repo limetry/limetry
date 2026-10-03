@@ -1,0 +1,1 @@
+/Users/jeremy/dev/config-resources/agents/AGENTS.md
