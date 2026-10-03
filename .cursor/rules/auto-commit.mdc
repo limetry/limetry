@@ -1,13 +1,1 @@
----
-description: Commit finished work automatically in feature-sized commits
-alwaysApply: true
----
-
-# Automatic feature commits
-
-After a task is verified, stage and commit before ending the turn. Do not ask whether to commit.
-
-- One logical feature or fix per commit. Split unrelated changes.
-- Use Conventional Commits in the past tense (`feat:`, `fix:`, `chore:`).
-- Do not commit secrets (`.env`, credentials).
-- Do not push unless the user asks.
+/Users/jeremy/dev/config-resources/agents/auto-commit.mdc
