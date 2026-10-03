@@ -77,4 +77,4 @@ jobs:
             echo "Expected shopify.inventory to be denied by packages/shopify/policies/refunds.json"
             exit 1
           fi
-          echo "Limetry allowed a $10 refund and denied $500 refund plus inventory wipe"
+          echo 'Limetry allowed a $10 refund and denied a $500 refund plus inventory wipe'
