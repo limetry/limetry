@@ -288,6 +288,41 @@ export function buildCompatibility(input: {
 }
 
 /**
+ * Adds the trailing commas ESLint requires in a pretty-printed JSON object.
+ *
+ * JSON forbids those commas. The compatibility module is TypeScript, and
+ * `comma-dangle` requires one after the last item of every multiline
+ * object. The closing brace of the whole document stays uncomma'd so
+ * `as const` remains valid.
+ *
+ * @param json - Output of `JSON.stringify(value, null, 2)`.
+ * @returns The same text with trailing commas inserted.
+ */
+function withTrailingCommas(json: string): string {
+  const lines = json.split("\n")
+  return lines.map((line, index) => {
+    const next = lines[index + 1]
+    if (!next) {
+      return line
+    }
+    const trimmed = line.trimEnd()
+    if (
+      trimmed.length === 0
+      || trimmed.endsWith(",")
+      || trimmed.endsWith("{")
+      || trimmed.endsWith("[")
+    ) {
+      return line
+    }
+    const nextTrimmed = next.trim()
+    if (nextTrimmed.startsWith("}") || nextTrimmed.startsWith("]")) {
+      return `${trimmed},`
+    }
+    return line
+  }).join("\n")
+}
+
+/**
  * TypeScript source that publishes {@link CompatibilityDocument} from a package.
  *
  * @param document - Compatibility document.
@@ -297,7 +332,7 @@ export function formatCompatibilityModule(document: CompatibilityDocument): stri
   return `/**
  * Product, package, website, and schema compatibility for this release.
  */
-export const COMPATIBILITY = ${JSON.stringify(document, null, 2)} as const
+export const COMPATIBILITY = ${withTrailingCommas(JSON.stringify(document, null, 2))} as const
 `
 }
 
