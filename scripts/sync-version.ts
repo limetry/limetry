@@ -586,63 +586,6 @@ function runPeerFollowUp(
 }
 
 /**
- * Releases or deploys the sibling checkout at the same product version.
- *
- * The sibling runs its own script with `--no-peer`, so it cannot call back.
- * An already-tagged sibling only receives `--deploy-only=aws`.
- *
- * @param deployTarget - Deploy selected for this release.
- * @param version - Product version being published.
- * @param schemaBump - Schema bump forwarded when the sibling still needs a release.
- * @returns Nothing.
- * @throws Error When the sibling checkout is missing or its command fails.
- */
-function runPeerFollowUp(
-  deployTarget: DeployTarget,
-  version: string,
-  schemaBump: ReleaseBump,
-): void {
-  if (!existsSync(join(PEER_ROOT, "package.json"))) {
-    throw new Error(
-      `${PEER_NAME} is not checked out at ${PEER_ROOT}. Clone it beside this repo so one release can deploy both stacks.`,
-    )
-  }
-
-  const followUp = planPeerFollowUp({
-    peerTagged: gitHasTag(PEER_ROOT, version),
-    deploy: deployTarget,
-  })
-  if (followUp === "already-shipped") {
-    console.log(`${PEER_NAME} is already tagged v${version}. Its Vercel deploy ran with that tag.`)
-    return
-  }
-
-  const args = followUp === "deploy-aws"
-    ? ["tsx", "scripts/sync-version.ts", "--deploy-only=aws"]
-    : [
-      "tsx",
-      "scripts/sync-version.ts",
-      "--yes",
-      `--deploy=${deployTarget}`,
-      "--no-peer",
-      `--schema-bump=${schemaBump}`,
-    ]
-  console.log("")
-  console.log(followUp === "deploy-aws"
-    ? `▶ ${PEER_NAME} prod deploy`
-    : `▶ ${PEER_NAME} release and deploy`)
-  const result = spawnSync("yarn", args, {
-    cwd: PEER_ROOT,
-    stdio: "inherit",
-    env: process.env,
-  })
-  if (result.status !== 0) {
-    const action = followUp === "deploy-aws" ? "deploy" : "release"
-    throw new Error(`${PEER_NAME} ${action} failed (exit ${result.status ?? 1})`)
-  }
-}
-
-/**
  * CLI entry: sync-only stamp, or full release + deploy flow.
  *
  * Side effects: git, yarn, file writes, optional Vercel watch; may set exit code.
