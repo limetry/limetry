@@ -30,7 +30,7 @@ export type ApiInputs = {
   /**
    * `"true"` or `"false"` for Cloud links on the API landing page.
    */
-  launchingSoon: string
+  isCloudEnabled: string
   /**
    * Relative path to the Lambda artifact directory.
    */
@@ -209,7 +209,7 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
     LIMETRY_DEFAULT_AUDIT_MODE: inputs.defaultAuditMode,
     LIMETRY_AUDIT_RETENTION_DAYS: inputs.auditRetentionDays,
     NEXT_PUBLIC_WEB_URL: `https://${inputs.webHostname}`,
-    NEXT_PUBLIC_LAUNCHING_SOON: inputs.launchingSoon,
+    NEXT_PUBLIC_IS_CLOUD_ENABLED: inputs.isCloudEnabled,
   }
 
   if (inputs.authSigningPrivateKeyHex !== undefined) {
