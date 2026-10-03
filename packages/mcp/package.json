@@ -27,7 +27,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
-    "typecheck": "tsgo -p tsconfig.json --noEmit"
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@limetry/sdk": "workspace:*",

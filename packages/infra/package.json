@@ -5,7 +5,7 @@
   "description": "Pulumi TypeScript infrastructure for Limetry OSS (Lambda + API GW + S3/CloudFront + Neon via SSM)",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit",
     "test": "tsx --test src/*.test.ts",
     "preview": "pulumi preview",
     "up": "pulumi up --yes",

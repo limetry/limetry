@@ -31,7 +31,7 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean --out-dir dist",
-    "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit",
     "test": "vitest run",
     "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
     "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",

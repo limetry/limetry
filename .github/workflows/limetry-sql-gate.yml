@@ -51,7 +51,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build SDK, server, CLI, and SQL gate
-        run: yarn build:sdk && yarn build:server && yarn build:cli && yarn build:sql
+        run: yarn build:sdk && yarn build:preflight && yarn build:server && yarn build:cli && yarn build:sql
 
       - name: Start Limetry and apply postgres policy
         id: boot

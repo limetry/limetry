@@ -36,7 +36,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build SDK, server, CLI, and Shopify firewall
-        run: yarn build:sdk && yarn build:server && yarn build:cli && yarn build:shopify
+        run: yarn build:sdk && yarn build:preflight && yarn build:server && yarn build:cli && yarn build:shopify
 
       - name: Start Limetry and apply refunds policy
         id: boot
