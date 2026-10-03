@@ -87,12 +87,37 @@ See [INSTALL.md](INSTALL.md) for the platform matrix.
 ```bash
 git clone https://github.com/limetry/limetry.git
 cd limetry
-corepack enable
-yarn install
-yarn build:sdk && yarn build:server && yarn build:cli
-cp .env.example .env
-yarn dev:server
 ```
+
+Install and build with one supported package manager:
+
+```bash
+# npm
+npm install
+npm run build:sdk
+npm run build:preflight
+npm run build:server
+npm run build:cli
+
+# Yarn Classic 1.x or Yarn Berry 4.x
+yarn install
+yarn build:sdk
+yarn build:preflight
+yarn build:server
+yarn build:cli
+
+# pnpm
+pnpm install
+pnpm build:sdk
+pnpm build:preflight
+pnpm build:server
+pnpm build:cli
+
+cp .env.example .env
+```
+
+Start the server with `npm run dev:server`, `yarn dev:server`, or
+`pnpm dev:server`.
 
 ## Quickstart
 
@@ -111,7 +136,7 @@ Docs: [CI](packages/web/content/docs/ci/index.mdx) · [SQL](packages/web/content
 
 ## Publishing npm packages
 
-Every successful `yarn release` publishes all eight public packages at the
+Every successful `npm run release`, `yarn release`, or `pnpm release` publishes all eight public packages at the
 version in the root `package.json`. The release pushes one `v<version>` tag;
 that tag triggers a single GitHub Actions workflow which builds, tests, and
 publishes the packages in dependency order. AWS releases push the tag only after
@@ -160,9 +185,9 @@ connections and add `publish-npm.yml` as the workflow filename for each package.
 
 | Surface | Where | How it is produced |
 | --- | --- | --- |
-| Product docs (Fumadocs) | [limetry.org/docs](https://limetry.org/docs/introduction) · source: `packages/web/content/docs/` | Built with the marketing site (`yarn build:web` / Vercel). MDX is the source of truth. |
-| OpenAPI / Swagger | `GET /openapi` on the evaluate server (local: <http://localhost:3810/openapi>) | Source: `packages/server/openapi.yaml`. Synced into `public/` on `yarn workspace @limetry/server sync:openapi` (also runs in build/test). |
-| Package API reference (TypeDoc) | [Markdown on `docs`](https://github.com/jeremydavidson/limetry-dev/blob/docs/README.md) · local: `docs/api/` (gitignored on `main`) | CI publishes Markdown on every `main` push (`Publish TypeDoc`). GitHub renders `.md` on the branch — no Pages required. Optional later: HTML + GitHub Pages for a site theme. |
+| Product docs (Fumadocs) | [limetry.org/docs](https://limetry.org/docs/introduction) · source: `packages/web/content/docs/` | Built with the marketing site (`npm run build:web`, `yarn build:web`, or `pnpm build:web` / Vercel). MDX is the source of truth. |
+| OpenAPI / Swagger | `GET /openapi` on the evaluate server (local: <http://localhost:3810/openapi>) | Source: `packages/server/openapi.yaml`. Synced into `public/` with the selected tool's workspace command. |
+| Package API reference (TypeDoc) | [Markdown on `docs`](https://github.com/jeremydavidson/limetry-dev/blob/docs/README.md) · local: `docs/api/` (gitignored on `main`) | CI publishes Markdown on release tags (`Publish TypeDoc`). GitHub renders `.md` on the branch — no Pages required. Optional later: HTML + GitHub Pages for a site theme. |
 
 TypeDoc is for library consumers browsing package exports. Product guides stay on Fumadocs.
 
@@ -170,7 +195,9 @@ TypeDoc is for library consumers browsing package exports. Product guides stay o
 - **Generate locally:**
 
 ```bash
-yarn docs:api
+npm run docs:api
+# or: yarn docs:api
+# or: pnpm docs:api
 # open docs/api/README.md (or browse the docs branch links above)
 ```
 
@@ -178,11 +205,11 @@ yarn docs:api
 
 | Script | Description |
 | --- | --- |
-| `yarn lint` / `yarn lint:fix` | Root flat ESLint (`eslint.config.mjs`) across packages/examples |
-| `yarn typecheck` | Parallel native TypeScript check (`tsgo`) across all packages and examples |
-| `yarn docs:api` | TypeDoc Markdown under `docs/api/` (gitignored) |
-| `yarn docs:api:watch` | TypeDoc watch mode |
-| `yarn docs:check` | TypeDoc + OpenAPI sync/validate (CI + release gate) |
+| `npm run lint` / `yarn lint` / `pnpm lint` | Root flat ESLint (`eslint.config.mjs`) across packages/examples |
+| `npm run typecheck` / `yarn typecheck` / `pnpm typecheck` | Parallel native TypeScript check (`tsgo`) across all packages and examples |
+| `npm run docs:api` / `yarn docs:api` / `pnpm docs:api` | TypeDoc Markdown under `docs/api/` (gitignored) |
+| `npm run docs:api:watch` / `yarn docs:api:watch` / `pnpm docs:api:watch` | TypeDoc watch mode |
+| `npm run docs:check` / `yarn docs:check` / `pnpm docs:check` | TypeDoc + OpenAPI sync/validate (release gate) |
 
 TSDoc is enforced via `eslint-plugin-tsdoc` (`tsdoc/syntax`). Escape package names like
 `\@limetry/sdk` inside doc comments so they are not parsed as tags.

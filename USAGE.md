@@ -25,19 +25,24 @@ and `redactDetails` / `redactActionIntent` from `@limetry/sdk`.
 | Tool | Version | Purpose |
 | --- | --- | --- |
 | [Node.js](https://nodejs.org/) | 20+ | SDK, server, CLI, MCP, optional adapters |
-| [Yarn](https://yarnpkg.com/) | 4.x (via Corepack) | Monorepo package manager |
+| Package manager | npm 10+, Yarn Classic 1.x, Yarn Berry 4.x, or pnpm 9/10 | Monorepo package manager |
 
 ## Setup
 
 ```bash
 git clone https://github.com/limetry/limetry.git
 cd limetry
-corepack enable
-yarn install
-yarn build:sdk && yarn build:server && yarn build:cli
+npm install
+npm run build:sdk
+npm run build:preflight
+npm run build:server
+npm run build:cli
 cp .env.example .env
-yarn dev:server
+npm run dev:server
 ```
+
+Replace `npm` with `yarn` or `pnpm` for the same scripts. Yarn Berry does not
+need `corepack enable` when it is already installed.
 
 The server prints a human-readable preflight banner on boot (secrets masked,
 then Postgres/Redis when those stores are enabled). Production fails fast if
@@ -64,21 +69,21 @@ limetry audit tail -n 20
 ### CI
 
 ```bash
-yarn workspace @limetry/ci build
+npm run build --workspace=@limetry/ci
 # See packages/ci/examples/workflow.yml and packages/ci/README.md
 ```
 
 ### SQL (Postgres / Supabase MCP)
 
 ```bash
-yarn workspace @limetry/sql build
+npm run build --workspace=@limetry/sql
 # DATABASE_URL + LIMETRY_API_KEY + LIMETRY_POLICY_ID — see packages/sql/README.md
 ```
 
 ### Shopify
 
 ```bash
-yarn workspace @limetry/shopify build
+npm run build --workspace=@limetry/shopify
 # SHOPIFY_ADMIN_TOKEN stays inside the firewall — see packages/shopify/README.md
 ```
 

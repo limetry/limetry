@@ -46,11 +46,16 @@ See [Minimize audit data](/docs/server/data-minimization) and [Run production op
 ```bash
 git clone https://github.com/limetry/limetry.git
 cd limetry
-corepack enable && yarn install
-yarn build:sdk && yarn build:server
+npm install
+npm run build:sdk
+npm run build:server
 cp .env.example .env           # set LIMETRY_BEARER_TOKEN
-yarn dev:server                # http://localhost:3810
+npm run dev:server             # http://localhost:3810
 ```
+
+Use the equivalent `yarn` or `pnpm` commands if those are your selected
+package manager. Yarn Berry does not require `corepack enable` when it is
+already installed.
 
 ## Run with Docker
 

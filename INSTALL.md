@@ -34,16 +34,43 @@ channel as "available" when it actually works today.
 | Tool | Version | Install |
 | --- | --- | --- |
 | Node.js | 20+ | [nodejs.org](https://nodejs.org/) or your package manager |
-| Yarn 4 | via Corepack | `corepack enable` (bundled with Node) |
+| One npm-compatible tool | npm 10+, Yarn Classic 1.x, Yarn Berry 4.x, or pnpm 9/10 | Install the tool using its own documentation |
+
+Choose one package manager for a checkout and use it consistently. Yarn Berry
+does not require `corepack enable` when Yarn Berry is already installed. Yarn
+Classic, npm, and pnpm use their own workspace and lockfile formats; do not
+commit a second manager's lockfile.
 
 ### macOS and Linux
 
 ```bash
 git clone https://github.com/limetrydev/limetry.git
 cd limetry
-corepack enable
+```
+
+Install and build with your chosen tool:
+
+```bash
+# npm
+npm install
+npm run build:sdk
+npm run build:preflight
+npm run build:server
+npm run build:cli
+
+# Yarn Classic 1.x or Yarn Berry 4.x
 yarn install
-yarn build:sdk && yarn build:server && yarn build:cli
+yarn build:sdk
+yarn build:preflight
+yarn build:server
+yarn build:cli
+
+# pnpm
+pnpm install
+pnpm build:sdk
+pnpm build:preflight
+pnpm build:server
+pnpm build:cli
 ```
 
 Run the CLI:
@@ -54,15 +81,23 @@ node packages/cli/dist/index.js --help
 
 ### Windows
 
-Limetry builds on Windows with Node.js 20+ and Yarn 4. Use PowerShell or Git Bash:
+Limetry builds on Windows with Node.js 20+ and any supported package manager.
+Use PowerShell or Git Bash:
 
 ```powershell
 git clone https://github.com/limetrydev/limetry.git
 cd limetry
-corepack enable
-yarn install
-yarn build:sdk
-yarn build:cli
+```
+
+Then use the equivalent install and build commands above with `npm`, `yarn`, or
+`pnpm`. For example:
+
+```powershell
+npm install
+npm run build:sdk
+npm run build:preflight
+npm run build:server
+npm run build:cli
 node packages\cli\dist\index.js --help
 ```
 
@@ -87,12 +122,17 @@ The public npm packages are `@limetry/sdk`, `@limetry/cli`, `@limetry/mcp`,
 
 Requires a clean `main` or `master` checkout pushed to `origin`, and npm Trusted
 Publishing configured for each package. Do not add an npm write token or
-`NPM_TOKEN` GitHub Actions secret. Every `yarn release` pushes one immutable
+`NPM_TOKEN` GitHub Actions secret. Every release command pushes one immutable
 `v<root-version>` tag; that tag triggers the shared GitHub Actions workflow and
 publishes every package, whether its source changed or not.
 
 ```bash
+# npm
+npm run release
+
+# Yarn Classic, Yarn Berry, or pnpm
 yarn release
+pnpm release
 ```
 
 For a failed/partial publish, run **Actions → Build and publish all @limetry
