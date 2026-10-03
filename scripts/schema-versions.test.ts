@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   buildCompatibility,
   fingerprintContents,
+  formatCompatibilityModule,
   planSchemaVersion,
   productCompatibleRange,
   SCHEMA_BASELINE,
@@ -98,5 +99,16 @@ describe("schema versions", () => {
     })
     expect(document.websites.cloud.version).toBe("1.2.46")
     expect(document.schemas["openapi.evaluate"].compatible).toBe(">=1.0.0 <2.0.0")
+  })
+
+  it("writes trailing commas into the compatibility module", () => {
+    const source = formatCompatibilityModule(buildCompatibility({
+      product: "1.2.51",
+      packages: ["@limetry/sdk"],
+      websites: ["oss"],
+      schemas: [{ id: "openapi.evaluate", version: "1.0.0", fingerprint: "abc" }],
+    }))
+    expect(source).toContain("\"compatible\": \">=1.2.0 <1.3.0\",")
+    expect(source).toContain("  },\n} as const\n")
   })
 })
