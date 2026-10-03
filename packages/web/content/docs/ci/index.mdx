@@ -57,8 +57,8 @@ Set GitHub Actions secrets/variables:
 
 Then call the action (see `packages/ci/examples/workflow.yml`).
 
-`dist/` is gitignored, so this repo's live demo **builds `@limetry/ci` from source**. After
-`npm publish` (`ci-v*` tags), customers can drop in:
+This repo's live demo builds `@limetry/ci` from source. Customers can use the
+published package through the composite action:
 
 ```yaml
 - uses: limetry/limetry/packages/ci@main

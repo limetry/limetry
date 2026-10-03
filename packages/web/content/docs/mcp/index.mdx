@@ -7,30 +7,9 @@ description: Build @limetry/mcp, register Cursor or Claude Desktop, and call lim
 `LIMETRY_BASE_URL` — typically a self-run Limetry node. Authenticate with
 `LIMETRY_BEARER_TOKEN` (or an API token you issued on that node).
 
-## Build the MCP server
+## Install the MCP server
 
-From a source checkout:
-
-```bash
-yarn workspace @limetry/mcp build
-```
-
-```json
-{
-  "mcpServers": {
-    "limetry": {
-      "command": "node",
-      "args": ["/path/to/limetry/packages/mcp/dist/index.js"],
-      "env": {
-        "LIMETRY_API_KEY": "your-bearer-token",
-        "LIMETRY_BASE_URL": "http://localhost:3810"
-      }
-    }
-  }
-}
-```
-
-Once published to npm:
+Use the package manager you prefer. For MCP hosts, `npx` is the smoothest path:
 
 ```json
 {
@@ -46,6 +25,9 @@ Once published to npm:
   }
 }
 ```
+
+For a regular Node application, install it with `npm install @limetry/mcp`.
+The equivalent Yarn or pnpm command works the same way.
 
 ## Set host environment
 
@@ -86,7 +68,6 @@ Once published to npm:
 See [Minimize audit data](/docs/server/data-minimization).
 
 <Note>
-Until `@limetry/mcp` is published to npm, run the built binary from a source
-checkout (`node packages/mcp/dist/index.js`) rather than assuming
-`npx @limetry/mcp` works.
+For local development or unreleased changes, build from a source checkout and
+replace the `npx` command with `node packages/mcp/dist/index.js`.
 </Note>

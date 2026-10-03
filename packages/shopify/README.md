@@ -29,8 +29,11 @@ optional step is a Partner **development store** with a token in GitHub secrets 
 ## Install
 
 ```bash
-yarn add @limetry/shopify @limetry/sdk
+npm install @limetry/shopify @limetry/sdk
 ```
+
+Use the package manager you prefer; the equivalent Yarn or pnpm command works
+the same way.
 
 ## Usage
 

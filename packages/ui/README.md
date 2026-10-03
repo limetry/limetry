@@ -8,6 +8,9 @@ Shared React Native and web UI for Limetry: buttons, form controls, page chrome,
 npm install @limetry/ui react react-native react-native-svg
 ```
 
+Use the package manager you prefer; the equivalent Yarn or pnpm command works
+the same way.
+
 Peers are `react` 18 or newer, `react-native` 0.73 or newer, and `react-native-svg` 15 or newer. Styles use NativeWind.
 
 ## Use a component

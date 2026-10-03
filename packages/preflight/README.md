@@ -22,6 +22,9 @@ about `PortalEnv`, `ServerEnv`, or other product types.
 npm install @limetry/preflight
 ```
 
+Use the package manager you prefer; the equivalent Yarn or pnpm command works
+the same way.
+
 Optional peers for store probes:
 
 ```bash

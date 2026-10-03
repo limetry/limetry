@@ -29,8 +29,11 @@ Supabase connection string.
 ## Install
 
 ```bash
-yarn add @limetry/sql @limetry/sdk @modelcontextprotocol/sdk pg
+npm install @limetry/sql @limetry/sdk @modelcontextprotocol/sdk pg
 ```
+
+Use the package manager you prefer; the equivalent Yarn or pnpm command works
+the same way.
 
 ## MCP
 

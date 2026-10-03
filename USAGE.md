@@ -25,9 +25,23 @@ and `redactDetails` / `redactActionIntent` from `@limetry/sdk`.
 | Tool | Version | Purpose |
 | --- | --- | --- |
 | [Node.js](https://nodejs.org/) | 20+ | SDK, server, CLI, MCP, optional adapters |
-| Package manager | npm 10+, Yarn Classic 1.x, Yarn Berry 4.x, or pnpm 9/10 | Monorepo package manager |
+| Package manager | npm 10+, Yarn, or pnpm | Use the package manager you prefer |
 
-## Setup
+## Install the published packages
+
+```bash
+npm install -g @limetry/cli
+npm install @limetry/sdk
+npx -y @limetry/mcp
+```
+
+Use the package manager you prefer; the equivalent Yarn or pnpm commands work
+the same way. The CLI is ready with `limetry setup`.
+
+## Run from source
+
+Clone the repository for local development or self-hosting, then use the same
+scripts with the tool you prefer:
 
 ```bash
 git clone https://github.com/limetry/limetry.git
@@ -40,9 +54,6 @@ npm run build:cli
 cp .env.example .env
 npm run dev:server
 ```
-
-Replace `npm` with `yarn` or `pnpm` for the same scripts. Yarn Berry does not
-need `corepack enable` when it is already installed.
 
 The server prints a human-readable preflight banner on boot (secrets masked,
 then Postgres/Redis when those stores are enabled). Production fails fast if
