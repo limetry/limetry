@@ -82,7 +82,7 @@ const config: NextConfig = {
             destination: "/docs/introduction",
             permanent: false,
           },
-          ...(process.env.NEXT_PUBLIC_LAUNCHING_SOON === "true"
+          ...(process.env.NEXT_PUBLIC_IS_CLOUD_ENABLED === "true"
             ? [
               {
                 source: "/pricing",

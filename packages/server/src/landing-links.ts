@@ -100,10 +100,10 @@ export function docsQuickStartUrl(webOrigin: string): string {
  * True when Cloud links should stay on the API landing page.
  *
  * @param source - Process env. Defaults to `process.env`.
- * @returns Whether `NEXT_PUBLIC_LAUNCHING_SOON` is exactly `"true"`.
+ * @returns Whether `NEXT_PUBLIC_IS_CLOUD_ENABLED` is exactly `"true"`.
  */
 export function isLandingLaunchOpen(source: NodeJS.ProcessEnv = process.env): boolean {
-  return source.NEXT_PUBLIC_LAUNCHING_SOON === "true"
+  return source.NEXT_PUBLIC_IS_CLOUD_ENABLED === "true"
 }
 
 /**

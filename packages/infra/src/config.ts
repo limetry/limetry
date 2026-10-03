@@ -227,7 +227,7 @@ export type OssStackConfig = {
   /**
    * `"true"` publishes Cloud links on the OSS site. Defaults to hidden.
    */
-  launchingSoon: string
+  isCloudEnabled: string
 }
 
 /**
@@ -310,7 +310,7 @@ export function loadOssStackConfig(): OssStackConfig {
     isSsoEnabled: String(config.getBoolean("isSsoEnabled") ?? true),
     isGoogleSsoEnabled: String(config.getBoolean("isGoogleSsoEnabled") ?? true),
     isAppleSsoEnabled: String(config.getBoolean("isAppleSsoEnabled") ?? true),
-    launchingSoon: String(config.getBoolean("launchingSoon") ?? false),
+    isCloudEnabled: String(config.getBoolean("isCloudEnabled") ?? false),
     posthogHost: config.get("posthogHost")
       ?? process.env.POSTHOG_HOST
       ?? process.env.NEXT_PUBLIC_POSTHOG_HOST
