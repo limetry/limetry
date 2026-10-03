@@ -18,6 +18,7 @@ import {
   promptForPassword,
   saveConfig,
 } from "../../utils/config.js"
+import { describeCliError, describeHttpFailure } from "../../utils/errors.js"
 
 /**
  * Authenticates with email/password and persists the JWT session.
@@ -62,8 +63,7 @@ export async function loginCommand(): Promise<void> {
     })
 
     if (!response.ok) {
-      const error = (await response.json()) as Record<string, unknown>
-      throw new Error(String(error.message || "Authentication failed"))
+      throw new Error(describeHttpFailure(response.status, await response.text()))
     }
 
     const data = (await response.json()) as {
@@ -86,9 +86,7 @@ export async function loginCommand(): Promise<void> {
 
     logSuccess(`Authenticated as ${email}`)
   } catch (error) {
-    logError(
-      error instanceof Error ? error.message : "Authentication failed",
-    )
+    logError(describeCliError(error))
     process.exit(1)
   }
 }
