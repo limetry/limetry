@@ -8,6 +8,7 @@ import Link from "next/link"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
 import { matchStaticEntries, type SearchSection, type SiteSearchHit, type StaticSearchEntry } from "@/lib/site-search-index"
+import { isExternalHref } from "@/lib/site-urls"
 
 const SECTION_LABELS: Record<SearchSection, string> = {
   docs: "Docs",
@@ -207,7 +208,7 @@ export function SiteSearchDialog({
                       <Link
                         href={hit.url}
                         onClick={close}
-                        {...(hit.url.startsWith("http")
+                        {...(isExternalHref(hit.url)
                           ? { target: "_blank", rel: "noopener noreferrer" }
                           : {})}
                         className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-muted"

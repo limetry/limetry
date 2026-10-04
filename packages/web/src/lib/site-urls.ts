@@ -83,6 +83,40 @@ export const siteUrls = {
 } as const
 
 /**
+ * Returns whether an absolute HTTP link leaves Limetry's web surfaces.
+ *
+ * Limetry uses separate origins for the OSS site, Cloud, API, and local
+ * development. They should all navigate in the current window.
+ *
+ * @param href - Link destination.
+ * @returns True when the destination is an external HTTP origin.
+ */
+export function isExternalHref(href: string): boolean {
+  if (!/^https?:\/\//i.test(href)) {
+    return false
+  }
+
+  let hostname: string
+  try {
+    hostname = new URL(href).hostname.toLowerCase()
+  } catch {
+    return true
+  }
+  const isLocalhost =
+    hostname === "localhost"
+    || hostname === "127.0.0.1"
+    || hostname === "::1"
+    || hostname === "[::1]"
+  const isLimetryHost =
+    hostname === "limetry.org"
+    || hostname.endsWith(".limetry.org")
+    || hostname === "limetry.com"
+    || hostname.endsWith(".limetry.com")
+
+  return !isLocalhost && !isLimetryHost
+}
+
+/**
  * Server/preflight origin resolution (full `process.env` object is fine here).
  *
  * @returns Resolved web, app, and API origins.

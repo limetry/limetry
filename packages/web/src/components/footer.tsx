@@ -8,7 +8,7 @@ import Link from "next/link"
 import { Logo } from "@/components/brand"
 import { CloudCtaBanner } from "@/components/cloud-cta-banner"
 import { isLaunchOpen } from "@/lib/launching-soon"
-import { siteUrls } from "@/lib/site-urls"
+import { isExternalHref, siteUrls } from "@/lib/site-urls"
 
 /**
  * Builds footer link columns from {@link siteUrls}.
@@ -89,7 +89,7 @@ export function Footer(): React.JSX.Element {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      {...(link.href.startsWith("http")
+                      {...(isExternalHref(link.href)
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -108,7 +108,7 @@ export function Footer(): React.JSX.Element {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      {...(link.href.startsWith("http")
+                      {...(isExternalHref(link.href)
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -127,7 +127,7 @@ export function Footer(): React.JSX.Element {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      {...(link.href.startsWith("http")
+                      {...(isExternalHref(link.href)
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
