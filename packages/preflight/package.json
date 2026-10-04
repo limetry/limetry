@@ -40,7 +40,7 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
-    "prepack": "yarn build && node ../../scripts/rewrite-workspace-protocol.mjs prepare",
+    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
     "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
     "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "test": "vitest run --coverage",
