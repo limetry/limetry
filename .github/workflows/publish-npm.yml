@@ -97,6 +97,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: package-dist
+          path: packages
 
       - name: Publish one package
         run: |
