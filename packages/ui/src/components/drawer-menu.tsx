@@ -97,9 +97,7 @@ function DrawerNavItem({
                 "relative mb-1 min-h-11 flex-1 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
                 highlighted
                   ? "bg-emerald-500/15"
-                  : ancestorActive
-                    ? ""
-                    : "active:bg-slate-100 dark:active:bg-slate-800",
+                  : "",
               )}
             >
               {highlighted && depth > 0 ? (
@@ -161,7 +159,7 @@ function DrawerNavItem({
       <View
         className={cn(
           "relative mb-1 min-h-11 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
-          highlighted ? "bg-emerald-500/15" : "active:bg-slate-100 dark:active:bg-slate-800",
+          highlighted ? "bg-emerald-500/15" : "",
         )}
       >
         {highlighted && depth > 0 ? (
@@ -222,14 +220,15 @@ export function DrawerMenu({
       <Pressable
         accessibilityLabel="Close navigation menu"
         className="absolute inset-0 bg-slate-900/50"
+        style={{ zIndex: 0 }}
         onPress={() => onOpenChange(false)}
       />
       <View
         className={cn(
-          "h-full border-l border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900",
+          "h-full border-l border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900",
           className,
         )}
-        style={{ width: "80%", maxWidth: DOCS_SIDEBAR_WIDTH }}
+        style={{ width: "80%", maxWidth: DOCS_SIDEBAR_WIDTH, zIndex: 1 }}
       >
         <View className="flex-1 gap-1">
           {items.map((item) => (
