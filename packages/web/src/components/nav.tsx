@@ -13,7 +13,7 @@ import { Logo } from "@/components/brand"
 import { SiteSearchDialog } from "@/components/site-search-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { isLaunchOpen } from "@/lib/launching-soon"
-import { siteUrls } from "@/lib/site-urls"
+import { isExternalHref, siteUrls } from "@/lib/site-urls"
 
 /**
  * Props for {@link Nav}.
@@ -147,7 +147,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
                         ? "font-semibold text-emerald-600 dark:text-emerald-400"
                         : "text-muted-foreground"
                     }`}
-                    {...(link.href.startsWith("http")
+                    {...(isExternalHref(link.href)
                       ? { target: "_blank", rel: "noopener noreferrer" }
                       : {})}
                   >
@@ -180,8 +180,6 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             {isLaunchOpen() ? (
               <Link
                 href={siteUrls.app}
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={dismissSearch}
                 className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-emerald-400 hover:to-cyan-400 hover:shadow-md"
               >
@@ -235,8 +233,6 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             {isLaunchOpen() ? (
               <Link
                 href={siteUrls.app}
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={() => setMenuOpen(false)}
                 className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center text-sm font-semibold text-white"
               >

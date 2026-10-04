@@ -56,18 +56,29 @@ describe("example markdown links", () => {
     }
   })
 
-  it("passes through absolute site and https links", () => {
+  it("keeps Limetry links in the current window", () => {
     assert.deepEqual(
       resolveExampleMarkdownHref("/docs/quick-start", "shopify-mutation-firewall"),
       { type: "link", href: "/docs/quick-start", external: false },
     )
     assert.deepEqual(
       resolveExampleMarkdownHref("https://limetry.com/docs/quick-start", "shopify-mutation-firewall"),
-      { type: "link", href: "https://limetry.com/docs/quick-start", external: true },
+      { type: "link", href: "https://limetry.com/docs/quick-start", external: false },
+    )
+    assert.deepEqual(
+      resolveExampleMarkdownHref("http://localhost:3800/docs/quick-start", "shopify-mutation-firewall"),
+      { type: "link", href: "http://localhost:3800/docs/quick-start", external: false },
     )
     assert.deepEqual(
       resolveExampleMarkdownHref("#decisions", "shopify-mutation-firewall"),
       { type: "link", href: "#decisions", external: false },
+    )
+  })
+
+  it("opens unrelated HTTPS links in a new window", () => {
+    assert.deepEqual(
+      resolveExampleMarkdownHref("https://example.com/docs", "shopify-mutation-firewall"),
+      { type: "link", href: "https://example.com/docs", external: true },
     )
   })
 

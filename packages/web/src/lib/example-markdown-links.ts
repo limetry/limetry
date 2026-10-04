@@ -7,7 +7,7 @@
 
 import path from "node:path"
 
-import { githubPath } from "./site-urls"
+import { githubPath, isExternalHref } from "./site-urls"
 
 export type ExampleMarkdownLink =
   | {
@@ -98,7 +98,7 @@ export function resolveExampleMarkdownHref(
   }
 
   if (isPassthroughHref(trimmed)) {
-    const external = /^https?:\/\//i.test(trimmed)
+    const external = isExternalHref(trimmed)
     return { type: "link", href: trimmed, external }
   }
 

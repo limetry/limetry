@@ -7,7 +7,7 @@ import Link from "next/link"
 import { siteUrls } from "@/lib/site-urls"
 
 /**
- * Bottom-of-page banner linking OSS visitors to Limetry Cloud in a new window.
+ * Bottom-of-page banner linking OSS visitors to Limetry Cloud.
  *
  * @returns Cloud CTA strip.
  */
@@ -29,8 +29,6 @@ export function CloudCtaBanner(): React.JSX.Element {
         </div>
         <Link
           href={siteUrls.app}
-          target="_blank"
-          rel="noopener noreferrer"
           className={`
             inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl
             bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold
