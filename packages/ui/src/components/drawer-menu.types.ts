@@ -84,4 +84,9 @@ export type DrawerMenuProps = {
    * Extra class names applied to the drawer panel surface.
    */
   className?: string
+  /**
+   * Native modal header rendered above the panel so header controls stay pressable.
+   * Web drawers ignore this and keep their own sticky header.
+   */
+  header?: ReactNode
 }
