@@ -47,6 +47,7 @@ const publicHosts = ossPublicUrls({
 ensureInfraArtifacts({
   apiHostname: cfg.apiHostname,
   portalHostname: cfg.portalHostname,
+  buildWeb: !cfg.isLoadTestApiOnly,
   buildArtifacts: cfg.buildArtifacts,
   discordUrl: cfg.discordUrl,
   domain: cfg.domain,
@@ -79,11 +80,13 @@ const secrets = createSecrets({
   neonBranchId: cfg.neonBranchId,
 })
 
-let cloudFrontCertificateArn: pulumi.Input<string> | undefined = cfg.cloudFrontCertificateArn
-let apiCertificateArn: pulumi.Input<string> | undefined = cfg.apiCertificateArn
+let cloudFrontCertificateArn: pulumi.Input<string> | undefined =
+  cfg.isLoadTestApiOnly ? undefined : cfg.cloudFrontCertificateArn
+let apiCertificateArn: pulumi.Input<string> | undefined =
+  cfg.isLoadTestApiOnly ? undefined : cfg.apiCertificateArn
 let cloudflareZoneId: pulumi.Output<string> | undefined
 
-if (cfg.manageCloudflare) {
+if (!cfg.isLoadTestApiOnly && cfg.manageCloudflare) {
   assertCloudflareAuth()
   const certs = requestCustomDomainCerts({
     apiHostname: cfg.apiHostname,
@@ -99,15 +102,17 @@ if (cfg.manageCloudflare) {
   apiCertificateArn = cfg.apiCertificateArn ?? issued.apiCertificateArn
 }
 
-const web = createWeb({
-  domain: cfg.domain,
-  webDistPath: cfg.webDistPath,
-  syncWebAssets: cfg.syncWebAssets,
-  forceDestroy: cfg.forceDestroyWebBucket,
-  certificateArn: cloudFrontCertificateArn,
-  includeWww,
-  invalidateOnDeploy: cfg.invalidateOnDeploy,
-})
+const web = cfg.isLoadTestApiOnly
+  ? undefined
+  : createWeb({
+    domain: cfg.domain,
+    webDistPath: cfg.webDistPath,
+    syncWebAssets: cfg.syncWebAssets,
+    forceDestroy: cfg.forceDestroyWebBucket,
+    certificateArn: cloudFrontCertificateArn,
+    includeWww,
+    invalidateOnDeploy: cfg.invalidateOnDeploy,
+  })
 
 const api = createApi({
   apiHostname: cfg.apiHostname,
@@ -142,7 +147,7 @@ const monitoring = createMonitoring({
   enableCostAnomalyDetection: cfg.enableCostAnomalyDetection,
 })
 
-if (cfg.manageCloudflare && cloudflareZoneId) {
+if (!cfg.isLoadTestApiOnly && cfg.manageCloudflare && cloudflareZoneId && web) {
   createCloudflareTrafficRecords({
     apiHostname: cfg.apiHostname,
     apiTargetDomainName: api.regionalDomainName,
@@ -153,18 +158,20 @@ if (cfg.manageCloudflare && cloudflareZoneId) {
   })
 }
 
-const dns = createDns({
-  domain: cfg.domain,
-  apiHostname: cfg.apiHostname,
-  manageRoute53: cfg.manageRoute53,
-  createHostedZone: cfg.createHostedZone,
-  hostedZoneId: cfg.hostedZoneId,
-  webDistributionDomainName: web.distributionDomainName,
-  webDistributionHostedZoneId: web.distributionHostedZoneId,
-  apiTargetDomainName: api.regionalDomainName,
-  apiTargetHostedZoneId: api.regionalHostedZoneId,
-  createApiAlias: api.hasCustomDomain,
-})
+const dns = cfg.isLoadTestApiOnly
+  ? undefined
+  : createDns({
+    domain: cfg.domain,
+    apiHostname: cfg.apiHostname,
+    manageRoute53: cfg.manageRoute53,
+    createHostedZone: cfg.createHostedZone,
+    hostedZoneId: cfg.hostedZoneId,
+    webDistributionDomainName: web?.distributionDomainName ?? pulumi.output(""),
+    webDistributionHostedZoneId: web?.distributionHostedZoneId ?? pulumi.output(""),
+    apiTargetDomainName: api.regionalDomainName,
+    apiTargetHostedZoneId: api.regionalHostedZoneId,
+    createApiAlias: api.hasCustomDomain,
+  })
 
 /**
  * Optional `www.` marketing URL when the stack manages apex + www.
@@ -174,7 +181,7 @@ export const websiteWwwUrl = publicHosts.webWww ?? ""
 /**
  * CloudFront distribution HTTPS origin (edge hostname).
  */
-export const websiteEdgeUrl = web.edgeWebsiteUrl
+export const websiteEdgeUrl = web?.edgeWebsiteUrl ?? pulumi.output("")
 
 /**
  * Cloud portal hostname URL (`app.` by default).
@@ -184,22 +191,24 @@ export const appUrl = publicHosts.app
 /**
  * S3 origin bucket name for the marketing static export.
  */
-export const webBucketName = web.bucketName
+export const webBucketName = web?.bucketName ?? pulumi.output("")
 
 /**
  * CloudFront distribution id for invalidations and console links.
  */
-export const cloudFrontDistributionId = web.distributionId
+export const cloudFrontDistributionId = web?.distributionId ?? pulumi.output("")
 
 /**
  * CloudFront distribution domain name (CNAME target for DNS-only Cloudflare).
  */
-export const cloudFrontDomainName = web.distributionDomainName
+export const cloudFrontDomainName = web?.distributionDomainName ?? pulumi.output("")
 
 /**
  * Public API HTTPS origin with trailing slash (custom hostname when configured).
  */
-export const apiEndpoint = pulumi.interpolate`${publicHosts.api}/`
+export const apiEndpoint = cfg.isLoadTestApiOnly
+  ? api.apiEndpoint
+  : pulumi.interpolate`${publicHosts.api}/`
 
 /**
  * API Gateway `$default` stage invoke URL (execute-api hostname).
@@ -242,44 +251,61 @@ export const neonNotes = describeNeonConfig({
 /**
  * CloudFront domain operators CNAME the apex (DNS-only) to.
  */
-export const cloudflareWebCnameTarget = dns.cloudflareWebCnameTarget
+export const cloudflareWebCnameTarget = dns?.cloudflareWebCnameTarget ?? pulumi.output("")
 
 /**
  * API Gateway regional domain operators CNAME the API host (DNS-only) to.
  */
-export const cloudflareApiCnameTarget = dns.cloudflareApiCnameTarget
+export const cloudflareApiCnameTarget = dns?.cloudflareApiCnameTarget ?? pulumi.output("")
 
 /**
  * Route53 hosted zone id when `manageRoute53` is enabled; otherwise empty.
  */
-export const route53HostedZoneId = dns.hostedZoneId ?? pulumi.output("")
+export const route53HostedZoneId = dns?.hostedZoneId ?? pulumi.output("")
 
 /**
  * Route53 name servers when Pulumi creates the hosted zone; otherwise empty.
  */
-export const route53NameServers = dns.nameServers ?? pulumi.output<string[]>([])
+export const route53NameServers = dns?.nameServers ?? pulumi.output<string[]>([])
 
-const publicUrls = pulumi
-  .all([web.edgeWebsiteUrl, api.invokeUrl, dns.cloudflareWebCnameTarget, dns.cloudflareApiCnameTarget])
-  .apply(([webEdge, apiEdge, webTarget, apiTarget]) => ({
-    web: publicHosts.web,
-    webWww: publicHosts.webWww,
-    webEdge,
-    api: publicHosts.api,
+const publicUrls = cfg.isLoadTestApiOnly
+  ? pulumi.all([api.invokeUrl]).apply(([apiEdge]) => ({
+    web: "",
+    webWww: undefined,
+    webEdge: "",
+    api: apiEdge,
     apiEdge,
-    app: publicHosts.app,
-    apex: cfg.domain,
-    apiHost: cfg.apiHostname,
-    cloudflare: cloudflareTrafficHints({
-      apiHostname: cfg.apiHostname,
-      apiTarget: apiTarget,
-      domain: cfg.domain,
-      includeWww,
-      proxied: false,
-      webTarget,
-      zoneName: cfg.cloudflareZoneName,
-    }),
+    app: "",
+    apex: "",
+    apiHost: "",
+    cloudflare: undefined,
   }))
+  : pulumi
+    .all([
+      web?.edgeWebsiteUrl ?? pulumi.output(""),
+      api.invokeUrl,
+      dns?.cloudflareWebCnameTarget ?? pulumi.output(""),
+      dns?.cloudflareApiCnameTarget ?? pulumi.output(""),
+    ])
+    .apply(([webEdge, apiEdge, webTarget, apiTarget]) => ({
+      web: publicHosts.web,
+      webWww: publicHosts.webWww,
+      webEdge,
+      api: publicHosts.api,
+      apiEdge,
+      app: publicHosts.app,
+      apex: cfg.domain,
+      apiHost: cfg.apiHostname,
+      cloudflare: cloudflareTrafficHints({
+        apiHostname: cfg.apiHostname,
+        apiTarget,
+        domain: cfg.domain,
+        includeWww,
+        proxied: false,
+        webTarget,
+        zoneName: cfg.cloudflareZoneName,
+      }),
+    }))
 
 /**
  * Public API HTTPS origin (printed last so `pulumi up` ends with primary URLs).

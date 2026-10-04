@@ -82,10 +82,18 @@ export function getTags(
   component?: string,
   extraTags: Record<string, string> = {},
 ): Record<string, string> {
+  const loadTestRunId = new pulumi.Config().get("loadTestRunId")
+
   return {
     Project: getProject(),
     Stack: getStackName(),
     ManagedBy: "pulumi",
+    ...(loadTestRunId
+      ? {
+        LoadTestRole: "target",
+        RunId: loadTestRunId,
+      }
+      : {}),
     ...(component ? { Component: component } : {}),
     ...extraTags,
   }

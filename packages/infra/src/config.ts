@@ -37,6 +37,10 @@ import { inferCloudflareZoneName } from "./dns-names.js"
  */
 export type OssStackConfig = {
   /**
+   * When true, provision only the API resources needed by an isolated load test.
+   */
+  isLoadTestApiOnly: boolean
+  /**
    * Marketing apex hostname (CloudFront alias when certificates are managed).
    */
   domain: string
@@ -251,6 +255,7 @@ export function loadOssStackConfig(): OssStackConfig {
   }
 
   return {
+    isLoadTestApiOnly: config.getBoolean("isLoadTestApiOnly") ?? false,
     domain,
     apiHostname: config.get("apiHostname") ?? "api.limetry.com",
     portalHostname: config.get("portalHostname") ?? defaultAppHostname(domain),

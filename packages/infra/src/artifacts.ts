@@ -18,6 +18,10 @@ import * as pulumi from "@pulumi/pulumi"
  */
 export type ArtifactBuildInputs = {
   /**
+   * When false, build only the Lambda artifact and skip the static web export.
+   */
+  buildWeb?: boolean
+  /**
    * API hostname for `NEXT_PUBLIC_API_URL`.
    */
   apiHostname: string
@@ -184,14 +188,17 @@ export function webPublicEnv(inputs: ArtifactBuildInputs): NodeJS.ProcessEnv {
  */
 export function shouldBuildArtifacts(options: {
   buildArtifacts: boolean
+  buildWeb?: boolean
   lambdaExists: boolean
   skipEnv: string | undefined
-  webExists: boolean
+  webExists?: boolean
 }): boolean {
   if (options.skipEnv === "1") {
     return false
   }
-  return options.buildArtifacts || !options.lambdaExists || !options.webExists
+  return options.buildArtifacts
+    || !options.lambdaExists
+    || (options.buildWeb !== false && !options.webExists)
 }
 
 /**
@@ -236,16 +243,23 @@ export function ensureInfraArtifacts(
   const webExists = existsSync(webDistDir)
   const shouldBuild = shouldBuildArtifacts({
     buildArtifacts: inputs.buildArtifacts,
+    buildWeb: inputs.buildWeb,
     lambdaExists,
     skipEnv: process.env.LIMETRY_SKIP_ARTIFACT_BUILD,
     webExists,
   })
 
   if (shouldBuild) {
-    pulumi.log.info("Building OSS Lambda bundle and web static export for Pulumi")
+    pulumi.log.info(
+      inputs.buildWeb === false
+        ? "Building OSS Lambda bundle for Pulumi"
+        : "Building OSS Lambda bundle and web static export for Pulumi",
+    )
     runYarn(["workspace", "@limetry/sdk", "build"], {})
     runYarn(["workspace", "@limetry/server", "build:lambda"], {})
-    runYarn(["workspace", "@limetry/web", "build"], webPublicEnv(inputs))
+    if (inputs.buildWeb !== false) {
+      runYarn(["workspace", "@limetry/web", "build"], webPublicEnv(inputs))
+    }
   }
 
   if (!existsSync(serverArtifactDir)) {
@@ -255,7 +269,7 @@ export function ensureInfraArtifacts(
     )
   }
 
-  if (!existsSync(webDistDir) && inputs.buildArtifacts) {
+  if (inputs.buildWeb !== false && !existsSync(webDistDir) && inputs.buildArtifacts) {
     throw new Error(
       `Web dist missing at ${webDistDir} after the static export. `
       + "Check the Next.js build logs above.",
