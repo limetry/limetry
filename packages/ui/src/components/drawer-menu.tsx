@@ -1,12 +1,12 @@
 /**
  * React Native drawer panel for Expo / mobile consumers.
  *
- * Positioned below the sticky header so the header (and its close control) stay
- * active. Re-exports navigation helpers used by host apps.
+ * Presented as a modal so menu presses are not lost under the page overlay.
+ * Re-exports navigation helpers used by host apps.
  */
 
 import { useState } from "react"
-import { Pressable, Text, View } from "react-native"
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native"
 
 import { cn } from "../lib/cn"
 import {
@@ -185,10 +185,12 @@ function DrawerNavItem({
 
 /**
  * React Native drawer panel for Expo / mobile consumers.
- * Positioned below the sticky header so the header (and its close control) stay active.
+ *
+ * The panel is a modal so its rows are not covered by the page overlay, and the
+ * host header is rendered inside that modal so logo, profile, and close stay pressable.
  *
  * @param props - Open state, nav items, pathname, and injected link/icon renderers.
- * @returns The drawer overlay when open, otherwise `null`.
+ * @returns The drawer modal when open, otherwise `null`.
  */
 export function DrawerMenu({
   open,
@@ -200,6 +202,7 @@ export function DrawerMenu({
   footer,
   topOffset = 0,
   className,
+  header,
 }: DrawerMenuProps): React.JSX.Element | null {
   if (!open) {
     return null
@@ -208,44 +211,50 @@ export function DrawerMenu({
   const activeHref = findActiveNavHref(pathname, items)
 
   const closeDrawer = (): void => {
-    setTimeout(() => onOpenChange(false), 0)
+    onOpenChange(false)
   }
 
   return (
-    <View
-      className="absolute inset-x-0 bottom-0 z-40 flex-row justify-end"
-      style={{ top: topOffset }}
-      pointerEvents="box-none"
+    <Modal
+      animationType="fade"
+      onRequestClose={closeDrawer}
+      transparent
+      visible
     >
-      <Pressable
-        accessibilityLabel="Close navigation menu"
-        className="absolute inset-0 bg-slate-900/50"
-        style={{ zIndex: 0 }}
-        onPress={() => onOpenChange(false)}
-      />
-      <View
-        className={cn(
-          "h-full border-l border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900",
-          className,
-        )}
-        style={{ width: "80%", maxWidth: DOCS_SIDEBAR_WIDTH, zIndex: 1 }}
-      >
-        <View className="flex-1 gap-1">
-          {items.map((item) => (
-            <DrawerNavItem
-              key={`${item.href}-${item.label}`}
-              item={item}
-              pathname={pathname}
-              activeHref={activeHref}
-              depth={0}
-              LinkComponent={LinkComponent}
-              renderIcon={renderIcon}
-              onNavigate={closeDrawer}
-            />
-          ))}
+      <View className="flex-1">
+        {header ?? <View style={{ height: topOffset }} />}
+        <View className="flex-1 flex-row justify-end">
+          <Pressable
+            accessibilityLabel="Close navigation menu"
+            accessibilityRole="button"
+            onPress={closeDrawer}
+            style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(15, 23, 42, 0.5)" }]}
+          />
+          <View
+            className={cn(
+              "h-full border-l border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900",
+              className,
+            )}
+            style={{ width: "80%", maxWidth: DOCS_SIDEBAR_WIDTH, zIndex: 1 }}
+          >
+            <View className="flex-1 gap-1">
+              {items.map((item) => (
+                <DrawerNavItem
+                  key={`${item.href}-${item.label}`}
+                  item={item}
+                  pathname={pathname}
+                  activeHref={activeHref}
+                  depth={0}
+                  LinkComponent={LinkComponent}
+                  renderIcon={renderIcon}
+                  onNavigate={closeDrawer}
+                />
+              ))}
+            </View>
+            {footer ? <View className="mt-auto items-stretch gap-2 pt-4">{footer}</View> : null}
+          </View>
         </View>
-        {footer ? <View className="mt-auto items-stretch gap-2 pt-4">{footer}</View> : null}
       </View>
-    </View>
+    </Modal>
   )
 }
