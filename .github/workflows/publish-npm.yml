@@ -111,5 +111,10 @@ jobs:
             echo "$name@$version is already published; skipping it."
             exit 0
           fi
+          dist_dir="packages/$package/dist"
+          if [ ! -d "$dist_dir" ]; then
+            echo "Missing $dist_dir — verify job must upload built artifacts before publish."
+            exit 1
+          fi
           node scripts/wait-for-npm-dependencies.mjs "packages/$package"
           npm publish "./packages/$package" --access public
