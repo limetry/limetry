@@ -18,7 +18,7 @@ export type SecretInputs = {
   /**
    * Postgres connection string stored as `DATABASE_URL`.
    */
-  databaseUrl: pulumi.Input<string>
+  databaseUrl: pulumi.Input<string> | undefined
   /**
    * JWT signing secret.
    */
@@ -60,7 +60,7 @@ export type SecretOutputs = {
   /**
    * SecureString parameter for `DATABASE_URL`.
    */
-  databaseUrlParam: aws.ssm.Parameter
+  databaseUrlParam: aws.ssm.Parameter | undefined
   /**
    * SecureString parameter for `JWT_SECRET`.
    */
@@ -144,12 +144,14 @@ function createSecretParam(args: SecretParamArgs): aws.ssm.Parameter {
 export function createSecrets(inputs: SecretInputs): SecretOutputs {
   const parameterPrefix = getSsmParameterPrefix()
 
-  const databaseUrlParam = createSecretParam({
-    logicalName: "database-url",
-    paramName: "DATABASE_URL",
-    value: inputs.databaseUrl,
-    description: "Neon serverless Postgres connection string for Limetry OSS API",
-  })
+  const databaseUrlParam = inputs.databaseUrl
+    ? createSecretParam({
+      logicalName: "database-url",
+      paramName: "DATABASE_URL",
+      value: inputs.databaseUrl,
+      description: "Neon serverless Postgres connection string for Limetry OSS API",
+    })
+    : undefined
 
   const jwtSecretParam = createSecretParam({
     logicalName: "jwt-secret",

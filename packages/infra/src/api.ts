@@ -40,7 +40,7 @@ export type ApiInputs = {
   /**
    * Postgres connection string (`DATABASE_URL`).
    */
-  databaseUrl: pulumi.Input<string>
+  databaseUrl: pulumi.Input<string> | undefined
   /**
    * JWT signing secret.
    */
@@ -200,9 +200,8 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
   })
 
   const environment: Record<string, pulumi.Input<string>> = {
-    NODE_ENV: "production",
-    USE_POSTGRES_STORE: "true",
-    DATABASE_URL: inputs.databaseUrl,
+    NODE_ENV: inputs.databaseUrl ? "production" : "test",
+    USE_POSTGRES_STORE: inputs.databaseUrl ? "true" : "false",
     JWT_SECRET: inputs.jwtSecret,
     LIMETRY_BEARER_TOKEN: inputs.bearerToken,
     DECISION_HMAC_SECRET: inputs.decisionHmacSecret,
@@ -213,6 +212,10 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
     NEXT_PUBLIC_WEB_URL: `https://${inputs.webHostname}`,
     NEXT_PUBLIC_IS_CLOUD_ENABLED: inputs.isCloudEnabled,
     NEXT_PUBLIC_LAUNCHING_SOON: inputs.launchingSoon,
+  }
+
+  if (inputs.databaseUrl) {
+    environment.DATABASE_URL = inputs.databaseUrl
   }
 
   if (inputs.authSigningPrivateKeyHex !== undefined) {

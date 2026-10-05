@@ -41,6 +41,10 @@ export type OssStackConfig = {
    */
   isLoadTestApiOnly: boolean
   /**
+   * When true, the isolated API uses in-memory stores instead of Postgres.
+   */
+  isLoadTestStoreMemory: boolean
+  /**
    * Marketing apex hostname (CloudFront alias when certificates are managed).
    */
   domain: string
@@ -160,7 +164,7 @@ export type OssStackConfig = {
   /**
    * Neon (or other) Postgres connection string secret.
    */
-  databaseUrl: pulumi.Output<string>
+  databaseUrl: pulumi.Output<string> | undefined
   /**
    * JWT signing secret for the API.
    */
@@ -254,8 +258,15 @@ export function loadOssStackConfig(): OssStackConfig {
     throw new Error("limetry-oss:defaultAuditMode must be minimal or forensics")
   }
 
+  const isLoadTestStoreMemory = config.getBoolean("isLoadTestStoreMemory") ?? false
+  const databaseUrl = config.getSecret("databaseUrl")
+  if (!isLoadTestStoreMemory && !databaseUrl) {
+    throw new Error("limetry-oss:databaseUrl is required when isLoadTestStoreMemory is false")
+  }
+
   return {
     isLoadTestApiOnly: config.getBoolean("isLoadTestApiOnly") ?? false,
+    isLoadTestStoreMemory,
     domain,
     apiHostname: config.get("apiHostname") ?? "api.limetry.com",
     portalHostname: config.get("portalHostname") ?? defaultAppHostname(domain),
@@ -286,7 +297,7 @@ export function loadOssStackConfig(): OssStackConfig {
     throttleMaxRequestsPerMinute: config.get("throttleMaxRequestsPerMinute") ?? "5",
     defaultAuditMode,
     auditRetentionDays: config.get("auditRetentionDays") ?? "90",
-    databaseUrl: config.requireSecret("databaseUrl"),
+    databaseUrl,
     jwtSecret: config.requireSecret("jwtSecret"),
     bearerToken: config.requireSecret("bearerToken"),
     decisionHmacSecret: config.requireSecret("decisionHmacSecret"),
