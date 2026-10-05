@@ -259,7 +259,7 @@ export function loadOssStackConfig(): OssStackConfig {
   }
 
   const isLoadTestStoreMemory = config.getBoolean("isLoadTestStoreMemory") ?? false
-  const databaseUrl = config.getSecret("databaseUrl")
+  const databaseUrl = isLoadTestStoreMemory ? undefined : config.getSecret("databaseUrl")
   if (!isLoadTestStoreMemory && !databaseUrl) {
     throw new Error("limetry-oss:databaseUrl is required when isLoadTestStoreMemory is false")
   }
