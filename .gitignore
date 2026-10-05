@@ -8,6 +8,8 @@ target/
 **/node_modules
 **/*.tsbuildinfo
 **/dist
+**/Pulumi.load-test-config.yaml
+**/Pulumi.load-target-*.yaml
 **/build
 **/coverage
 packages/server/lambda-bundle
