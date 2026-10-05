@@ -30,12 +30,18 @@ import {
   ossPublicUrls,
   shouldManageWww,
 } from "./dns-names.js"
+import { assertLoadTestDatabaseUrl } from "./load-test-safety.js"
 import { createMonitoring } from "./monitoring.js"
 import { describeNeonConfig } from "./neon.js"
 import { createSecrets } from "./secrets.js"
 import { createWeb } from "./web.js"
 
 const cfg = loadOssStackConfig()
+const databaseUrl = cfg.databaseUrl === undefined
+  ? undefined
+  : pulumi.output(cfg.databaseUrl).apply((url) => cfg.isLoadTestApiOnly
+    ? assertLoadTestDatabaseUrl(url, cfg.loadTestProtectedDatabaseHosts)
+    : url)
 const includeWww = shouldManageWww(cfg.domain, cfg.cloudflareZoneName)
 const publicHosts = ossPublicUrls({
   apiHostname: cfg.apiHostname,
@@ -70,7 +76,7 @@ pulumi.log.info(describeNeonConfig({
 }))
 
 const secrets = createSecrets({
-  databaseUrl: cfg.databaseUrl,
+  databaseUrl,
   jwtSecret: cfg.jwtSecret,
   bearerToken: cfg.bearerToken,
   decisionHmacSecret: cfg.decisionHmacSecret,
@@ -116,11 +122,13 @@ const web = cfg.isLoadTestApiOnly
 
 const api = createApi({
   apiHostname: cfg.apiHostname,
+  isLoadTestApiOnly: cfg.isLoadTestApiOnly,
+  loadTestProtectedDatabaseHosts: cfg.loadTestProtectedDatabaseHosts,
   webHostname: cfg.domain,
   isCloudEnabled: cfg.isCloudEnabled,
   launchingSoon: cfg.launchingSoon,
   serverArtifactPath: cfg.serverArtifactPath,
-  databaseUrl: cfg.databaseUrl,
+  databaseUrl,
   jwtSecret: cfg.jwtSecret,
   bearerToken: cfg.bearerToken,
   decisionHmacSecret: cfg.decisionHmacSecret,

@@ -177,6 +177,27 @@ Root shortcuts: `yarn typecheck:infra`, `yarn deploy:infra:preview`, `yarn deplo
 
 CI deploys stack `oss-prod`. A local `dev` stack (`Pulumi.dev.yaml`) is optional for previews; it uses the same four required secrets.
 
+## Isolated API load-test stacks
+
+Set `isLoadTestApiOnly=true` only on an ephemeral stack named
+`load-target-*` or `load-test-*`. The stack guard rejects `dev`, `prod`, and
+protected Limetry hostnames, and API-only mode skips web, certificate, and
+Cloudflare resources.
+
+Memory-store load tests do not need a database. For a persistent isolated
+target, set `loadTestProtectedDatabaseHosts` to every production database host
+before deploying; the Lambda rejects a protected host at runtime:
+
+```bash
+pulumi config set isLoadTestApiOnly true --stack load-target-limetry-run
+pulumi config set isLoadTestStoreMemory false --stack load-target-limetry-run
+pulumi config set loadTestProtectedDatabaseHosts prod-db.example.com \
+  --stack load-target-limetry-run
+```
+
+Use a dedicated non-production database URL and update the protected-host
+configuration whenever a production endpoint changes.
+
 ## DNS (Cloudflare)
 
 `manageCloudflare` (default `true`) creates the records during `pulumi up`:

@@ -13,12 +13,15 @@ import * as aws from "@pulumi/aws"
 import * as pulumi from "@pulumi/pulumi"
 
 import { resolveArtifactDir } from "./artifacts.js"
+import { assertLoadTestDatabaseUrl } from "./load-test-safety.js"
 import { getName, getSsmParameterPrefix, getTags } from "./tags.js"
 
 /**
  * Inputs for {@link createApi}.
  */
 export type ApiInputs = {
+  isLoadTestApiOnly: boolean
+  loadTestProtectedDatabaseHosts: readonly string[]
   /**
    * Custom API hostname when a certificate ARN is supplied.
    */
@@ -199,9 +202,14 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
     }),
   })
 
+  const databaseUrl = inputs.databaseUrl === undefined
+    ? undefined
+    : pulumi.output(inputs.databaseUrl).apply((url) => inputs.isLoadTestApiOnly
+      ? assertLoadTestDatabaseUrl(url, inputs.loadTestProtectedDatabaseHosts)
+      : url)
   const environment: Record<string, pulumi.Input<string>> = {
-    NODE_ENV: inputs.databaseUrl ? "production" : "test",
-    USE_POSTGRES_STORE: inputs.databaseUrl ? "true" : "false",
+    NODE_ENV: databaseUrl ? "production" : "test",
+    USE_POSTGRES_STORE: databaseUrl ? "true" : "false",
     JWT_SECRET: inputs.jwtSecret,
     LIMETRY_BEARER_TOKEN: inputs.bearerToken,
     DECISION_HMAC_SECRET: inputs.decisionHmacSecret,
@@ -214,8 +222,8 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
     NEXT_PUBLIC_LAUNCHING_SOON: inputs.launchingSoon,
   }
 
-  if (inputs.databaseUrl) {
-    environment.DATABASE_URL = inputs.databaseUrl
+  if (databaseUrl) {
+    environment.DATABASE_URL = databaseUrl
   }
 
   if (inputs.authSigningPrivateKeyHex !== undefined) {

@@ -11,6 +11,12 @@ import * as pulumi from "@pulumi/pulumi"
 
 import { type BudgetThresholds, resolveBudgetThresholds } from "./budget-config.js"
 import { inferCloudflareZoneName } from "./dns-names.js"
+import {
+  assertLoadTestStackSafety,
+  DEFAULT_LOAD_TEST_PROTECTED_HOSTNAMES,
+  DEFAULT_LOAD_TEST_PROTECTED_STACK_NAMES,
+  parseLoadTestList,
+} from "./load-test-safety.js"
 
 /**
  * Typed stack configuration for the Limetry OSS Pulumi project.
@@ -40,6 +46,9 @@ export type OssStackConfig = {
    * When true, provision only the API resources needed by an isolated load test.
    */
   isLoadTestApiOnly: boolean
+  loadTestProtectedDatabaseHosts: readonly string[]
+  loadTestProtectedHostnames: readonly string[]
+  loadTestProtectedStackNames: readonly string[]
   /**
    * When true, the isolated API uses in-memory stores instead of Postgres.
    */
@@ -253,6 +262,27 @@ function defaultAppHostname(domain: string): string {
 export function loadOssStackConfig(): OssStackConfig {
   const config = new pulumi.Config()
   const domain = config.get("domain") ?? "limetry.com"
+  const apiHostname = config.get("apiHostname") ?? "api.limetry.com"
+  const isLoadTestApiOnly = config.getBoolean("isLoadTestApiOnly") ?? false
+  const loadTestProtectedDatabaseHosts = parseLoadTestList(
+    config.get("loadTestProtectedDatabaseHosts"),
+  )
+  const loadTestProtectedHostnames = [
+    ...DEFAULT_LOAD_TEST_PROTECTED_HOSTNAMES,
+    ...parseLoadTestList(config.get("loadTestProtectedHostnames")),
+  ]
+  const loadTestProtectedStackNames = [
+    ...DEFAULT_LOAD_TEST_PROTECTED_STACK_NAMES,
+    ...parseLoadTestList(config.get("loadTestProtectedStackNames")),
+  ]
+  assertLoadTestStackSafety({
+    apiHostname,
+    domain,
+    isLoadTestApiOnly,
+    protectedHostnames: loadTestProtectedHostnames,
+    protectedStackNames: loadTestProtectedStackNames,
+    stackName: pulumi.getStack(),
+  })
   const defaultAuditMode = config.get("defaultAuditMode") ?? "minimal"
   if (defaultAuditMode !== "minimal" && defaultAuditMode !== "forensics") {
     throw new Error("limetry-oss:defaultAuditMode must be minimal or forensics")
@@ -265,10 +295,13 @@ export function loadOssStackConfig(): OssStackConfig {
   }
 
   return {
-    isLoadTestApiOnly: config.getBoolean("isLoadTestApiOnly") ?? false,
+    isLoadTestApiOnly,
+    loadTestProtectedDatabaseHosts,
+    loadTestProtectedHostnames,
+    loadTestProtectedStackNames,
     isLoadTestStoreMemory,
     domain,
-    apiHostname: config.get("apiHostname") ?? "api.limetry.com",
+    apiHostname,
     portalHostname: config.get("portalHostname") ?? defaultAppHostname(domain),
     manageRoute53: config.getBoolean("manageRoute53") ?? false,
     createHostedZone: config.getBoolean("createHostedZone") ?? false,
