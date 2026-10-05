@@ -221,6 +221,16 @@ export const apiInvokeUrl = api.invokeUrl
 export const lambdaArn = api.lambdaArn
 
 /**
+ * API Lambda function name for operational log lookup.
+ */
+export const lambdaFunctionName = api.lambdaFunctionName
+
+/**
+ * API Lambda log group name for load-test artifact collection.
+ */
+export const apiLogGroupName = api.logGroupName
+
+/**
  * API Gateway HTTP API id.
  */
 export const httpApiId = api.httpApiId
