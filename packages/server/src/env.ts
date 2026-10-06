@@ -49,6 +49,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   REPLAY_WINDOW_MS: z.coerce.number().int().positive().default(300_000),
   THROTTLE_MAX_REQUESTS_PER_MINUTE: z.coerce.number().int().positive().default(5),
+  LOAD_TEST_POLICY_JSON: z.preprocess(
+    emptyStringToUndefined,
+    z.string().optional(),
+  ),
   REDIS_URL: z.preprocess(
     emptyStringToUndefined,
     z.string().url().optional(),

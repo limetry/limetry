@@ -32,6 +32,7 @@ import { createActionRoutes } from "./routes/actions.js"
 import { createAuthRoutes } from "./routes/auth.js"
 import { createRuleRoutes } from "./routes/rules.js"
 import { createUserRoutes } from "./routes/users.js"
+import { actionPolicySchema } from "./schemas/action.js"
 import {
   type ApprovalStore,
   InMemoryApprovalStore,
@@ -137,6 +138,17 @@ export function createApp(options: CreateAppOptions) {
   const policyRegistry = options.policyRegistry ?? new InMemoryPolicyRegistry()
   const auditStore = options.auditStore ?? new InMemoryAuditStore()
   const approvalStore = options.approvalStore ?? new InMemoryApprovalStore()
+  if (options.env.LOAD_TEST_POLICY_JSON) {
+    try {
+      const policy = actionPolicySchema.parse(JSON.parse(options.env.LOAD_TEST_POLICY_JSON))
+      void policyRegistry.registerPolicy("default", policy)
+    } catch (error) {
+      logger.warn(
+        { error },
+        "load-test policy seed was invalid and was ignored",
+      )
+    }
+  }
 
   const app = express()
   app.use(express.json({ limit: "1mb" }))

@@ -65,6 +65,10 @@ export type ApiInputs = {
    */
   throttleMaxRequestsPerMinute: pulumi.Input<string>
   /**
+   * Optional policy JSON seeded by isolated in-memory load-test APIs.
+   */
+  loadTestPolicyJson: string | undefined
+  /**
    * Default audit mode (`minimal` / `forensics`).
    */
   defaultAuditMode: pulumi.Input<string>
@@ -220,6 +224,10 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
     NEXT_PUBLIC_WEB_URL: `https://${inputs.webHostname}`,
     NEXT_PUBLIC_IS_CLOUD_ENABLED: inputs.isCloudEnabled,
     NEXT_PUBLIC_LAUNCHING_SOON: inputs.launchingSoon,
+  }
+
+  if (inputs.loadTestPolicyJson !== undefined) {
+    environment.LOAD_TEST_POLICY_JSON = inputs.loadTestPolicyJson
   }
 
   if (databaseUrl) {

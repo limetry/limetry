@@ -54,6 +54,10 @@ export type OssStackConfig = {
    */
   isLoadTestStoreMemory: boolean
   /**
+   * Optional policy JSON seeded into every isolated in-memory API process.
+   */
+  loadTestPolicyJson: string | undefined
+  /**
    * Marketing apex hostname (CloudFront alias when certificates are managed).
    */
   domain: string
@@ -289,6 +293,9 @@ export function loadOssStackConfig(): OssStackConfig {
   }
 
   const isLoadTestStoreMemory = config.getBoolean("isLoadTestStoreMemory") ?? false
+  const loadTestPolicyJson = isLoadTestStoreMemory
+    ? config.get("loadTestPolicyJson")
+    : undefined
   const databaseUrl = isLoadTestStoreMemory ? undefined : config.getSecret("databaseUrl")
   if (!isLoadTestStoreMemory && !databaseUrl) {
     throw new Error("limetry-oss:databaseUrl is required when isLoadTestStoreMemory is false")
@@ -300,6 +307,7 @@ export function loadOssStackConfig(): OssStackConfig {
     loadTestProtectedHostnames,
     loadTestProtectedStackNames,
     isLoadTestStoreMemory,
+    loadTestPolicyJson,
     domain,
     apiHostname,
     portalHostname: config.get("portalHostname") ?? defaultAppHostname(domain),

@@ -134,6 +134,7 @@ const api = createApi({
   decisionHmacSecret: cfg.decisionHmacSecret,
   replayWindowMs: cfg.replayWindowMs,
   throttleMaxRequestsPerMinute: cfg.throttleMaxRequestsPerMinute,
+  loadTestPolicyJson: cfg.loadTestPolicyJson,
   defaultAuditMode: cfg.defaultAuditMode,
   auditRetentionDays: cfg.auditRetentionDays,
   authSigningPrivateKeyHex: cfg.authSigningPrivateKeyHex,
