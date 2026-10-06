@@ -46,7 +46,10 @@ export {
 export type * from "./types.js"
 export {
   DEFAULT_LIMETRY_BASE_URL,
+  DEFAULT_LIMETRY_CLOUD_BASE_URL,
+  LIMETRY_CLOUD_APP_ORIGIN,
   LIMETRY_CLOUD_ORIGINS,
   LIMETRY_OSS_ORIGINS,
   resolveLimetryBaseUrl,
+  resolveLimetryCloudBaseUrl,
 } from "./urls.js"

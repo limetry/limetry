@@ -1,11 +1,16 @@
 /**
  * Interactive `limetry setup` wizard for self-hosted or cloud API credentials.
  *
- * Side effects: may open a browser, writes `~/.limetry/config.json`, probes `/health`,
+ * Side effects: writes `~/.limetry/config.json`, probes `/health`,
  * and may `process.exit(1)` on connectivity failure.
  */
 
-import { DEFAULT_LIMETRY_BASE_URL } from "@limetry/sdk"
+import {
+  DEFAULT_LIMETRY_BASE_URL,
+  DEFAULT_LIMETRY_CLOUD_BASE_URL,
+  LIMETRY_CLOUD_APP_ORIGIN,
+  resolveLimetryCloudBaseUrl,
+} from "@limetry/sdk"
 import chalk from "chalk"
 import { mkdirSync, writeFileSync } from "fs"
 import inquirer from "inquirer"
@@ -15,6 +20,8 @@ import { dirname, join } from "path"
 import { logError, logInfo, logSuccess } from "../../utils/config.js"
 
 const CONFIG_PATH = join(homedir(), ".limetry", "config.json")
+
+type SetupTarget = "oss" | "cloud"
 
 /**
  * Probes `{baseUrl}/health` with a Bearer API key.
@@ -51,16 +58,6 @@ function writeConfig(baseUrl: string, apiKey: string): void {
 /**
  * Runs the interactive setup wizard (`limetry setup`).
  *
- * Prompts for self-hosted URL + `LIMETRY_BEARER_TOKEN`, or cloud API key.
- * Reads no env vars directly for credentials (user input only); cloud mode
- * opens docs at {@link CLOUD_SIGNUP_URL}.
- *
- * Side effects:
- * - May open the system browser to the quick-start docs.
- * - Writes `~/.limetry/config.json` on success.
- * - Calls `GET {baseUrl}/health` with the entered API key.
- * - Exits with code 1 when connectivity fails.
- *
  * @returns Resolves when setup completes successfully.
  */
 export async function setupCommand(): Promise<void> {
@@ -68,28 +65,65 @@ export async function setupCommand(): Promise<void> {
   console.log(chalk.bold("  Limetry — Setup Wizard"))
   console.log(chalk.dim("  Govern sensitive agent tool calls in under 5 minutes.\n"))
 
+  const { target } = await inquirer.prompt<{ target: SetupTarget }>([
+    {
+      type: "list",
+      name: "target",
+      message: "Which API will this CLI use?",
+      choices: [
+        {
+          name: `Limetry Cloud (organization) — ${DEFAULT_LIMETRY_CLOUD_BASE_URL}`,
+          value: "cloud",
+        },
+        {
+          name: `Self-hosted / OSS API — ${DEFAULT_LIMETRY_BASE_URL}`,
+          value: "oss",
+        },
+      ],
+      default: "cloud",
+    },
+  ])
+
+  const defaultUrl =
+    target === "cloud"
+      ? resolveLimetryCloudBaseUrl()
+      : DEFAULT_LIMETRY_BASE_URL
+
+  if (target === "cloud") {
+    console.log()
+    console.log(chalk.dim(`  Portal: ${LIMETRY_CLOUD_APP_ORIGIN}`))
+    console.log(chalk.dim(`  Sign up → ${LIMETRY_CLOUD_APP_ORIGIN}/sign-up`))
+    console.log(chalk.dim(`  Agent token → ${LIMETRY_CLOUD_APP_ORIGIN}/tokens/create`))
+    console.log(chalk.dim(`  Onboarding checklist → ${LIMETRY_CLOUD_APP_ORIGIN}/connect\n`))
+  }
+
   const { url } = await inquirer.prompt([
     {
       type: "input",
       name: "url",
-      message: "Evaluation server URL:",
-      default: DEFAULT_LIMETRY_BASE_URL,
+      message: "Evaluation API base URL:",
+      default: defaultUrl,
       validate: (input: string) => {
         try {
           new URL(input)
           return true
         } catch {
-          return `Enter a valid URL (e.g. ${DEFAULT_LIMETRY_BASE_URL})`
+          return `Enter a valid URL (e.g. ${defaultUrl})`
         }
       },
     },
   ])
 
+  const tokenMessage =
+    target === "cloud"
+      ? "Organization agent token (from portal → Tokens):"
+      : "Bearer token (LIMETRY_BEARER_TOKEN):"
+
   const { key } = await inquirer.prompt([
     {
       type: "password",
       name: "key",
-      message: "Bearer token (LIMETRY_BEARER_TOKEN):",
+      message: tokenMessage,
       mask: "*",
       validate: (input: string) =>
         input.trim().length >= 16 || "Token must be at least 16 characters",
@@ -106,7 +140,11 @@ export async function setupCommand(): Promise<void> {
   if (!ok) {
     process.stdout.write(chalk.red(" ✗\n\n"))
     logError(`Could not connect to ${baseUrl}`)
-    logInfo("Check your URL and bearer token, then run `limetry setup` again.")
+    if (target === "cloud") {
+      logInfo(`Create a scoped token at ${LIMETRY_CLOUD_APP_ORIGIN}/tokens/create, then run \`limetry setup\` again.`)
+    } else {
+      logInfo("Check your URL and bearer token, then run `limetry setup` again.")
+    }
     process.exit(1)
   }
 
