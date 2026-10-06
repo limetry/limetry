@@ -4,7 +4,7 @@
 
 import { z } from "zod"
 
-import { resolveWebOrigins } from "./public-origins"
+import { CANONICAL_ORIGINS, resolveWebOrigins } from "./public-origins"
 
 /**
  * Zod preprocess helper: treats blank strings as unset.
@@ -18,15 +18,15 @@ const emptyStringToUndefined = (value: unknown): unknown =>
 const envSchema = z.object({
   NEXT_PUBLIC_WEB_URL: z.preprocess(
     emptyStringToUndefined,
-    z.string().url().default("http://localhost:3800"),
+    z.string().url().default(CANONICAL_ORIGINS.web),
   ),
   NEXT_PUBLIC_APP_URL: z.preprocess(
     emptyStringToUndefined,
-    z.string().url().default("http://localhost:3830"),
+    z.string().url().default(CANONICAL_ORIGINS.app),
   ),
   NEXT_PUBLIC_API_URL: z.preprocess(
     emptyStringToUndefined,
-    z.string().url().default("http://localhost:3810"),
+    z.string().url().default(CANONICAL_ORIGINS.ossApi),
   ),
   NEXT_PUBLIC_GITHUB_URL: z.preprocess(
     emptyStringToUndefined,

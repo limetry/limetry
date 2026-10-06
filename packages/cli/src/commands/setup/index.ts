@@ -5,6 +5,7 @@
  * and may `process.exit(1)` on connectivity failure.
  */
 
+import { DEFAULT_LIMETRY_BASE_URL } from "@limetry/sdk"
 import chalk from "chalk"
 import { mkdirSync, writeFileSync } from "fs"
 import inquirer from "inquirer"
@@ -72,13 +73,13 @@ export async function setupCommand(): Promise<void> {
       type: "input",
       name: "url",
       message: "Evaluation server URL:",
-      default: "http://localhost:3810",
+      default: DEFAULT_LIMETRY_BASE_URL,
       validate: (input: string) => {
         try {
           new URL(input)
           return true
         } catch {
-          return "Enter a valid URL (e.g. http://localhost:3810)"
+          return `Enter a valid URL (e.g. ${DEFAULT_LIMETRY_BASE_URL})`
         }
       },
     },

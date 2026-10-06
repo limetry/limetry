@@ -4,12 +4,12 @@ import { describe, it } from "node:test"
 import { CANONICAL_ORIGINS, resolveWebOrigins } from "./public-origins"
 
 describe("web public origins", () => {
-  it("keeps localhost defaults for local development", () => {
+  it("uses canonical product URLs when env is unset", () => {
     const origins = resolveWebOrigins({ NODE_ENV: "development" })
-    assert.equal(origins.web.url, "http://localhost:3800")
+    assert.equal(origins.web.url, CANONICAL_ORIGINS.web)
     assert.equal(origins.web.source, "default")
-    assert.equal(origins.app.url, "http://localhost:3830")
-    assert.equal(origins.api.url, "http://localhost:3810")
+    assert.equal(origins.app.url, CANONICAL_ORIGINS.app)
+    assert.equal(origins.api.url, CANONICAL_ORIGINS.ossApi)
   })
 
   it("uses Vercel self URL for the marketing site and canonical product URLs", () => {

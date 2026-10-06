@@ -38,11 +38,13 @@
     "test": "vitest run --coverage",
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "@limetry/sdk": "workspace:*"
+  },
   "peerDependencies": {
     "@limetry/sdk": "*"
   },
   "devDependencies": {
-    "@limetry/sdk": "workspace:*",
     "@types/node": "^26.4.1",
     "@vitest/coverage-v8": "4.1.11",
     "typescript": "^5.8.2",

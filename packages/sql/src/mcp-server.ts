@@ -7,6 +7,7 @@
  * `LIMETRY_SQL_DRY_RUN=false`.
  */
 
+import { resolveLimetryBaseUrl } from "@limetry/sdk"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
@@ -31,7 +32,7 @@ const POLICY_ID = process.env.LIMETRY_POLICY_ID ?? ""
 /**
  * Optional Limetry API base URL.
  */
-const BASE_URL = process.env.LIMETRY_BASE_URL
+const BASE_URL = resolveLimetryBaseUrl()
 
 /**
  * Agent id for intents created by this MCP server.

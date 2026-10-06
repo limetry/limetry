@@ -10,6 +10,7 @@ import type {
   ActionEvaluationResponse,
   ActionIntent,
 } from "../types.js"
+import { resolveLimetryBaseUrl } from "../urls.js"
 
 /**
  * Construction options for {@link RemotePolicyEngine}.
@@ -17,7 +18,7 @@ import type {
 export type RemotePolicyEngineOptions = {
   /**
    * Base URL of the Limetry server.
-   * Defaults to the hosted cloud API: https://api.limetry.com
+   * Defaults to the OSS production API: https://api.limetry.org
    */
   baseUrl?: string
   /**
@@ -34,11 +35,6 @@ export type RemotePolicyEngineOptions = {
    */
   fetch?: typeof globalThis.fetch
 }
-
-/**
- * Default hosted Limetry API origin when `baseUrl` is omitted.
- */
-const DEFAULT_BASE_URL = "https://api.limetry.com"
 
 /**
  * Posts a JSON body to a Limetry API URL with Bearer authentication.
@@ -92,7 +88,7 @@ export class RemotePolicyEngine {
    * @throws {@link EngineLoadError} when no `fetch` implementation is available.
    */
   constructor(options: RemotePolicyEngineOptions) {
-    this.baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, "")
+    this.baseUrl = resolveLimetryBaseUrl(process.env, options.baseUrl)
     this.apiKey = options.apiKey
     this.tenantId = options.tenantId ?? "default"
     this.fetcher = options.fetch ?? globalThis.fetch
@@ -151,7 +147,7 @@ export function createRemoteEngine(overrides?: Partial<RemotePolicyEngineOptions
   }
 
   return new RemotePolicyEngine({
-    baseUrl: overrides?.baseUrl ?? process.env.LIMETRY_BASE_URL ?? DEFAULT_BASE_URL,
+    baseUrl: resolveLimetryBaseUrl(process.env, overrides?.baseUrl),
     apiKey,
     ...overrides,
   })

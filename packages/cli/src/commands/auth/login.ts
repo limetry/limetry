@@ -7,6 +7,7 @@
  * Side effects: writes JWT and user fields to `~/.limetry/config.json`; may `process.exit(1)`.
  */
 
+import { resolveLimetryBaseUrl } from "@limetry/sdk"
 import fetch from "node-fetch"
 
 import {
@@ -27,7 +28,7 @@ import { describeCliError, describeHttpFailure } from "../../utils/errors.js"
  * Posts to `POST {baseUrl}/v1/auth/login`.
  *
  * Base URL resolution order: saved `config.baseUrl`, then `LIMETRY_BASE_URL`, then
- * `http://localhost:3810`.
+ * `https://api.limetry.org`.
  *
  * Side effects:
  * - Prompts for email and password on stdin.
@@ -48,8 +49,7 @@ export async function loginCommand(): Promise<void> {
   const email = await promptForEmail()
   const password = await promptForPassword()
 
-  const baseUrl =
-    config?.baseUrl || process.env.LIMETRY_BASE_URL || "http://localhost:3810"
+  const baseUrl = config?.baseUrl || resolveLimetryBaseUrl()
 
   try {
     logInfo("Authenticating...")

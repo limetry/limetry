@@ -2,6 +2,10 @@
  * Resolve public web, app, and API origins from env, Vercel, or canonical defaults.
  */
 
+import {
+  LIMETRY_OSS_ORIGINS,
+} from "@limetry/sdk"
+
 /**
  * Where a resolved origin URL came from.
  */
@@ -20,15 +24,9 @@ export type ResolvedOrigin = {
  * (`domain`, `apiHostname`) and sibling portal/API hostnames when configured.
  */
 export const CANONICAL_ORIGINS = {
-  web: "https://limetry.org",
-  app: "https://app.limetry.com",
-  ossApi: "https://api.limetry.org",
-} as const
-
-const LOCAL_ORIGINS = {
-  web: "http://localhost:3800",
-  app: "http://localhost:3830",
-  ossApi: "http://localhost:3810",
+  web: LIMETRY_OSS_ORIGINS.web,
+  app: LIMETRY_OSS_ORIGINS.app,
+  ossApi: LIMETRY_OSS_ORIGINS.api,
 } as const
 
 /**
@@ -104,11 +102,10 @@ export function vercelSelfOrigin(source: NodeJS.ProcessEnv = process.env): strin
 }
 
 /**
- * Resolves one product origin with env → Vercel self → canonical → local priority.
+ * Resolves one product origin with env → Vercel self → canonical priority.
  *
  * @param explicit - Explicit env URL when set.
  * @param deployedFallback - Canonical production URL.
- * @param localFallback - Local development URL.
  * @param source - Process env for deploy detection.
  * @param selfOrigin - Optional Vercel self origin.
  * @returns Resolved origin and source tag.
@@ -116,7 +113,6 @@ export function vercelSelfOrigin(source: NodeJS.ProcessEnv = process.env): strin
 function resolveOrigin(
   explicit: string | undefined,
   deployedFallback: string,
-  localFallback: string,
   source: NodeJS.ProcessEnv,
   selfOrigin?: string,
 ): ResolvedOrigin {
@@ -129,7 +125,7 @@ function resolveOrigin(
   if (isDeployedEnv(source)) {
     return { url: deployedFallback, source: "canonical" }
   }
-  return { url: localFallback, source: "default" }
+  return { url: deployedFallback, source: "default" }
 }
 
 /**
@@ -147,20 +143,17 @@ export function resolveWebOrigins(source: NodeJS.ProcessEnv = process.env): {
     web: resolveOrigin(
       firstEnvUrl(source, ["NEXT_PUBLIC_WEB_URL"]),
       CANONICAL_ORIGINS.web,
-      LOCAL_ORIGINS.web,
       source,
       vercelSelfOrigin(source),
     ),
     app: resolveOrigin(
       firstEnvUrl(source, ["NEXT_PUBLIC_APP_URL"]),
       CANONICAL_ORIGINS.app,
-      LOCAL_ORIGINS.app,
       source,
     ),
     api: resolveOrigin(
       firstEnvUrl(source, ["NEXT_PUBLIC_API_URL"]),
       CANONICAL_ORIGINS.ossApi,
-      LOCAL_ORIGINS.ossApi,
       source,
     ),
   }

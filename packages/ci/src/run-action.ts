@@ -6,6 +6,8 @@
 
 import { appendFileSync } from "node:fs"
 
+import { resolveLimetryBaseUrl } from "@limetry/sdk"
+
 import { evaluateCiPrivilege } from "./evaluate.js"
 
 /**
@@ -59,7 +61,10 @@ export async function runAction(env: NodeJS.ProcessEnv = process.env): Promise<n
   const repository = env.GITHUB_REPOSITORY ?? ""
   const ref = env.GITHUB_REF
   const apiKey = env.INPUT_LIMETRY_API_KEY ?? env.LIMETRY_API_KEY ?? ""
-  const baseUrl = env.INPUT_LIMETRY_BASE_URL ?? env.LIMETRY_BASE_URL
+  const baseUrl = resolveLimetryBaseUrl(
+    env,
+    env.INPUT_LIMETRY_BASE_URL ?? env.LIMETRY_BASE_URL,
+  )
   const policyId = env.INPUT_POLICY_ID ?? env.LIMETRY_POLICY_ID ?? ""
   const agentId = env.INPUT_AGENT_ID ?? "github_actions"
   const actionTypeRaw = env.INPUT_ACTION_TYPE ?? "ci_privilege"

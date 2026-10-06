@@ -44,3 +44,9 @@ export {
   scrubResource,
 } from "./privacy/redact.js"
 export type * from "./types.js"
+export {
+  DEFAULT_LIMETRY_BASE_URL,
+  LIMETRY_CLOUD_ORIGINS,
+  LIMETRY_OSS_ORIGINS,
+  resolveLimetryBaseUrl,
+} from "./urls.js"

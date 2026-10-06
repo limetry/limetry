@@ -16,7 +16,7 @@ Requires Node.js 20 or newer.
 
 ## Evaluate an action
 
-`LIMETRY_API_KEY` is a bearer token from `limetry setup` or your organization. `LIMETRY_BASE_URL` overrides the default API origin.
+`LIMETRY_API_KEY` is a bearer token from `limetry setup` or your organization. `LIMETRY_BASE_URL` overrides the default API origin (`https://api.limetry.org`).
 
 ```ts
 import { createRemoteEngine } from "@limetry/sdk"

@@ -29,30 +29,14 @@ function trimTrailingSlash(value: string): string {
  *
  * @param envValue - Static `process.env.NEXT_PUBLIC_*` value.
  * @param canonical - Production canonical origin.
- * @param local - Local development origin.
  * @returns Absolute origin without trailing slash.
  */
-function clientSafeOrigin(
-  envValue: string | undefined,
-  canonical: string,
-  local: string,
-): string {
+function clientSafeOrigin(envValue: string | undefined, canonical: string): string {
   if (envValue && envValue.trim().length > 0) {
     return trimTrailingSlash(trimOrigin(envValue))
   }
-  if (
-    process.env.NODE_ENV === "production"
-    || process.env.VERCEL
-    || process.env.VERCEL_ENV
-  ) {
-    return trimTrailingSlash(canonical)
-  }
-  return trimTrailingSlash(local)
+  return trimTrailingSlash(canonical)
 }
-
-const LOCAL_WEB = "http://localhost:3800"
-const LOCAL_APP = "http://localhost:3830"
-const LOCAL_API = "http://localhost:3810"
 
 /**
  * Client-inlined public URLs for limetry.org.
@@ -61,24 +45,20 @@ export const siteUrls = {
   web: clientSafeOrigin(
     process.env.NEXT_PUBLIC_WEB_URL,
     CANONICAL_ORIGINS.web,
-    LOCAL_WEB,
   ),
   app: clientSafeOrigin(
     process.env.NEXT_PUBLIC_APP_URL,
     CANONICAL_ORIGINS.app,
-    LOCAL_APP,
   ),
   api: clientSafeOrigin(
     process.env.NEXT_PUBLIC_API_URL,
     CANONICAL_ORIGINS.ossApi,
-    LOCAL_API,
   ),
   github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/limetry"),
   discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/VxUWz7cZP"),
   contactUrl: clientSafeOrigin(
     process.env.NEXT_PUBLIC_CONTACT_FORM_URL,
     "https://app.limetry.com/contact",
-    `${LOCAL_APP}/contact`,
   ),
 } as const
 

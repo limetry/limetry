@@ -5,6 +5,8 @@
  * Uses `dryRun: false` so allowed reads can execute when `INPUT_EXECUTE` is not `"false"`.
  */
 
+import { resolveLimetryBaseUrl } from "@limetry/sdk"
+
 import { SqlActionGate } from "./gate.js"
 
 /**
@@ -35,7 +37,7 @@ export async function runSqlCiDemo(
   overrides: SqlCiDemoOverrides = {},
 ): Promise<number> {
   const apiKey = env.INPUT_LIMETRY_API_KEY ?? env.LIMETRY_API_KEY ?? ""
-  const baseUrl = env.INPUT_LIMETRY_BASE_URL ?? env.LIMETRY_BASE_URL
+  const baseUrl = resolveLimetryBaseUrl(env, env.INPUT_LIMETRY_BASE_URL ?? env.LIMETRY_BASE_URL)
   const policyId = env.INPUT_POLICY_ID ?? env.LIMETRY_POLICY_ID ?? ""
   const agentId = env.INPUT_AGENT_ID ?? "sql_agent"
   const sql = env.INPUT_SQL ?? env.LIMETRY_SQL ?? "SELECT 1 AS ok"

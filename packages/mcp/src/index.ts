@@ -4,14 +4,14 @@
  * policy upsert, and approval tools (`\@limetry/mcp`).
  *
  * Requires `LIMETRY_API_KEY` (or `LIMETRY_BEARER_TOKEN`). Optional `LIMETRY_BASE_URL`
- * defaults to `http://localhost:3810`.
+ * defaults to `https://api.limetry.org`.
  *
  * @packageDocumentation
  */
 
 import { randomUUID } from "node:crypto"
 
-import { APP_VERSION, redactDetails } from "@limetry/sdk"
+import { APP_VERSION, redactDetails, resolveLimetryBaseUrl } from "@limetry/sdk"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
@@ -19,7 +19,7 @@ import { z } from "zod"
 /**
  * Limetry HTTP API origin with trailing slash stripped.
  */
-const BASE_URL = (process.env.LIMETRY_BASE_URL ?? "http://localhost:3810").replace(/\/$/, "")
+const BASE_URL = resolveLimetryBaseUrl()
 
 /**
  * Bearer token used for all Limetry API calls.

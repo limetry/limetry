@@ -5,6 +5,8 @@
  * Always sets `dryRun: true` so the Admin API is never called.
  */
 
+import { resolveLimetryBaseUrl } from "@limetry/sdk"
+
 import { ShopifyActionFirewall } from "./client.js"
 
 /**
@@ -49,7 +51,7 @@ export async function runShopifyCiDemo(
   overrides: ShopifyCiDemoOverrides = {},
 ): Promise<number> {
   const apiKey = env.INPUT_LIMETRY_API_KEY ?? env.LIMETRY_API_KEY ?? ""
-  const baseUrl = env.INPUT_LIMETRY_BASE_URL ?? env.LIMETRY_BASE_URL
+  const baseUrl = resolveLimetryBaseUrl(env, env.INPUT_LIMETRY_BASE_URL ?? env.LIMETRY_BASE_URL)
   const policyId = env.INPUT_POLICY_ID ?? env.LIMETRY_POLICY_ID ?? ""
   const agentId = env.INPUT_AGENT_ID ?? "shopify_agent"
   const shopDomain = env.INPUT_SHOP_DOMAIN ?? "demo.myshopify.com"
