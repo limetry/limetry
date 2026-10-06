@@ -18,5 +18,5 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..")
  * @returns Nothing.
  */
 export function loadDotenv(): void {
-  dotenvx.config({ path: repoRoot, quiet: true })
+  dotenvx.config({ path: repoRoot, convention: "nextjs", quiet: true })
 }

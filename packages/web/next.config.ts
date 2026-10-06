@@ -86,7 +86,7 @@ const config: NextConfig = {
             ? [
               {
                 source: "/pricing",
-                destination: process.env.NEXT_PUBLIC_APP_URL || "https://app.limetry.com",
+                destination: `${(process.env.NEXT_PUBLIC_CLOUD_WEB_URL || "https://limetry.com").replace(/\/$/, "")}/pricing`,
                 permanent: false,
               },
             ]

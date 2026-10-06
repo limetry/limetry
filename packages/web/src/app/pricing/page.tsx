@@ -19,7 +19,7 @@ import { siteUrls } from "@/lib/site-urls"
  */
 export default function PricingRedirectPage(): React.JSX.Element {
   useEffect(() => {
-    window.location.replace(isLaunchOpen() ? siteUrls.app : "/")
+    window.location.replace(isLaunchOpen() ? `${siteUrls.cloudWeb}/pricing` : "/")
   }, [])
 
   if (!isLaunchOpen()) {
@@ -34,10 +34,10 @@ export default function PricingRedirectPage(): React.JSX.Element {
     <main className="mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
       <p className="text-sm text-muted-foreground">Opening Limetry Cloud…</p>
       <a
-        href={siteUrls.app}
+        href={`${siteUrls.cloudWeb}/pricing`}
         className="text-sm font-semibold text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
       >
-        Continue to {siteUrls.app.replace(/^https?:\/\//, "")}
+        Continue to {siteUrls.cloudWeb.replace(/^https?:\/\//, "")}/pricing
       </a>
     </main>
   )

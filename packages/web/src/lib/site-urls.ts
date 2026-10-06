@@ -5,6 +5,8 @@
  * accesses so Next can inline them into the client bundle.
  */
 
+import { LIMETRY_CLOUD_ORIGINS } from "@limetry/sdk"
+
 import {
   CANONICAL_ORIGINS,
   type ResolvedOrigin,
@@ -53,6 +55,10 @@ export const siteUrls = {
   api: clientSafeOrigin(
     process.env.NEXT_PUBLIC_API_URL,
     CANONICAL_ORIGINS.ossApi,
+  ),
+  cloudWeb: clientSafeOrigin(
+    process.env.NEXT_PUBLIC_CLOUD_WEB_URL,
+    LIMETRY_CLOUD_ORIGINS.web,
   ),
   github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/limetry"),
   discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/VxUWz7cZP"),
