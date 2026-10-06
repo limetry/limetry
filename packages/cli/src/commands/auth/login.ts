@@ -7,19 +7,7 @@
  * Side effects: writes JWT and user fields to `~/.limetry/config.json`; may `process.exit(1)`.
  */
 
-import { resolveLimetryBaseUrl } from "@limetry/sdk"
-import fetch from "node-fetch"
-
-import {
-  getConfig,
-  logError,
-  logInfo,
-  logSuccess,
-  promptForEmail,
-  promptForPassword,
-  saveConfig,
-} from "../../utils/config.js"
-import { describeCliError, describeHttpFailure } from "../../utils/errors.js"
+import { clerkAuthProvider } from "./browser.js"
 
 /**
  * Authenticates with email/password and persists the JWT session.
@@ -39,54 +27,5 @@ import { describeCliError, describeHttpFailure } from "../../utils/errors.js"
  * @returns Resolves when already logged in or login succeeds.
  */
 export async function loginCommand(): Promise<void> {
-  const config = getConfig()
-
-  if (config?.email) {
-    logInfo("Already authenticated as " + config.email)
-    return
-  }
-
-  const email = await promptForEmail()
-  const password = await promptForPassword()
-
-  const baseUrl = config?.baseUrl || resolveLimetryBaseUrl()
-
-  try {
-    logInfo("Authenticating...")
-
-    const response = await fetch(`${baseUrl}/v1/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    })
-
-    if (!response.ok) {
-      throw new Error(describeHttpFailure(response.status, await response.text()))
-    }
-
-    const data = (await response.json()) as {
-      token: string
-      user: {
-        id: string
-        email: string
-        tenantId: string
-      }
-    }
-
-    saveConfig({
-      baseUrl,
-      apiKey: config?.apiKey ?? process.env.LIMETRY_BEARER_TOKEN ?? "",
-      jwtToken: data.token,
-      tenantId: data.user.tenantId,
-      userId: data.user.id,
-      email: data.user.email,
-    })
-
-    logSuccess(`Authenticated as ${email}`)
-  } catch (error) {
-    logError(describeCliError(error))
-    process.exit(1)
-  }
+  await clerkAuthProvider.login()
 }

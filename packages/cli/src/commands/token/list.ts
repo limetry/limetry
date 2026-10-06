@@ -6,9 +6,9 @@
  */
 
 import chalk from "chalk"
-import fetch from "node-fetch"
 
-import { logError, logInfo, requireAuth } from "../../utils/config.js"
+import { authenticatedFetch, ensureAuthenticatedConfig, responseError } from "../../utils/auth.js"
+import { logError, logInfo } from "../../utils/config.js"
 
 /**
  * Fetches and prints all access tokens for the current API key.
@@ -16,20 +16,17 @@ import { logError, logInfo, requireAuth } from "../../utils/config.js"
  * @returns Resolves when listing completes (including empty list).
  */
 export async function tokenListCommand(): Promise<void> {
-  const config = requireAuth()
+  const config = await ensureAuthenticatedConfig()
 
   try {
     logInfo("Fetching access tokens...")
 
-    const response = await fetch(`${config.baseUrl}/v1/tokens`, {
+    const response = await authenticatedFetch(config, "/v1/tokens", {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-      },
     })
 
     if (!response.ok) {
-      throw new Error("Failed to fetch tokens")
+      throw await responseError(response)
     }
 
     const data = (await response.json()) as Array<{

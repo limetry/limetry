@@ -4,8 +4,9 @@
  * Config path: `~/.limetry/config.json`.
  */
 
+import { chmodSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs"
+
 import chalk from "chalk"
-import { readFileSync, writeFileSync } from "fs"
 import inquirer from "inquirer"
 import { homedir } from "os"
 import { join } from "path"
@@ -24,6 +25,22 @@ export interface CliConfig {
    * Bearer API key / `LIMETRY_BEARER_TOKEN` used for API calls.
    */
   apiKey: string
+  /**
+   * Short-lived Cloud CLI access token.
+   */
+  accessToken?: string
+  /**
+   * Rotating Cloud CLI refresh token.
+   */
+  refreshToken?: string
+  /**
+   * Access-token expiry as Unix milliseconds.
+   */
+  accessTokenExpiresAt?: number
+  /**
+   * Authentication provider used for this session.
+   */
+  authProvider?: "cloud" | "oss"
   /**
    * JWT from `limetry login`, when authenticated via email/password.
    */
@@ -50,7 +67,11 @@ export interface CliConfig {
 export function getConfig(): CliConfig | null {
   try {
     const content = readFileSync(CONFIG_PATH, "utf-8")
-    return JSON.parse(content)
+    const parsed: unknown = JSON.parse(content)
+    if (!isCliConfig(parsed)) {
+      return null
+    }
+    return parsed
   } catch {
     return null
   }
@@ -66,7 +87,17 @@ export function getConfig(): CliConfig | null {
  */
 export function saveConfig(config: CliConfig): void {
   try {
-    writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2))
+    const directory = join(homedir(), ".limetry")
+    mkdirSync(directory, { recursive: true, mode: 0o700 })
+    chmodSync(directory, 0o700)
+    const temporaryPath = `${CONFIG_PATH}.tmp`
+    writeFileSync(temporaryPath, `${JSON.stringify(config, null, 2)}\n`, {
+      encoding: "utf-8",
+      mode: 0o600,
+    })
+    chmodSync(temporaryPath, 0o600)
+    renameSync(temporaryPath, CONFIG_PATH)
+    chmodSync(CONFIG_PATH, 0o600)
   } catch (error) {
     console.error("Failed to save config:", error)
   }
@@ -148,9 +179,42 @@ export function logInfo(message: string): void {
  */
 export function requireAuth(): CliConfig {
   const config = getConfig()
-  if (!config) {
-    logError("Not authenticated. Run 'limetry login' first.")
+  if (!config?.baseUrl || !getAuthToken(config)) {
+    logError("Not authenticated. Run `limetry auth login` first.")
     process.exit(1)
   }
   return config
+}
+
+/**
+ * Returns the active bearer token, preferring a Cloud access token.
+ *
+ * @param config - Persisted CLI configuration.
+ * @returns Bearer token or an empty string.
+ */
+export function getAuthToken(config: CliConfig): string {
+  return config.accessToken ?? config.apiKey
+}
+
+/**
+ * Removes Cloud session fields while preserving the selected API endpoint.
+ *
+ * @param config - Existing CLI configuration.
+ * @returns Configuration without active credentials.
+ */
+export function clearAuthSession(config: CliConfig): CliConfig {
+  const { accessToken: _accessToken, refreshToken: _refreshToken, accessTokenExpiresAt: _expires, ...rest } = config
+  return {
+    ...rest,
+    apiKey: "",
+  }
+}
+
+function isCliConfig(value: unknown): value is CliConfig {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+  const candidate = value as Partial<CliConfig>
+  return typeof candidate.baseUrl === "string"
+    && typeof candidate.apiKey === "string"
 }

@@ -11,7 +11,13 @@
 import { APP_VERSION } from "@limetry/sdk"
 import { Command } from "commander"
 
+import { clerkAuthProvider } from "./commands/auth/browser.js"
 import { loginCommand } from "./commands/auth/login.js"
+import {
+  authEnvCommand,
+  authLogoutCommand,
+  authStatusCommand,
+} from "./commands/auth/session.js"
 import {
   approvalsListCommand,
   approvalsResolveCommand,
@@ -48,8 +54,31 @@ program
 
 program
   .command("login")
-  .description("Authenticate with Limetry (JWT)")
-  .action(loginCommand)
+  .description("Authenticate with Limetry Cloud in a browser")
+  .action(async () => {
+    await loginCommand()
+  })
+
+const authCmd = program.command("auth")
+authCmd.description("Manage CLI authentication")
+authCmd
+  .command("login")
+  .description("Sign in or sign up in the browser")
+  .action(async () => {
+    await clerkAuthProvider.login()
+  })
+authCmd
+  .command("status")
+  .description("Show the current CLI session")
+  .action(authStatusCommand)
+authCmd
+  .command("logout")
+  .description("Revoke the Cloud session and remove local credentials")
+  .action(authLogoutCommand)
+authCmd
+  .command("env")
+  .description("Print shell exports for the current session")
+  .action(authEnvCommand)
 
 const policyCmd = program.command("policy")
 policyCmd.description("Manage action policies")

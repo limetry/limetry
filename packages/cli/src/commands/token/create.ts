@@ -8,9 +8,9 @@
  */
 
 import inquirer from "inquirer"
-import fetch from "node-fetch"
 
-import { logError, logInfo, logSuccess, requireAuth } from "../../utils/config.js"
+import { authenticatedFetch, ensureAuthenticatedConfig, responseError } from "../../utils/auth.js"
+import { logError, logInfo, logSuccess } from "../../utils/config.js"
 
 /**
  * Commander options for `limetry token create`.
@@ -37,7 +37,7 @@ interface CreateTokenOptions {
  * @returns Resolves when the token is created and printed.
  */
 export async function tokenCreateCommand(options: CreateTokenOptions): Promise<void> {
-  const config = requireAuth()
+  const config = await ensureAuthenticatedConfig()
 
   let name = options.name
   let scopes = options.scopes || []
@@ -68,11 +68,10 @@ export async function tokenCreateCommand(options: CreateTokenOptions): Promise<v
   try {
     logInfo("Creating access token...")
 
-    const response = await fetch(`${config.baseUrl}/v1/tokens`, {
+    const response = await authenticatedFetch(config, "/v1/tokens", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
         name,
@@ -82,8 +81,7 @@ export async function tokenCreateCommand(options: CreateTokenOptions): Promise<v
     })
 
     if (!response.ok) {
-      const error = (await response.json()) as Record<string, unknown>
-      throw new Error(String(error.message || "Failed to create token"))
+      throw await responseError(response)
     }
 
     const data = (await response.json()) as { id: string; token: string }

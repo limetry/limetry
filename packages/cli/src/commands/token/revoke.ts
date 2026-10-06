@@ -6,9 +6,9 @@
  */
 
 import inquirer from "inquirer"
-import fetch from "node-fetch"
 
-import { logError, logInfo, logSuccess, requireAuth } from "../../utils/config.js"
+import { authenticatedFetch, ensureAuthenticatedConfig, responseError } from "../../utils/auth.js"
+import { logError, logInfo, logSuccess } from "../../utils/config.js"
 
 /**
  * Revokes the given access token after the user confirms.
@@ -17,7 +17,7 @@ import { logError, logInfo, logSuccess, requireAuth } from "../../utils/config.j
  * @returns Resolves when revoked or the user cancels.
  */
 export async function tokenRevokeCommand(tokenId: string): Promise<void> {
-  const config = requireAuth()
+  const config = await ensureAuthenticatedConfig()
 
   const answers = await inquirer.prompt([
     {
@@ -36,15 +36,12 @@ export async function tokenRevokeCommand(tokenId: string): Promise<void> {
   try {
     logInfo("Revoking token...")
 
-    const response = await fetch(`${config.baseUrl}/v1/tokens/${tokenId}`, {
+    const response = await authenticatedFetch(config, `/v1/tokens/${tokenId}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-      },
     })
 
     if (!response.ok) {
-      throw new Error("Failed to revoke token")
+      throw await responseError(response)
     }
 
     logSuccess("Token revoked")

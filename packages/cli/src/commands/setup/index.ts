@@ -18,6 +18,7 @@ import { homedir } from "os"
 import { dirname, join } from "path"
 
 import { logError, logInfo, logSuccess } from "../../utils/config.js"
+import { clerkAuthProvider } from "../auth/browser.js"
 
 const CONFIG_PATH = join(homedir(), ".limetry", "config.json")
 
@@ -95,6 +96,8 @@ export async function setupCommand(): Promise<void> {
     console.log(chalk.dim(`  Sign up → ${LIMETRY_CLOUD_APP_ORIGIN}/sign-up`))
     console.log(chalk.dim(`  Agent token → ${LIMETRY_CLOUD_APP_ORIGIN}/tokens/create`))
     console.log(chalk.dim(`  Onboarding checklist → ${LIMETRY_CLOUD_APP_ORIGIN}/connect\n`))
+    await clerkAuthProvider.login(defaultUrl)
+    return
   }
 
   const { url } = await inquirer.prompt([
@@ -114,16 +117,11 @@ export async function setupCommand(): Promise<void> {
     },
   ])
 
-  const tokenMessage =
-    target === "cloud"
-      ? "Organization agent token (from portal → Tokens):"
-      : "Bearer token (LIMETRY_BEARER_TOKEN):"
-
   const { key } = await inquirer.prompt([
     {
       type: "password",
       name: "key",
-      message: tokenMessage,
+      message: "Bearer token (LIMETRY_BEARER_TOKEN):",
       mask: "*",
       validate: (input: string) =>
         input.trim().length >= 16 || "Token must be at least 16 characters",
@@ -140,11 +138,7 @@ export async function setupCommand(): Promise<void> {
   if (!ok) {
     process.stdout.write(chalk.red(" ✗\n\n"))
     logError(`Could not connect to ${baseUrl}`)
-    if (target === "cloud") {
-      logInfo(`Create a scoped token at ${LIMETRY_CLOUD_APP_ORIGIN}/tokens/create, then run \`limetry setup\` again.`)
-    } else {
-      logInfo("Check your URL and bearer token, then run `limetry setup` again.")
-    }
+    logInfo("Check your URL and bearer token, then run `limetry setup` again.")
     process.exit(1)
   }
 

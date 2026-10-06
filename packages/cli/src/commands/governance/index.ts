@@ -11,7 +11,8 @@ import { randomUUID } from "node:crypto"
 import { type ActionIntent, type ActionPolicy, createSlimActionPolicy } from "@limetry/sdk"
 import chalk from "chalk"
 
-import { type CliConfig, getConfig, logError, logInfo, logSuccess } from "../../utils/config.js"
+import { authenticatedFetch, ensureAuthenticatedConfig } from "../../utils/auth.js"
+import { type CliConfig, logError, logInfo, logSuccess } from "../../utils/config.js"
 
 /**
  * Ensures setup has produced a usable `baseUrl` and `apiKey`.
@@ -20,13 +21,8 @@ import { type CliConfig, getConfig, logError, logInfo, logSuccess } from "../../
  *
  * @returns Loaded {@link CliConfig} with `baseUrl` and `apiKey`.
  */
-function requireApiConfig(): CliConfig {
-  const config = getConfig()
-  if (!config?.baseUrl || !config?.apiKey) {
-    logError("Not configured. Run `limetry setup` first.")
-    process.exit(1)
-  }
-  return config
+async function requireApiConfig(): Promise<CliConfig> {
+  return ensureAuthenticatedConfig()
 }
 
 /**
@@ -44,10 +40,9 @@ async function apiRequest(
   path: string,
   body?: unknown,
 ): Promise<{ status: number; json: unknown }> {
-  const response = await fetch(`${config.baseUrl.replace(/\/$/, "")}${path}`, {
+  const response = await authenticatedFetch(config, path, {
     method,
     headers: {
-      "Authorization": `Bearer ${config.apiKey}`,
       "Content-Type": "application/json",
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -89,7 +84,7 @@ export async function policyApplyCommand(options: {
   blockResource?: string[]
   maxCost?: string
 }): Promise<void> {
-  const config = requireApiConfig()
+  const config = await requireApiConfig()
   let policy: ActionPolicy
 
   if (options.file) {
@@ -135,7 +130,7 @@ export async function policyApplyCommand(options: {
  * @returns Resolves when evaluation completes.
  */
 export async function evalCommand(options: { file?: string }): Promise<void> {
-  const config = requireApiConfig()
+  const config = await requireApiConfig()
   let raw: string
 
   if (options.file) {
@@ -209,7 +204,7 @@ export async function evalCommand(options: { file?: string }): Promise<void> {
 export async function approvalsListCommand(options: {
   status?: string
 }): Promise<void> {
-  const config = requireApiConfig()
+  const config = await requireApiConfig()
   const params = new URLSearchParams()
   params.set("status", options.status ?? "pending")
   const { status, json } = await apiRequest(
@@ -241,7 +236,7 @@ export async function approvalsResolveCommand(options: {
   reviewer?: string
   intentFile?: string
 }): Promise<void> {
-  const config = requireApiConfig()
+  const config = await requireApiConfig()
   let intent: ActionIntent | undefined
   if (options.intentFile) {
     const { readFileSync } = await import("node:fs")
@@ -277,7 +272,7 @@ export async function auditTailCommand(options: {
   eventType?: string
   agentId?: string
 }): Promise<void> {
-  const config = requireApiConfig()
+  const config = await requireApiConfig()
   const params = new URLSearchParams()
   params.set("limit", options.limit ?? "20")
   if (options.eventType) params.set("event_type", options.eventType)
@@ -303,15 +298,11 @@ export async function auditTailCommand(options: {
  * @returns Resolves when all doctor checks pass.
  */
 export async function doctorCommand(): Promise<void> {
-  const config = getConfig()
   console.log()
   console.log(chalk.bold("  Limetry doctor"))
   console.log()
 
-  if (!config?.baseUrl || !config?.apiKey) {
-    logError("No ~/.limetry/config.json — run `limetry setup`")
-    process.exit(1)
-  }
+  const config = await ensureAuthenticatedConfig()
 
   logInfo(`Config: ${config.baseUrl}`)
   const healthUrl = `${config.baseUrl.replace(/\/$/, "")}/health`

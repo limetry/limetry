@@ -21,7 +21,24 @@ limetry setup
 limetry doctor
 ```
 
-`setup` writes local config for a self-hosted server or a hosted API token. `doctor` checks that config, server health, and auth.
+For Limetry Cloud, `setup` opens the portal in your browser. Sign in or create a
+workspace with Clerk, approve the CLI request, and return to the terminal. The
+CLI stores a short-lived access session and rotating refresh session in
+`~/.limetry/config.json`; bearer tokens are never placed in the browser URL.
+
+For a self-hosted OSS server, choose the OSS option and enter its bearer token.
+Published CLI defaults are `https://api.app.limetry.com` for Cloud and
+`https://api.limetry.org` for OSS.
+
+The CLI reads its stored session automatically. To export compatible variables
+for an external SDK or MCP process, use:
+
+```bash
+eval "$(limetry auth env)"
+```
+
+Use `limetry auth status` to inspect the session without printing secrets and
+`limetry auth logout` to revoke the Cloud refresh session and remove local credentials.
 
 ## Policy, evaluate, approve
 
@@ -38,7 +55,9 @@ limetry audit tail -n 20
 ## Tokens
 
 ```bash
-limetry login
+limetry auth login
+limetry auth status
+limetry auth logout
 limetry token create --name ci --scopes read:rules
 limetry token list
 limetry token revoke <tokenId>
