@@ -7,12 +7,13 @@ import type { Metadata } from "next"
 import { IconAccent } from "@/components/brand"
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 
 /**
  * Changelog page SEO metadata.
  */
 export const metadata: Metadata = {
-  title: "Changelog",
+  title: documentTitle("Changelog"),
   description:
     "Notable Limetry releases across the SDK, CLI, evaluation server, and MCP packages.",
 }

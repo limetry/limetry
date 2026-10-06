@@ -8,13 +8,14 @@ import Link from "next/link"
 import { IconAccent } from "@/components/brand"
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 import { siteUrls } from "@/lib/site-urls"
 
 /**
  * Get started page SEO metadata.
  */
 export const metadata: Metadata = {
-  title: "Get started",
+  title: documentTitle("Get started"),
   description: "Run Limetry in minutes: SDK, CLI, MCP, and the evaluation server.",
 }
 

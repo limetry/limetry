@@ -13,6 +13,7 @@ import { notFound } from "next/navigation"
 
 import { docsMdxComponents } from "@/lib/docs-mdx-components"
 import { includeDocsRootParam, resolveDocsSlug } from "@/lib/docs-routing"
+import { documentTitle } from "@/lib/document-title"
 import { source } from "@/lib/source"
 
 /**
@@ -66,11 +67,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const page = source.getPage(resolveDocsSlug(slug))
   if (!page) notFound()
 
+  const title = `Limetry — ${page.data.title}`
   return {
-    title: page.data.title,
+    title: documentTitle(page.data.title),
     description: page.data.description,
     openGraph: {
-      title: page.data.title,
+      title,
       description: page.data.description,
     },
   }

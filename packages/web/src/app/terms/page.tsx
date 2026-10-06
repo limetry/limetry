@@ -8,13 +8,14 @@ import Link from "next/link"
 import { IconAccent } from "@/components/brand"
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 import { siteUrls } from "@/lib/site-urls"
 
 /**
  * Terms of Service page SEO metadata.
  */
 export const metadata: Metadata = {
-  title: "Terms of Service",
+  title: documentTitle("Terms of Service"),
   description: "Terms for using Limetry open-source software and this website.",
 }
 

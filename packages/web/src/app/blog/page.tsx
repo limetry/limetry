@@ -8,6 +8,7 @@ import Link from "next/link"
 import { IconAccent } from "@/components/brand"
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 
 import { BLOG_POSTS } from "./posts"
 
@@ -15,7 +16,7 @@ import { BLOG_POSTS } from "./posts"
  * Blog index SEO metadata.
  */
 export const metadata: Metadata = {
-  title: "Blog — Limetry",
+  title: documentTitle("Blog"),
   description: "Release notes, tutorials, and engineering stories from the Limetry team.",
 }
 

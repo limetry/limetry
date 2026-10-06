@@ -11,13 +11,14 @@ import { Footer } from "@/components/footer"
 import { Hero } from "@/components/hero"
 import { HowItWorks } from "@/components/how-it-works"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 import { siteUrls } from "@/lib/site-urls"
 
 /**
  * Home page SEO metadata.
  */
 export const metadata: Metadata = {
-  title: "Limetry — Stop irreversible agent side effects",
+  title: documentTitle("Stop irreversible agent side effects"),
   description:
     "Gate agent tool calls before they run: evaluate, deny with reasons, and audit outcomes. MCP, CLI, and SDK for Cursor, Claude, and your frameworks.",
 }

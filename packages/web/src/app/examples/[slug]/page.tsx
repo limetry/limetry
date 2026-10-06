@@ -12,6 +12,7 @@ import remarkGfm from "remark-gfm"
 
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 
 import { EXAMPLES } from "../examples"
 import { CodeTabs } from "./code-tabs"
@@ -35,9 +36,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const example = EXAMPLES[slug]
-  if (!example) return { title: "Example Not Found" }
+  if (!example) return { title: documentTitle("Example not found") }
   return {
-    title: `${example.name} — Limetry Examples`,
+    title: documentTitle(example.name),
     description: example.description,
   }
 }

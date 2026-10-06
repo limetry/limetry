@@ -32,7 +32,7 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: {
     default: "Limetry — Agent Action Governance",
-    template: "%s | Limetry",
+    template: "Limetry — %s",
   },
   description:
     "Open-source policy engine for AI agent tool calls. Evaluate, allow, deny, or wait — then audit outcomes. Self-run with MCP and CLI.",

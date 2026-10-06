@@ -8,13 +8,14 @@ import Link from "next/link"
 import { IconAccent } from "@/components/brand"
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 import { githubPath, siteUrls } from "@/lib/site-urls"
 
 /**
  * Community page SEO metadata.
  */
 export const metadata: Metadata = {
-  title: "Community",
+  title: documentTitle("Community"),
   description: "Discord, GitHub Discussions, contributing guide, and documentation for Limetry.",
 }
 

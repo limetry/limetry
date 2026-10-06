@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Limetry evaluate API
+  title: Limetry — Evaluate API
   description: |
     Self-hosted Limetry evaluation server: register action policies, evaluate
     action intents, record outcomes, and read the privacy-safe audit trail.

@@ -7,6 +7,7 @@ import Link from "next/link"
 
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 import { githubPath } from "@/lib/site-urls"
 
 import { type ExampleConfig,EXAMPLES, examplesByCategory } from "./examples"
@@ -15,7 +16,7 @@ import { type ExampleConfig,EXAMPLES, examplesByCategory } from "./examples"
  * Examples gallery SEO metadata.
  */
 export const metadata: Metadata = {
-  title: "Examples — Limetry",
+  title: documentTitle("Examples"),
   description:
     "Reference agent loops for CI, Shopify, SQL, and common frameworks. Each evaluates before a side effect and writes privacy-safe audit.",
 }

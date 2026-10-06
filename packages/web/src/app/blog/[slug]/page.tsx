@@ -10,6 +10,7 @@ import remarkGfm from "remark-gfm"
 
 import { Footer } from "@/components/footer"
 import { SiteHeader } from "@/components/site-header"
+import { documentTitle } from "@/lib/document-title"
 import { siteUrls } from "@/lib/site-urls"
 
 import { BLOG_POSTS } from "../posts"
@@ -34,9 +35,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const post = BLOG_POSTS.find((p) => p.slug === slug)
-  if (!post) return { title: "Post Not Found" }
+  if (!post) return { title: documentTitle("Post not found") }
   return {
-    title: `${post.title} — Limetry Blog`,
+    title: documentTitle(post.title),
     description: post.description,
   }
 }
