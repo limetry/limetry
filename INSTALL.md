@@ -17,7 +17,7 @@ channel as "available" when it actually works today.
 
 | Channel | Status | Notes |
 | --- | --- | --- |
-| Source checkout (all platforms) | **Available** | Reference path; always works |
+| Source checkout (all platforms) | **Available** | Yarn Berry 4.13 is required for repository development |
 | npm / npx | **Published** | Install published packages directly; releases use `.github/workflows/publish-npm.yml` |
 | Docker (server) | **Available** | `packages/server/Dockerfile` |
 | Homebrew (macOS / Linuxbrew) | Planned — next | Formula wrapping the npm package or release tarball |
@@ -29,8 +29,9 @@ channel as "available" when it actually works today.
 
 ## Install the published packages
 
-Use the package manager you prefer. The examples use npm; the equivalent Yarn
-or pnpm command is the same script with that tool name.
+These commands install published packages, so use npm, Yarn, or pnpm according
+to your project. The examples use npm; `yarn add` and `pnpm add` are equivalent.
+For an MCP host, `npx` can be replaced with `yarn dlx` or `pnpm dlx`.
 
 ```bash
 npm install -g @limetry/cli
@@ -54,12 +55,12 @@ changes, or running a fully local governance server.
 | Tool | Version | Install |
 | --- | --- | --- |
 | Node.js | 20+ | [nodejs.org](https://nodejs.org/) or your package manager |
-| One npm-compatible tool | npm 10+, Yarn Classic 1.x, Yarn Berry 4.x, or pnpm 9/10 | Install the tool using its own documentation |
+| Yarn Berry | 4.13.0, supplied by the repository | Enable it with Corepack before installing |
 
-Choose one package manager for a checkout and use it consistently. Yarn Berry
-does not require `corepack enable` when Yarn Berry is already installed. Yarn
-Classic, npm, and pnpm use their own workspace and lockfile formats; do not
-commit a second manager's lockfile.
+The cloned repository is a Yarn Berry workspace. Do not run `npm install`,
+`pnpm install`, or Yarn Classic in the checkout: the repository uses Yarn
+workspace protocols, resolutions, package extensions, and the committed
+`yarn.lock`. Do not commit another package manager's lockfile.
 
 ### macOS and Linux
 
@@ -68,15 +69,16 @@ git clone https://github.com/limetrydev/limetry.git
 cd limetry
 ```
 
-Install and build with your chosen tool. Replace `npm` with the tool you prefer
-(`yarn` or `pnpm`) while keeping the same script names:
+Enable Corepack, install with the repository's pinned Yarn version, and run the
+workspace scripts through Yarn:
 
 ```bash
-npm install
-npm run build:sdk
-npm run build:preflight
-npm run build:server
-npm run build:cli
+corepack enable
+yarn install
+yarn build:sdk
+yarn build:preflight
+yarn build:server
+yarn build:cli
 ```
 
 Run the CLI:
@@ -87,22 +89,23 @@ node packages/cli/dist/index.js --help
 
 ### Windows
 
-Limetry builds on Windows with Node.js 20+ and any supported package manager.
-Use PowerShell or Git Bash:
+Limetry builds on Windows with Node.js 20+ and Yarn Berry 4.13. Use PowerShell
+or Git Bash:
 
 ```powershell
 git clone https://github.com/limetrydev/limetry.git
 cd limetry
 ```
 
-Then use the same scripts with the tool you prefer. For example:
+Then install and build with the repository's Yarn workspace:
 
 ```powershell
-npm install
-npm run build:sdk
-npm run build:preflight
-npm run build:server
-npm run build:cli
+corepack enable
+yarn install
+yarn build:sdk
+yarn build:preflight
+yarn build:server
+yarn build:cli
 node packages\cli\dist\index.js --help
 ```
 
@@ -132,12 +135,12 @@ Publishing configured for each package. Do not add an npm write token or
 publishes every package, whether its source changed or not.
 
 ```bash
-npm run release
+yarn release
 ```
 
-Use the equivalent `yarn release` or `pnpm release` command when those are your
-selected package manager. Publishing itself is performed by npm Trusted
-Publishing in GitHub Actions.
+Run releases from a Yarn-installed checkout. Publishing itself is performed by
+npm Trusted Publishing in GitHub Actions; maintainers do not need an npm token
+locally.
 
 For a failed/partial publish, run **Actions → Build and publish all @limetry
 packages → Run workflow** on `main`. Package versions already present on npm are

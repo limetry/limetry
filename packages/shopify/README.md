@@ -32,8 +32,9 @@ optional step is a Partner **development store** with a token in GitHub secrets 
 npm install @limetry/shopify @limetry/sdk
 ```
 
-Use the package manager you prefer; the equivalent Yarn or pnpm command works
-the same way.
+This installs published packages, so npm, Yarn, or pnpm are valid choices.
+For a cloned Limetry repository, use the root Yarn Berry workspace instructions
+instead of installing from the workspace.
 
 ## Usage
 

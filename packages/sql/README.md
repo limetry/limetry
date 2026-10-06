@@ -32,8 +32,9 @@ Supabase connection string.
 npm install @limetry/sql @limetry/sdk @modelcontextprotocol/sdk pg
 ```
 
-Use the package manager you prefer; the equivalent Yarn or pnpm command works
-the same way.
+This installs published packages, so npm, Yarn, or pnpm are valid choices.
+For a cloned Limetry repository, use the root Yarn Berry workspace instructions
+instead of installing from the workspace.
 
 ## MCP
 

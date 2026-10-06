@@ -25,7 +25,8 @@ and `redactDetails` / `redactActionIntent` from `@limetry/sdk`.
 | Tool | Version | Purpose |
 | --- | --- | --- |
 | [Node.js](https://nodejs.org/) | 20+ | SDK, server, CLI, MCP, optional adapters |
-| Package manager | npm 10+, Yarn, or pnpm | Use the package manager you prefer |
+| Package manager for published packages | npm 10+, Yarn, or pnpm | Use the package manager you prefer |
+| Package manager for this repository | Yarn Berry 4.13 | Use Corepack and the committed Yarn workspace |
 
 ## Install the published packages
 
@@ -40,19 +41,21 @@ the same way. The CLI is ready with `limetry setup`.
 
 ## Run from source
 
-Clone the repository for local development or self-hosting, then use the same
-scripts with the tool you prefer:
+Clone the repository for local development or self-hosting, then use the
+repository's Yarn Berry workspace. Do not run npm or pnpm install from the
+cloned repository because its workspace protocols and resolutions are Yarn-specific:
 
 ```bash
 git clone https://github.com/limetry/limetry.git
 cd limetry
-npm install
-npm run build:sdk
-npm run build:preflight
-npm run build:server
-npm run build:cli
+corepack enable
+yarn install
+yarn build:sdk
+yarn build:preflight
+yarn build:server
+yarn build:cli
 cp .env.example .env
-npm run dev:server
+yarn dev:server
 ```
 
 The server prints a human-readable preflight banner on boot (secrets masked,
@@ -80,21 +83,21 @@ limetry audit tail -n 20
 ### CI
 
 ```bash
-npm run build --workspace=@limetry/ci
+yarn workspace @limetry/ci build
 # See packages/ci/examples/workflow.yml and packages/ci/README.md
 ```
 
 ### SQL (Postgres / Supabase MCP)
 
 ```bash
-npm run build --workspace=@limetry/sql
+yarn workspace @limetry/sql build
 # DATABASE_URL + LIMETRY_API_KEY + LIMETRY_POLICY_ID — see packages/sql/README.md
 ```
 
 ### Shopify
 
 ```bash
-npm run build --workspace=@limetry/shopify
+yarn workspace @limetry/shopify build
 # SHOPIFY_ADMIN_TOKEN stays inside the firewall — see packages/shopify/README.md
 ```
 

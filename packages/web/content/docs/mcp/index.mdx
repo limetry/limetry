@@ -9,7 +9,8 @@ description: Build @limetry/mcp, register Cursor or Claude Desktop, and call lim
 
 ## Install the MCP server
 
-Use the package manager you prefer. For MCP hosts, `npx` is the smoothest path:
+This section is for published package consumers. Use npm, Yarn Berry, or pnpm;
+for MCP hosts, `npx` is the smoothest path:
 
 ```json
 {
@@ -26,8 +27,8 @@ Use the package manager you prefer. For MCP hosts, `npx` is the smoothest path:
 }
 ```
 
-For a regular Node application, install it with `npm install @limetry/mcp`.
-The equivalent Yarn or pnpm command works the same way.
+For a regular Node application, install it with `npm install @limetry/mcp`,
+`yarn add @limetry/mcp`, or `pnpm add @limetry/mcp`.
 
 ## Set host environment
 
@@ -68,6 +69,16 @@ The equivalent Yarn or pnpm command works the same way.
 See [Minimize audit data](/docs/server/data-minimization).
 
 <Note>
-For local development or unreleased changes, build from a source checkout and
-replace the `npx` command with `node packages/mcp/dist/index.js`.
+For local development or unreleased changes, clone the repository and use its
+Yarn Berry workspace:
+
+```bash
+corepack enable
+yarn install
+yarn build:sdk
+yarn workspace @limetry/mcp build
+node packages/mcp/dist/index.js
+```
+
+Do not run npm or pnpm install at the cloned repository root.
 </Note>

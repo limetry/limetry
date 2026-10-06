@@ -22,8 +22,9 @@ about `PortalEnv`, `ServerEnv`, or other product types.
 npm install @limetry/preflight
 ```
 
-Use the package manager you prefer; the equivalent Yarn or pnpm command works
-the same way.
+This installs the published package, so `npm install`, `yarn add`, and
+`pnpm add` are equivalent. For a cloned Limetry repository, use the root Yarn
+Berry workspace instructions.
 
 Optional peers for store probes:
 

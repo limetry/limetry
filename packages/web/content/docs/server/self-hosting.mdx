@@ -43,30 +43,32 @@ See [Minimize audit data](/docs/server/data-minimization) and [Run production op
 
 ## Run from source
 
-Source checkout is the development and self-hosting path. For clients, use the
-published packages:
+Source checkout is the development and self-hosting path. The cloned
+repository is a Yarn Berry 4.13 workspace; do not run npm or pnpm install at
+its root. For clients, use the published packages with the package manager
+your application already uses:
 
 ```bash
 npm install -g @limetry/cli
 npm install @limetry/sdk
 ```
 
-Use the package manager you prefer; the equivalent Yarn or pnpm commands work
-the same way.
+The equivalent published-package commands are `yarn add @limetry/sdk` and
+`pnpm add @limetry/sdk`.
 
 ```bash
 git clone https://github.com/limetry/limetry.git
 cd limetry
-npm install
-npm run build:sdk
-npm run build:server
+corepack enable
+yarn install
+yarn build:sdk
+yarn build:server
 cp .env.example .env           # set LIMETRY_BEARER_TOKEN
-npm run dev:server             # http://localhost:3810
+yarn dev:server                # http://localhost:3810
 ```
 
-Use the equivalent `yarn` or `pnpm` commands if those are your selected
-package manager. Yarn Berry does not require `corepack enable` when it is
-already installed.
+Use npm or pnpm for the published CLI and SDK only; use Yarn for the cloned
+repository.
 
 ## Run with Docker
 

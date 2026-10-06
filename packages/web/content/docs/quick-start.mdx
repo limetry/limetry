@@ -6,20 +6,34 @@ description: Self-host the evaluation server, apply a policy, deny a production 
 Run this path against a **self-run Limetry node**. Point the CLI at your local
 API and use `LIMETRY_BEARER_TOKEN` (or scoped API tokens you issue on that node).
 
-## Install the published toolchain
+## Choose the installation path
 
-- Node.js ≥ 20 and a package manager you prefer
+- Node.js ≥ 20
 - A self-run Limetry node, or Limetry Cloud
 
-For the CLI and MCP host, install the published packages:
+For a consumer project, install the published CLI with npm, Yarn, or pnpm:
 
 ```bash
 npm install -g @limetry/cli
 ```
 
-Use the package manager you prefer; the equivalent Yarn or pnpm commands work
-the same way. To self-host the server, use the source checkout instructions in
-[Run the server yourself](/docs/server/self-hosting).
+For a global CLI, use `pnpm add --global @limetry/cli`; for a one-off CLI
+invocation with Yarn Berry, use `yarn dlx @limetry/cli`. To run the MCP server
+without installing it, use `npx -y @limetry/mcp`, `yarn dlx @limetry/mcp`, or
+`pnpm dlx @limetry/mcp`.
+
+If you cloned the Limetry repository, use Yarn Berry 4.13 for the checkout:
+
+```bash
+corepack enable
+yarn install
+yarn build:sdk
+yarn build:server
+```
+
+Do not run `npm install` or `pnpm install` at the repository root. See
+[Run the server yourself](/docs/server/self-hosting) for the complete source
+checkout path.
 
 <Steps>
 <Step title="Start the server">
