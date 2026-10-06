@@ -272,6 +272,21 @@ function restoreFiles(snapshot: Map<string, string>, cwd = ROOT_DIR): void {
 }
 
 /**
+ * Returns whether a Git status contains changes outside release-managed files.
+ *
+ * @param status - Porcelain status output.
+ * @param managedPaths - Absolute paths owned by the release workflow.
+ * @returns True when user changes need confirmation.
+ */
+function hasUnexpectedWorkingTreeChanges(status: string, managedPaths: string[]): boolean {
+  const managed = new Set(managedPaths.map((path) => relative(ROOT_DIR, path)))
+  return status.split("\n").filter(Boolean).some((line) => {
+    const rawPath = line.slice(3).split(" -> ").at(-1)?.trim()
+    return rawPath !== undefined && !managed.has(rawPath)
+  })
+}
+
+/**
  * Returns the current commit id for safe release rollback.
  *
  * @returns Current HEAD.
@@ -703,7 +718,8 @@ async function main(): Promise<void> {
   try {
     try {
       const status = runGit(["status", "--porcelain"])
-      if (status) {
+      const managedPaths = collectVersionFilePaths()
+      if (status && hasUnexpectedWorkingTreeChanges(status, managedPaths)) {
         console.warn("You have uncommitted changes. Commit before releasing when possible.")
         if (!args.yes) {
           const proceed = await question("Proceed anyway? (Y/n): ")
@@ -711,6 +727,8 @@ async function main(): Promise<void> {
             return
           }
         }
+      } else if (status) {
+        console.log("Continuing with release-managed working-tree changes.")
       }
     } catch {
       console.error("Git is required for yarn release.")
