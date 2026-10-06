@@ -1,6 +1,6 @@
 {
   "name": "@limetry/ci",
-  "version": "1.2.61",
+  "version": "1.2.63",
   "description": "Limetry GitHub Action and helpers for CI privilege and release gating",
   "license": "MIT",
   "type": "module",
