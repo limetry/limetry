@@ -60,6 +60,8 @@ export type ReleaseCliArgs = {
   peer: boolean
   /** True when `--sync-only` (re-stamp without bumping). */
   syncOnly: boolean
+  /** True when a sibling orchestrator supplied the version to release. */
+  adoptCurrent: boolean
   /** True when `--yes` / `-y` (non-interactive confirmations). */
   yes: boolean
   /**
@@ -420,6 +422,7 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
       deployOnly: null,
       yes: false,
       syncOnly: false,
+      adoptCurrent: false,
       help: true,
       peer: true,
       schemaBump: "patch",
@@ -428,6 +431,7 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
 
   const yes = argv.includes("--yes") || argv.includes("-y")
   const syncOnly = argv.includes("--sync-only")
+  const adoptCurrent = argv.includes("--adopt-current")
   const deploy = parseDeployFlag(argv)
   const deployOnly = parseDeployOnly(argv)
   const peer = !argv.includes("--no-peer")
@@ -447,6 +451,7 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
     deployOnly,
     yes,
     syncOnly,
+    adoptCurrent,
     help: false,
     peer,
     schemaBump: parseSchemaBump(argv),

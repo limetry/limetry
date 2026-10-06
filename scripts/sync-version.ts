@@ -221,6 +221,21 @@ function collectVersionFilePaths(): string[] {
 }
 
 /**
+ * Absolute paths stamped in the sibling Cloud checkout.
+ *
+ * @returns Existing sibling version files.
+ */
+function collectPeerVersionFilePaths(): string[] {
+  return [
+    join(PEER_ROOT, "package.json"),
+    join(PEER_ROOT, "packages/web/package.json"),
+    join(PEER_ROOT, "packages/portal/package.json"),
+    join(PEER_ROOT, "packages/shared/src/app-version.ts"),
+    join(PEER_ROOT, "packages/mobile/app.json"),
+  ].filter(existsSync)
+}
+
+/**
  * Reads file contents into a map keyed by absolute path (for rollback).
  *
  * @param paths - Absolute file paths to snapshot.
@@ -245,12 +260,40 @@ function snapshotFiles(paths: string[]): Map<string, string> {
  * @param snapshot - Map from {@link snapshotFiles}.
  * @returns Nothing.
  */
-function restoreFiles(snapshot: Map<string, string>): void {
+function restoreFiles(snapshot: Map<string, string>, cwd = ROOT_DIR): void {
   for (const [absolute, contents] of snapshot) {
     writeFileSync(absolute, contents)
   }
-  const relativePaths = [...snapshot.keys()].map((absolute) => relative(ROOT_DIR, absolute))
-  spawnSync("git", ["restore", "--staged", "--", ...relativePaths], { cwd: ROOT_DIR })
+  const relativePaths = [...snapshot.keys()].map((absolute) => relative(cwd, absolute))
+  if (relativePaths.length === 0) {
+    return
+  }
+  spawnSync("git", ["restore", "--staged", "--", ...relativePaths], { cwd })
+}
+
+/**
+ * Returns the current commit id for safe release rollback.
+ *
+ * @returns Current HEAD.
+ */
+function getHead(): string {
+  return runGit(["rev-parse", "HEAD"])
+}
+
+/**
+ * Returns whether the current HEAD is the release commit created by this run.
+ *
+ * @param originalHead - Commit present before the release started.
+ * @param version - Version being released.
+ * @returns True when it is safe to remove the release commit.
+ */
+function isReleaseCommit(originalHead: string, version: string): boolean {
+  try {
+    return getHead() !== originalHead
+      && runGit(["log", "-1", "--format=%s"]) === `chore: released ${version}`
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -379,10 +422,18 @@ function gitHasTag(cwd: string, version: string): boolean {
  * @param snapshot - Pre-release file snapshot.
  * @returns Nothing.
  */
-function undoLocalRelease(version: string, snapshot: Map<string, string>): void {
-  spawnSync("git", ["reset", "--mixed", "HEAD~1"], { cwd: ROOT_DIR })
+function undoLocalRelease(
+  version: string,
+  snapshot: Map<string, string>,
+  originalHead: string,
+  peerSnapshot: Map<string, string>,
+): void {
+  if (isReleaseCommit(originalHead, version)) {
+    runGit(["reset", "--mixed", originalHead])
+  }
   deleteLocalTag(version)
   restoreFiles(snapshot)
+  restoreFiles(peerSnapshot, PEER_ROOT)
 }
 
 /**
@@ -403,6 +454,12 @@ function commitAndTagRelease(
   const relativePaths = versionFiles.map((absolute) => relative(ROOT_DIR, absolute))
   runGit(["add", "--", ...relativePaths])
 
+  const tag = `v${version}`
+  const existingTag = runGit(["tag", "-l", tag])
+  if (existingTag) {
+    throw new Error(`Tag ${tag} already exists.`)
+  }
+
   const staged = runGit(["status", "--porcelain", "--", ...relativePaths])
   if (!staged) {
     if (options?.tagExistingCommit) {
@@ -420,11 +477,6 @@ function commitAndTagRelease(
 
   runGit(["commit", "-m", `chore: released ${version}`])
 
-  const tag = `v${version}`
-  const existingTag = runGit(["tag", "-l", tag])
-  if (existingTag) {
-    throw new Error(`Tag ${tag} already exists.`)
-  }
   runGit(["tag", tag])
 }
 
@@ -568,6 +620,7 @@ function runPeerFollowUp(
       "--yes",
       `--deploy=${deployTarget}`,
       "--no-peer",
+      "--adopt-current",
       `--schema-bump=${schemaBump}`,
     ]
   console.log("")
@@ -608,11 +661,13 @@ async function main(): Promise<void> {
 
   if (args.syncOnly) {
     const snapshot = snapshotFiles(collectVersionFilePaths())
+    const peerSnapshot = snapshotFiles(collectPeerVersionFilePaths())
     try {
       applyReleaseVersion(currentVersion)
       console.log(`Synced publishable package versions to ${canonicalizeVersion(currentVersion)}.`)
     } catch (error) {
       restoreFiles(snapshot)
+      restoreFiles(peerSnapshot, PEER_ROOT)
       console.error(error instanceof Error ? error.message : error)
       process.exitCode = 1
     }
@@ -711,6 +766,8 @@ async function main(): Promise<void> {
 
     const trackedPaths = collectVersionFilePaths()
     const snapshot = snapshotFiles(trackedPaths)
+    const peerSnapshot = snapshotFiles(collectPeerVersionFilePaths())
+    const originalHead = getHead()
     let committed = false
     let pushed = false
     let versionFiles: string[] = trackedPaths
@@ -757,11 +814,13 @@ async function main(): Promise<void> {
         console.log("🚀 Tag pushed (deploy skipped).")
       }
     } catch (error) {
-      if (committed && !pushed) {
-        undoLocalRelease(newVersion, snapshot)
+      const releaseCommitCreated = committed || isReleaseCommit(originalHead, newVersion)
+      if (releaseCommitCreated && !pushed) {
+        undoLocalRelease(newVersion, snapshot, originalHead, peerSnapshot)
         console.error("Release rolled back locally (commit + tag removed; nothing pushed).")
       } else if (!committed) {
         restoreFiles(snapshot)
+        restoreFiles(peerSnapshot, PEER_ROOT)
       } else {
         console.error(
           "Release commit/tag are on origin. Vercel (or a later step) failed — fix forward or revert.",

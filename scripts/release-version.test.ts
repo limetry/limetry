@@ -108,6 +108,7 @@ describe("release-version", () => {
       deployOnly: null,
       yes: true,
       syncOnly: false,
+      adoptCurrent: false,
       help: false,
       peer: true,
       schemaBump: "patch",
@@ -118,6 +119,7 @@ describe("release-version", () => {
       deployOnly: null,
       yes: false,
       syncOnly: false,
+      adoptCurrent: false,
       help: false,
       peer: true,
       schemaBump: "minor",
@@ -128,6 +130,7 @@ describe("release-version", () => {
       deployOnly: null,
       yes: true,
       syncOnly: false,
+      adoptCurrent: false,
       help: false,
       peer: false,
       schemaBump: "patch",
@@ -138,6 +141,7 @@ describe("release-version", () => {
       deployOnly: null,
       yes: false,
       syncOnly: false,
+      adoptCurrent: false,
       help: false,
       peer: true,
       schemaBump: "patch",
@@ -148,9 +152,14 @@ describe("release-version", () => {
       deployOnly: "aws",
       yes: false,
       syncOnly: false,
+      adoptCurrent: false,
       help: false,
       peer: true,
       schemaBump: "patch",
+    })
+    expect(parseReleaseCliArgs(["--adopt-current", "--no-peer"])).toMatchObject({
+      adoptCurrent: true,
+      peer: false,
     })
   })
 
