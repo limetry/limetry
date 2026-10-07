@@ -1,8 +1,9 @@
 /**
  * Zod-validated process environment for `\@limetry/server`.
  *
- * Enforces bearer/JWT strength outside development/test, requires Postgres in
- * production, and resolves the HMAC secret used for decision receipts.
+ * Enforces bearer/JWT strength outside development/test, supports SQLite for
+ * single-process self-hosting, and resolves the HMAC secret used for decision
+ * receipts.
  */
 
 import { z } from "zod"
@@ -44,8 +45,10 @@ const emptyStringToUndefined = (val: unknown): unknown =>
  */
 const envSchema = z.object({
   LIMETRY_API_PORT: z.coerce.number().int().positive().default(3810),
+  LIMETRY_API_PATH_PREFIX: z.string().regex(/^\/?[\w/-]*$/).default(""),
   LIMETRY_BEARER_TOKEN: z.string().min(16),
   DATABASE_URL: z.string().url().default("postgresql://localhost:5432/limetry"),
+  SQLITE_DATABASE_PATH: z.string().min(1).default("~/.limetry/limetry.sqlite"),
   JWT_SECRET: z.string().min(32),
   REPLAY_WINDOW_MS: z.coerce.number().int().positive().default(300_000),
   THROTTLE_MAX_REQUESTS_PER_MINUTE: z.coerce.number().int().positive().default(5),
@@ -124,8 +127,8 @@ function isLoopbackUrl(value: string): boolean {
  *
  * Outside production, missing `LIMETRY_BEARER_TOKEN` / `JWT_SECRET` receive
  * weak development defaults. Production and other non-dev environments reject
- * weak secrets, require `DECISION_HMAC_SECRET`, require `USE_POSTGRES_STORE=true`,
- * and reject loopback `DATABASE_URL`.
+ * weak secrets and require `DECISION_HMAC_SECRET`. Postgres is validated when
+ * explicitly selected; otherwise the durable SQLite store is used.
  *
  * @param source - Env bag to parse; defaults to `process.env`.
  * @returns Validated {@link ServerEnv}.
@@ -134,6 +137,9 @@ function isLoopbackUrl(value: string): boolean {
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv {
   const sourceWithDefaults: NodeJS.ProcessEnv = { ...source }
   const nodeEnv = sourceWithDefaults.NODE_ENV ?? process.env.NODE_ENV
+  if (nodeEnv === "test" && !sourceWithDefaults.SQLITE_DATABASE_PATH) {
+    sourceWithDefaults.SQLITE_DATABASE_PATH = ":memory:"
+  }
   if (!sourceWithDefaults.LIMETRY_BEARER_TOKEN && nodeEnv !== "production") {
     sourceWithDefaults.LIMETRY_BEARER_TOKEN = "replace-with-secure-bearer-token"
   }
@@ -187,13 +193,11 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv {
     }
   }
 
-  if (nodeEnv === "production" && !parsed.data.USE_POSTGRES_STORE) {
-    throw new Error(
-      "USE_POSTGRES_STORE=true is required in production. In-memory stores are not durable.",
-    )
-  }
-
-  if (nodeEnv === "production" && (!source.DATABASE_URL || isLoopbackUrl(parsed.data.DATABASE_URL))) {
+  if (
+    nodeEnv === "production" &&
+    parsed.data.USE_POSTGRES_STORE &&
+    (!source.DATABASE_URL || isLoopbackUrl(parsed.data.DATABASE_URL))
+  ) {
     throw new Error(
       "DATABASE_URL must be set to a non-loopback Postgres host in production",
     )

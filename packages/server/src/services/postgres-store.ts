@@ -272,8 +272,15 @@ export class PostgresGovernanceStateStore implements GovernanceStateStore {
  * @returns Nothing.
  * @throws When migration SQL fails.
  */
-export async function migratePostgres(pool: Pool): Promise<void> {
-  await pool.query(POSTGRES_MIGRATION_SQL)
+export async function migratePostgres(pool: Pool, schema = "public"): Promise<void> {
+  if (!/^[a-z_]+$/.test(schema)) {
+    throw new Error(`Invalid Postgres schema: ${schema}`)
+  }
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`)
+  pool.on("connect", (client) => {
+    void client.query(`SET search_path TO "${schema}"`)
+  })
+  await pool.query(`SET search_path TO "${schema}";${POSTGRES_MIGRATION_SQL}`)
 }
 
 /**

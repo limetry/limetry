@@ -55,6 +55,7 @@ import {
   PostgresPolicyRegistry,
 } from "./services/postgres-store.js"
 import { PostgresUserService } from "./services/postgres-user-service.js"
+import { SqliteStore } from "./services/sqlite-store.js"
 import { InMemoryUserService, type UserService } from "./services/user-service.js"
 
 /**
@@ -241,7 +242,7 @@ export function createApp(options: CreateAppOptions) {
 }
 
 /**
- * Builds a fully wired Express app (Postgres/Redis stores when configured)
+ * Builds a fully wired Express app (SQLite, Postgres, or Redis stores when configured)
  * without binding a TCP port. Used by both the long-running server and Lambda.
  *
  * @param env - Validated server environment.
@@ -252,15 +253,23 @@ export async function prepareApp(env: ServerEnv) {
   await runOssPreflight(env)
   const options: CreateAppOptions = { env }
   let postgresPool: Pool | undefined
+  let sqliteStore: SqliteStore | undefined
 
   if (env.USE_POSTGRES_STORE) {
     const pool = new Pool({ connectionString: env.DATABASE_URL })
-    await migratePostgres(pool)
+    await migratePostgres(pool, "evaluate")
     postgresPool = pool
     options.policyRegistry = new PostgresPolicyRegistry(pool)
     options.stateStore = new PostgresGovernanceStateStore(pool)
     options.userService = new PostgresUserService(pool)
     options.auditStore = new PostgresAuditStore(pool)
+  } else {
+    sqliteStore = SqliteStore.open(env.SQLITE_DATABASE_PATH)
+    options.policyRegistry = sqliteStore.policyRegistry
+    options.stateStore = sqliteStore.governanceStateStore
+    options.userService = sqliteStore.userService
+    options.auditStore = sqliteStore.auditStore
+    options.approvalStore = sqliteStore.approvalStore
   }
 
   if (env.REDIS_URL) {
@@ -274,7 +283,7 @@ export async function prepareApp(env: ServerEnv) {
     options.jwtRevocationStore = new RedisJwtRevocationStore(redis)
   }
 
-  return { app: createApp(options), postgresPool }
+  return { app: createApp(options), postgresPool, sqliteStore }
 }
 
 /**
@@ -298,7 +307,7 @@ export async function startServer(env: ServerEnv) {
     process.env.LIMETRY_API_PORT = String(hop.port)
   }
 
-  const { app, postgresPool } = await prepareApp(env)
+  const { app, postgresPool, sqliteStore } = await prepareApp(env)
 
   if (
     postgresPool &&
@@ -312,7 +321,9 @@ export async function startServer(env: ServerEnv) {
     })
   }
 
-  return app.listen(env.LIMETRY_API_PORT, () => {
+  const server = app.listen(env.LIMETRY_API_PORT, () => {
     logger.info({ port: env.LIMETRY_API_PORT, version: APP_VERSION }, "server.listening")
   })
+  server.once("close", () => sqliteStore?.close())
+  return server
 }
