@@ -1824,6 +1824,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@isaacs/cliui@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@isaacs/cliui@npm:9.0.0"
+  checksum: 10c0/971063b7296419f85053dacd0a0285dcadaa3dfc139228b23e016c1a9848121ad4aa5e7fcca7522062014e1eb6239a7424188b9f2cba893a79c90aae5710319c
+  languageName: node
+  linkType: hard
+
 "@isaacs/fs-minipass@npm:^4.0.0":
   version: 4.0.1
   resolution: "@isaacs/fs-minipass@npm:4.0.1"
@@ -1971,6 +1978,17 @@ __metadata:
     vitest: "npm:4.1.11"
   bin:
     limetry: dist/index.js
+  languageName: unknown
+  linkType: soft
+
+"@limetry/cloud@workspace:packages/cloud":
+  version: 0.0.0-use.local
+  resolution: "@limetry/cloud@workspace:packages/cloud"
+  dependencies:
+    "@pulumi/kubernetes": "npm:^4.23.0"
+    "@pulumi/pulumi": "npm:^3.113.0"
+    "@types/node": "npm:^18"
+    typescript: "npm:^5.0.0"
   languageName: unknown
   linkType: soft
 
@@ -3013,6 +3031,58 @@ __metadata:
   dependencies:
     "@pulumi/pulumi": "npm:^3.142.0"
   checksum: 10c0/4aee9f029c5feda517a5af7b0f4832c8ee094c5c98405bab73812b29760fa3d43e4511f84348def5702bf718f31188a59fd30a41f1afeeee5b0457d912ee41d7
+  languageName: node
+  linkType: hard
+
+"@pulumi/kubernetes@npm:^4.23.0":
+  version: 4.34.2
+  resolution: "@pulumi/kubernetes@npm:4.34.2"
+  dependencies:
+    "@pulumi/pulumi": "npm:^3.142.0"
+    glob: "npm:^12.0.0"
+    shell-quote: "npm:^1.6.1"
+  checksum: 10c0/afd8d71db9954c5eedf1602b383d6ac3522b712f5cb566e860a2ffb7eec39cc03821348d5ffd4076772f18f74eb49b3837b1d5cfb38fb313668f0afe6a28f8ed
+  languageName: node
+  linkType: hard
+
+"@pulumi/pulumi@npm:^3.113.0":
+  version: 3.267.0
+  resolution: "@pulumi/pulumi@npm:3.267.0"
+  dependencies:
+    "@grpc/grpc-js": "npm:^1.10.1"
+    "@logdna/tail-file": "npm:^2.0.6"
+    "@npmcli/arborist": "npm:^9.0.0"
+    "@opentelemetry/api": "npm:^1.9"
+    "@opentelemetry/core": "npm:^2.9"
+    "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.220"
+    "@opentelemetry/exporter-zipkin": "npm:^2.9"
+    "@opentelemetry/instrumentation": "npm:^0.220"
+    "@opentelemetry/instrumentation-grpc": "npm:^0.220"
+    "@opentelemetry/resources": "npm:^2.9"
+    "@opentelemetry/sdk-trace-base": "npm:^2.9"
+    "@opentelemetry/sdk-trace-node": "npm:^2.9"
+    "@opentelemetry/semantic-conventions": "npm:^1.42"
+    "@types/google-protobuf": "npm:^3.15.5"
+    "@types/semver": "npm:^7.5.6"
+    execa: "npm:^5.1.0"
+    google-protobuf: "npm:^3.21.4"
+    ini: "npm:^2.0.0"
+    js-yaml: "npm:^4.3.2"
+    minimist: "npm:^1.2.6"
+    normalize-package-data: "npm:^6.0.0"
+    require-from-string: "npm:^2.0.1"
+    semver: "npm:^7.5.2"
+    source-map-support: "npm:^0.5.6"
+    upath: "npm:^1.1.0"
+  peerDependencies:
+    ts-node: ">= 7.0.1 < 12"
+    typescript: ">= 3.8.3 < 7"
+  peerDependenciesMeta:
+    ts-node:
+      optional: true
+    typescript:
+      optional: true
+  checksum: 10c0/7080439e1f6d11503d8871dddfd5a3ad2dc549c0f82dc0329052abb5b156de249361008cf159458dfa37b64c0c06fc9513527a84552ec996a0b7aa9840d425e6
   languageName: node
   linkType: hard
 
@@ -5365,6 +5435,15 @@ __metadata:
   dependencies:
     undici-types: "npm:~8.3.0"
   checksum: 10c0/25ac5093195736dd074d5027adbba85617bc951d5a41506ebd3b9073048acb7233613f3822d5f9b9447f9c0841c91f6387c46283916767e3ef79f23917452c46
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18":
+  version: 18.19.130
+  resolution: "@types/node@npm:18.19.130"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 10c0/22ba2bc9f8863101a7e90a56aaeba1eb3ebdc51e847cef4a6d188967ab1acbce9b4f92251372fd0329ecb924bbf610509e122c3dfe346c04dbad04013d4ad7d0
   languageName: node
   linkType: hard
 
@@ -8520,6 +8599,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"foreground-child@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "foreground-child@npm:3.3.1"
+  dependencies:
+    cross-spawn: "npm:^7.0.6"
+    signal-exit: "npm:^4.0.1"
+  checksum: 10c0/8986e4af2430896e65bc2788d6679067294d6aee9545daefc84923a0a4b399ad9c7a3ea7bd8c0b2b80fdf4a92de4c69df3f628233ff3224260e9c1541a9e9ed3
+  languageName: node
+  linkType: hard
+
 "form-data@npm:^4.0.0, form-data@npm:^4.0.5":
   version: 4.0.6
   resolution: "form-data@npm:4.0.6"
@@ -8965,6 +9054,22 @@ __metadata:
   dependencies:
     is-glob: "npm:^4.0.3"
   checksum: 10c0/317034d88654730230b3f43bb7ad4f7c90257a426e872ea0bf157473ac61c99bf5d205fad8f0185f989be8d2fa6d3c7dce1645d99d545b6ea9089c39f838e7f8
+  languageName: node
+  linkType: hard
+
+"glob@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "glob@npm:12.0.0"
+  dependencies:
+    foreground-child: "npm:^3.3.1"
+    jackspeak: "npm:^4.1.1"
+    minimatch: "npm:^10.1.1"
+    minipass: "npm:^7.1.2"
+    package-json-from-dist: "npm:^1.0.0"
+    path-scurry: "npm:^2.0.0"
+  bin:
+    glob: dist/esm/bin.mjs
+  checksum: 10c0/923fbb7e30913496dc1c30191edb7ebb610a26edac81710a5f697c718b08694bce7fb0245baceba5383472778a8431ff7c36571703507cc6563602d3c139c993
   languageName: node
   linkType: hard
 
@@ -9993,6 +10098,15 @@ __metadata:
     has-symbols: "npm:^1.1.0"
     set-function-name: "npm:^2.0.2"
   checksum: 10c0/f7a262808e1b41049ab55f1e9c29af7ec1025a000d243b83edf34ce2416eedd56079b117fa59376bb4a724110690f13aa8427f2ee29a09eec63a7e72367626d0
+  languageName: node
+  linkType: hard
+
+"jackspeak@npm:^4.1.1":
+  version: 4.2.3
+  resolution: "jackspeak@npm:4.2.3"
+  dependencies:
+    "@isaacs/cliui": "npm:^9.0.0"
+  checksum: 10c0/b5c0c414f1607c2aa0597f4bf2c03b8443897fccd5fd3c2b3e4f77d556b2bc7c3d3413828ba91e0789f6fb40ad90242f7f89fb20aee9e9d705bc1681f7564f67
   languageName: node
   linkType: hard
 
@@ -12803,6 +12917,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"package-json-from-dist@npm:^1.0.0":
+  version: 1.0.1
+  resolution: "package-json-from-dist@npm:1.0.1"
+  checksum: 10c0/62ba2785eb655fec084a257af34dbe24292ab74516d6aecef97ef72d4897310bc6898f6c85b5cd22770eaa1ce60d55a0230e150fb6a966e3ecd6c511e23d164b
+  languageName: node
+  linkType: hard
+
 "pacote@npm:^21.0.0, pacote@npm:^21.0.2":
   version: 21.5.1
   resolution: "pacote@npm:21.5.1"
@@ -12902,7 +13023,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path-scurry@npm:^2.0.2":
+"path-scurry@npm:^2.0.0, path-scurry@npm:^2.0.2":
   version: 2.0.2
   resolution: "path-scurry@npm:2.0.2"
   dependencies:
@@ -15789,7 +15910,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.3.3, typescript@npm:^5.8.2":
+"typescript@npm:^5.0.0, typescript@npm:^5.3.3, typescript@npm:^5.8.2":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
   bin:
@@ -15799,7 +15920,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.3.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.2#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.0.0#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.3.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.2#optional!builtin<compat/typescript>":
   version: 5.9.3
   resolution: "typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"
   bin:
@@ -15832,6 +15953,13 @@ __metadata:
     has-symbols: "npm:^1.1.0"
     which-boxed-primitive: "npm:^1.1.1"
   checksum: 10c0/7dbd35ab02b0e05fe07136c72cb9355091242455473ec15057c11430129bab38b7b3624019b8778d02a881c13de44d63cd02d122ee782fb519e1de7775b5b982
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~5.26.4":
+  version: 5.26.5
+  resolution: "undici-types@npm:5.26.5"
+  checksum: 10c0/bb673d7876c2d411b6eb6c560e0c571eef4a01c1c19925175d16e3a30c4c428181fb8d7ae802a261f283e4166a0ac435e2f505743aa9e45d893f9a3df017b501
   languageName: node
   linkType: hard
 

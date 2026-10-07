@@ -1,0 +1,10 @@
+name: limetry-cloud
+description: Deploy the Limetry OSS evaluate API to any Kubernetes-compatible cloud
+runtime:
+  name: nodejs
+  options:
+    packagemanager: yarn
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript

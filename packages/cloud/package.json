@@ -1,0 +1,16 @@
+{
+    "name": "@limetry/cloud",
+    "main": "index.ts",
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "typecheck": "tsc -p tsconfig.json --noEmit"
+    },
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/kubernetes": "^4.23.0",
+        "@pulumi/pulumi": "^3.113.0"
+    }
+}
