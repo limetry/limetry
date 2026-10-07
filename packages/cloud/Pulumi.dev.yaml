@@ -1,0 +1,3 @@
+config:
+  limetry-core:usePostgres: "false"
+  limetry-core:apiDomain: dev.cloud.limetry.org

@@ -1,5 +1,5 @@
-name: limetry-cloud
-description: Deploy the Limetry OSS evaluate API to any Kubernetes-compatible cloud
+name: limetry-core
+description: Deploy the Limetry Core runtime to any Kubernetes-compatible cloud
 runtime:
   name: nodejs
   options:
