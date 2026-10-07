@@ -69,4 +69,15 @@ describe("Navigation Types & Drawer Highlight", () => {
     expect(isItemHighlighted("/blog", blog, blogActiveHref)).toBe(true)
     expect(isItemHighlighted("/blog", home, blogActiveHref)).toBe(false)
   })
+
+  it("matches absolute cloud URLs against the current pathname", () => {
+    const cloudHome = { href: "https://app.limetry.com/", label: "Cloud" }
+    const cloudPricing = { href: "https://app.limetry.com/pricing", label: "Pricing" }
+
+    expect(findActiveNavHref("/pricing?interval=monthly", [cloudHome, cloudPricing])).toBe(
+      cloudPricing.href,
+    )
+    expect(isNavItemOrChildActive("/dashboard", cloudHome)).toBe(false)
+    expect(isNavItemOrChildActive("/pricing", cloudPricing)).toBe(true)
+  })
 })
