@@ -92,5 +92,18 @@ describe("landing page", () => {
     expect(swagger.status).toBe(200)
     expect(swagger.text).toContain("swagger-ui")
     expect(swagger.text).toContain("/openapi.yaml")
+
+    const versionedYaml = await request(app).get("/v1/openapi.yaml")
+    expect(versionedYaml.status).toBe(200)
+    expect(versionedYaml.text).toMatch(/openapi:\s*['"]?3\./)
+
+    const versionedJson = await request(app).get("/v1/openapi.json")
+    expect(versionedJson.status).toBe(200)
+    expect(versionedJson.body.openapi).toMatch(/^3\./)
+
+    const versionedSwagger = await request(app).get("/v1/docs")
+    expect(versionedSwagger.status).toBe(200)
+    expect(versionedSwagger.text).toContain("swagger-ui")
+    expect(versionedSwagger.text).toContain("/v1/openapi.yaml")
   })
 })

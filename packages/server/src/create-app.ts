@@ -128,6 +128,21 @@ export function resolvePublicDir(explicit?: string): string | null {
 }
 
 /**
+ * Reads the Swagger UI document and points it at the requested OpenAPI spec.
+ *
+ * @param publicDir - Directory containing the packaged documentation assets.
+ * @param specPath - URL path served by the current documentation route.
+ * @returns Swagger UI HTML.
+ */
+function readSwaggerPage(publicDir: string, specPath: string): string {
+  const swaggerPage = join(publicDir, "openapi.html")
+  if (!existsSync(swaggerPage)) {
+    return ""
+  }
+  return readFileSync(swaggerPage, "utf8").replace('url: "/openapi.yaml"', `url: "${specPath}"`)
+}
+
+/**
  * Builds the Express application with JSON parsing, request context, optional
  * static landing page, health/metrics, and all HTTP route modules.
  *
@@ -173,32 +188,46 @@ export function createApp(options: CreateAppOptions) {
       response.type("html").send(html)
     })
 
-    app.get("/openapi", (_request, response) => {
-      const swaggerPage = join(publicDir, "openapi.html")
-      if (!existsSync(swaggerPage)) {
-        response.redirect(302, "/openapi.yaml")
+    const serveSwaggerPage = (specPath: string, response: express.Response) => {
+      const html = readSwaggerPage(publicDir, specPath)
+      if (!html) {
+        response.redirect(302, specPath)
         return
       }
-      response.type("html").send(readFileSync(swaggerPage, "utf8"))
+      response.type("html").send(html)
+    }
+
+    app.get("/openapi", (_request, response) => {
+      serveSwaggerPage("/openapi.yaml", response)
     })
 
-    app.get("/openapi.yaml", (_request, response) => {
+    app.get("/v1/docs", (_request, response) => {
+      serveSwaggerPage("/v1/openapi.yaml", response)
+    })
+
+    const serveOpenApiYaml = (_request: express.Request, response: express.Response) => {
       const filePath = join(publicDir, "openapi.yaml")
       if (!existsSync(filePath)) {
         response.status(404).json({ error: "openapi_yaml_missing" })
         return
       }
       response.type("text/yaml").send(readFileSync(filePath, "utf8"))
-    })
+    }
 
-    app.get("/openapi.json", (_request, response) => {
+    app.get("/openapi.yaml", serveOpenApiYaml)
+    app.get("/v1/openapi.yaml", serveOpenApiYaml)
+
+    const serveOpenApiJson = (_request: express.Request, response: express.Response) => {
       const filePath = join(publicDir, "openapi.json")
       if (!existsSync(filePath)) {
         response.status(404).json({ error: "openapi_json_missing" })
         return
       }
       response.type("json").send(readFileSync(filePath, "utf8"))
-    })
+    }
+
+    app.get("/openapi.json", serveOpenApiJson)
+    app.get("/v1/openapi.json", serveOpenApiJson)
 
     app.use(express.static(publicDir, {
       index: false,
