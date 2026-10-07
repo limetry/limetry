@@ -10,6 +10,25 @@ type MockResource = {
 const resources: MockResource[] = []
 let cloudStack: typeof import("./index")
 
+/**
+ * Resolves a Pulumi Output through the public apply API for unit tests.
+ *
+ * @param output - Output whose underlying value should be awaited.
+ * @returns A promise that settles when the Output value is known.
+ */
+function promiseOf<T>(output: pulumi.Output<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    try {
+      output.apply((value) => {
+        resolve(value)
+        return value
+      })
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
 function findResource(type: string, name: string): MockResource {
   const resource = resources.find((candidate) => candidate.type === type && candidate.name === name)
   expect(
@@ -43,9 +62,9 @@ describe("cloud Pulumi stack", () => {
     })
     cloudStack = await import("./index")
     await Promise.all([
-      cloudStack.apiEndpoint.promise(),
-      cloudStack.apiNamespace.promise(),
-      cloudStack.apiServiceName.promise(),
+      promiseOf(cloudStack.apiEndpoint),
+      promiseOf(cloudStack.apiNamespace),
+      promiseOf(cloudStack.apiServiceName),
     ])
   })
 
@@ -82,6 +101,6 @@ describe("cloud Pulumi stack", () => {
     const stringData = readRecord(runtimeSecret.inputs.stringData)
 
     expect(stringData.value).toBeTypeOf("object")
-    expect(await cloudStack.bearerToken.isSecret).toBe(true)
+    expect(await pulumi.isSecret(cloudStack.bearerToken)).toBe(true)
   })
 })
