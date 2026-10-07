@@ -10,6 +10,11 @@ list privacy-safe audit events, and upsert action policies.
 3. Ask the agent to call `limetry_evaluate` before irreversible tool calls; enforce deny in the loop.
 4. Call `limetry_record_action` after execute/skip/block.
 
+The MCP package remains a local stdio process. It makes short authenticated
+HTTP requests to `LIMETRY_BASE_URL`; hosted users should set that value to
+`https://api.limetry.com` (development: `https://api.dev.limetry.com`).
+There is no hosted SSE endpoint.
+
 > [!NOTE]
 > Evaluate uses the **full** intent for policy matching. Audit stores a **privacy-safe record**
 > (`audit_mode=minimal` by default). Do **not** put API keys, passwords, or chat transcripts in
