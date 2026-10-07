@@ -6,11 +6,11 @@
  */
 
 /**
- * Production origins for the open-source product (limetry.org).
+ * Production origins for the OSS evaluate API and limetry.org website.
  */
 export const LIMETRY_OSS_ORIGINS = {
   web: "https://limetry.org",
-  api: "https://api.limetry.org",
+  api: "https://api.limetry.com",
   app: "https://app.limetry.com",
 } as const
 
@@ -19,9 +19,9 @@ export const LIMETRY_OSS_ORIGINS = {
  */
 export const LIMETRY_CLOUD_ORIGINS = {
   web: "https://limetry.com",
-  api: "https://api.app.limetry.com",
+  api: "https://api.limetry.com",
   app: "https://app.limetry.com",
-  ossApi: "https://api.limetry.org",
+  ossApi: "https://api.limetry.com",
 } as const
 
 /**

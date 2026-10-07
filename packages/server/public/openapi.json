@@ -14,7 +14,7 @@
   },
   "servers": [
     {
-      "url": "https://api.limetry.org",
+      "url": "https://api.limetry.com",
       "description": "Hosted Limetry API"
     },
     {

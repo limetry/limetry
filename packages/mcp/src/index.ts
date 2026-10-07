@@ -4,7 +4,7 @@
  * policy upsert, and approval tools (`\@limetry/mcp`).
  *
  * Requires `LIMETRY_API_KEY` (or `LIMETRY_BEARER_TOKEN`). Optional `LIMETRY_BASE_URL`
- * defaults to `https://api.limetry.org`.
+ * defaults to `https://api.limetry.com`.
  *
  * @packageDocumentation
  */

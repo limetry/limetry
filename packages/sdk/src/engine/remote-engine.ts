@@ -18,7 +18,7 @@ import { resolveLimetryBaseUrl } from "../urls.js"
 export type RemotePolicyEngineOptions = {
   /**
    * Base URL of the Limetry server.
-   * Defaults to the OSS production API: https://api.limetry.org
+   * Defaults to the unified production API: https://api.limetry.com
    */
   baseUrl?: string
   /**

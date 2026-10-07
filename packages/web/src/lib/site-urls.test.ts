@@ -22,7 +22,7 @@ describe("siteUrls client-safe env reads", () => {
 describe("isExternalHref", () => {
   it("keeps Limetry and localhost links in the current window", () => {
     assert.equal(isExternalHref("https://limetry.org/docs"), false)
-    assert.equal(isExternalHref("https://api.limetry.org/openapi"), false)
+    assert.equal(isExternalHref("https://api.limetry.com/openapi"), false)
     assert.equal(isExternalHref("https://app.limetry.com/connect"), false)
     assert.equal(isExternalHref("http://localhost:3830/connect"), false)
     assert.equal(isExternalHref("/docs/quick-start"), false)

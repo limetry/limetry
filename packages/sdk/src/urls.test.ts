@@ -12,7 +12,7 @@ import {
 describe("resolveLimetryBaseUrl", () => {
   it("uses the OSS production API when env is unset", () => {
     expect(resolveLimetryBaseUrl({})).toBe(LIMETRY_OSS_ORIGINS.api)
-    expect(DEFAULT_LIMETRY_BASE_URL).toBe("https://api.limetry.org")
+    expect(DEFAULT_LIMETRY_BASE_URL).toBe("https://api.limetry.com")
   })
 
   it("prefers LIMETRY_BASE_URL and strips trailing slashes", () => {
@@ -34,8 +34,8 @@ describe("resolveLimetryBaseUrl", () => {
 })
 
 describe("LIMETRY_CLOUD_ORIGINS", () => {
-  it("points the hosted API at api.app.limetry.com", () => {
-    expect(LIMETRY_CLOUD_ORIGINS.api).toBe("https://api.app.limetry.com")
+  it("points the hosted API at api.limetry.com", () => {
+    expect(LIMETRY_CLOUD_ORIGINS.api).toBe("https://api.limetry.com")
     expect(LIMETRY_CLOUD_ORIGINS.web).toBe("https://limetry.com")
   })
 })

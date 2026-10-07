@@ -62,4 +62,12 @@ export const COMPATIBILITY = {
       "compatible": ">=1.0.0 <2.0.0",
     },
   },
+  "api": {
+    "canonical": "https://api.limetry.com",
+    "development": "https://api.dev.limetry.com",
+    "retired": [
+      "https://api.limetry.org",
+      "https://api.app.limetry.com",
+    ],
+  },
 } as const

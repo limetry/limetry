@@ -237,7 +237,7 @@ Create the project in the Neon console (free/launch is enough). This stack does 
 | `websiteUrl` | Public docs/marketing URL (`https://dev.limetry.org` on the `dev` stack) |
 | `websiteWwwUrl` | `https://www.…` when the stack is the zone apex; empty otherwise |
 | `websiteEdgeUrl` | CloudFront distribution URL |
-| `apiUrl` / `apiEndpoint` | Public API origin (`https://api.dev.limetry.org`) |
+| `apiUrl` / `apiEndpoint` | Legacy OSS stack API output; hosted API is `https://api.dev.limetry.com` |
 | `apiInvokeUrl` | Raw execute-api URL |
 | `appUrl` | Optional app origin baked into the static export |
 | `publicUrls` | All of the above plus Cloudflare CNAME hints |

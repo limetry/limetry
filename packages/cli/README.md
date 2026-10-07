@@ -27,8 +27,8 @@ CLI stores a short-lived access session and rotating refresh session in
 `~/.limetry/config.json`; bearer tokens are never placed in the browser URL.
 
 For a self-hosted OSS server, choose the OSS option and enter its bearer token.
-Published CLI defaults are `https://api.app.limetry.com` for Cloud and
-`https://api.limetry.org` for OSS.
+Published CLI defaults use the unified API at `https://api.limetry.com` for
+both OSS-compatible evaluate operations and Cloud control-plane operations.
 
 The CLI reads its stored session automatically. To export compatible variables
 for an external SDK or MCP process, use:
