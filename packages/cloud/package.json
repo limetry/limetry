@@ -3,14 +3,18 @@
     "main": "index.ts",
     "scripts": {
         "build": "tsc -p tsconfig.json",
-        "typecheck": "tsc -p tsconfig.json --noEmit"
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "test": "vitest run"
     },
     "devDependencies": {
         "@types/node": "^18",
-        "typescript": "^5.0.0"
+        "typescript": "^5.0.0",
+        "vitest": "4.1.11"
     },
     "dependencies": {
+        "@pulumi/docker-build": "^0.0.22",
         "@pulumi/kubernetes": "^4.23.0",
-        "@pulumi/pulumi": "^3.113.0"
+        "@pulumi/pulumi": "^3.113.0",
+        "@pulumi/random": "^4.21.2"
     }
 }

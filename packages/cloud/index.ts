@@ -6,20 +6,62 @@
  * The marketing website is intentionally outside this package.
  */
 
+import { join, resolve } from "node:path"
+
+import * as dockerbuild from "@pulumi/docker-build"
 import * as k8s from "@pulumi/kubernetes"
 import * as pulumi from "@pulumi/pulumi"
+import * as random from "@pulumi/random"
+
+import {
+  API_PORT,
+  buildApiDnsAnnotations,
+  buildApiDocumentationUrls,
+  buildApiImageTag,
+  buildApiUrl,
+  buildSecretResourceName,
+  normalizeApiDomain,
+  resolvePersistence,
+} from "./config"
 
 const config = new pulumi.Config()
 const name = config.get("name") ?? "limetry"
 const namespaceName = config.get("namespace") ?? name
-const apiImage = config.get("apiImage") ?? "limetry-server:local"
-const apiPort = config.getNumber("apiPort") ?? 3810
 const storageSize = config.get("storageSize") ?? "1Gi"
 const usePostgres = config.getBoolean("usePostgres") ?? false
-const bearerToken = config.requireSecret("bearerToken")
-const jwtSecret = config.requireSecret("jwtSecret")
-const decisionHmacSecret = config.getSecret("decisionHmacSecret") ?? jwtSecret
+export const apiDomain = normalizeApiDomain(config.get("apiDomain"))
+export const apiDomainZone = config.get("apiDomainZone") ?? "limetry.org"
+const imageRepository = config.get("apiImageRepository")?.trim() || undefined
+const imageTag = buildApiImageTag(name, pulumi.getStack(), imageRepository, config.get("apiImageTag"))
+const repoRoot = resolve(process.cwd(), "../..")
+
+function resolveSecret(namePart: string, length: number): pulumi.Output<string> {
+  const configured = config.getSecret(namePart)
+  if (configured) {
+    return configured
+  }
+
+  const generated = new random.RandomPassword(buildSecretResourceName(name, namePart), {
+    length,
+    special: false,
+  })
+  return generated.result
+}
+
+export const bearerToken = pulumi.secret(resolveSecret("bearerToken", 48))
+export const jwtSecret = pulumi.secret(resolveSecret("jwtSecret", 64))
+export const decisionHmacSecret = pulumi.secret(resolveSecret("decisionHmacSecret", 64))
 const databaseUrl = usePostgres ? config.requireSecret("databaseUrl") : undefined
+
+const apiImage = new dockerbuild.Image(`${name}-api-image`, {
+  buildOnPreview: false,
+  context: { location: repoRoot },
+  dockerfile: { location: join(repoRoot, "packages/server/Dockerfile") },
+  load: !imageRepository,
+  platforms: ["linux/amd64"],
+  push: Boolean(imageRepository),
+  tags: [imageTag],
+})
 
 const namespace = new k8s.core.v1.Namespace(`${name}-namespace`, {
   metadata: { name: namespaceName },
@@ -36,13 +78,15 @@ const runtimeSecret = new k8s.core.v1.Secret(`${name}-runtime`, {
   type: "Opaque",
 })
 
-const sqliteVolume = new k8s.core.v1.PersistentVolumeClaim(`${name}-sqlite`, {
-  metadata: { namespace: namespace.metadata.name },
-  spec: {
-    accessModes: ["ReadWriteOnce"],
-    resources: { requests: { storage: storageSize } },
-  },
-})
+const sqliteVolume = usePostgres
+  ? undefined
+  : new k8s.core.v1.PersistentVolumeClaim(`${name}-sqlite`, {
+    metadata: { namespace: namespace.metadata.name },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      resources: { requests: { storage: storageSize } },
+    },
+  })
 
 const labels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": "evaluate-api" }
 
@@ -56,12 +100,12 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
       spec: {
         containers: [{
           name: "api",
-          image: apiImage,
+          image: imageTag,
           imagePullPolicy: "IfNotPresent",
-          ports: [{ name: "http", containerPort: apiPort }],
+          ports: [{ name: "http", containerPort: API_PORT }],
           env: [
             { name: "NODE_ENV", value: "production" },
-            { name: "LIMETRY_API_PORT", value: String(apiPort) },
+            { name: "LIMETRY_API_PORT", value: String(API_PORT) },
             { name: "USE_POSTGRES_STORE", value: String(usePostgres) },
             { name: "SQLITE_DATABASE_PATH", value: "/data/limetry.sqlite" },
             { name: "LIMETRY_BEARER_TOKEN", valueFrom: { secretKeyRef: { name: runtimeSecret.metadata.name, key: "LIMETRY_BEARER_TOKEN" } } },
@@ -69,22 +113,35 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
             { name: "DECISION_HMAC_SECRET", valueFrom: { secretKeyRef: { name: runtimeSecret.metadata.name, key: "DECISION_HMAC_SECRET" } } },
             ...(databaseUrl ? [{ name: "DATABASE_URL", valueFrom: { secretKeyRef: { name: runtimeSecret.metadata.name, key: "DATABASE_URL" } } }] : []),
           ],
-          volumeMounts: [{ name: "sqlite", mountPath: "/data" }],
+          volumeMounts: sqliteVolume
+            ? [{ name: "sqlite", mountPath: "/data" }]
+            : undefined,
           readinessProbe: { httpGet: { path: "/health", port: "http" }, initialDelaySeconds: 3 },
           livenessProbe: { httpGet: { path: "/health", port: "http" }, initialDelaySeconds: 10 },
         }],
-        volumes: [{ name: "sqlite", persistentVolumeClaim: { claimName: sqliteVolume.metadata.name } }],
+        volumes: sqliteVolume
+          ? [{ name: "sqlite", persistentVolumeClaim: { claimName: sqliteVolume.metadata.name } }]
+          : undefined,
       },
     },
   },
-}, { dependsOn: [runtimeSecret, sqliteVolume] })
+}, {
+  dependsOn: [
+    runtimeSecret,
+    ...(sqliteVolume ? [sqliteVolume] : []),
+    apiImage,
+  ],
+})
 
 const apiService = new k8s.core.v1.Service(`${name}-api`, {
-  metadata: { namespace: namespace.metadata.name },
+  metadata: {
+    namespace: namespace.metadata.name,
+    annotations: buildApiDnsAnnotations(apiDomain, apiDomainZone),
+  },
   spec: {
     selector: labels,
     ports: [{ name: "http", port: 80, targetPort: "http" }],
-    type: config.get("serviceType") ?? "ClusterIP",
+    type: config.get("serviceType") ?? "LoadBalancer",
   },
 }, { dependsOn: [apiDeployment] })
 
@@ -137,4 +194,16 @@ if (usePostgres && databaseUrl) {
 export const apiServiceName = apiService.metadata.name
 export const apiNamespace = namespace.metadata.name
 export const apiEndpoint = pulumi.interpolate`http://${apiService.metadata.name}.${namespace.metadata.name}.svc.cluster.local`
-export const persistence = usePostgres ? "postgres" : "sqlite"
+export const apiServiceAddress = apiService.status.apply((status) => {
+  const ingress = status?.loadBalancer?.ingress?.[0]
+  return ingress?.hostname ?? ingress?.ip
+})
+export const apiUrl = apiServiceAddress.apply((serviceAddress) =>
+  buildApiUrl(apiDomain, serviceAddress),
+)
+const apiDocumentationUrls = apiUrl.apply(buildApiDocumentationUrls)
+export const apiOpenApiJsonUrl = apiDocumentationUrls.apply((urls) => urls?.openApiJson)
+export const apiOpenApiYamlUrl = apiDocumentationUrls.apply((urls) => urls?.openApiYaml)
+export const apiDocsUrl = apiDocumentationUrls.apply((urls) => urls?.docs)
+export const apiImageReference = imageTag
+export const persistence = resolvePersistence(usePostgres)
