@@ -29,12 +29,28 @@ const name = config.get("name") ?? "limetry"
 const namespaceName = config.get("namespace") ?? name
 const storageSize = config.get("storageSize") ?? "1Gi"
 const usePostgres = config.getBoolean("usePostgres") ?? false
+
+/**
+ * Configured public hostname for the API, without a URL scheme or trailing slash.
+ */
 export const apiDomain = normalizeApiDomain(config.get("apiDomain"))
+
+/**
+ * DNS zone associated with the configured API hostname.
+ */
 export const apiDomainZone = config.get("apiDomainZone") ?? "limetry.org"
 const imageRepository = config.get("apiImageRepository")?.trim() || undefined
 const imageTag = buildApiImageTag(name, pulumi.getStack(), imageRepository, config.get("apiImageTag"))
 const repoRoot = resolve(process.cwd(), "../..")
 
+/**
+ * Resolves an explicitly configured secret or creates a stable Pulumi-managed
+ * password resource when the config value is absent.
+ *
+ * @param namePart - Pulumi config key and logical secret name.
+ * @param length - Number of characters for a generated secret.
+ * @returns A secret value suitable for a Kubernetes Secret.
+ */
 function resolveSecret(namePart: string, length: number): pulumi.Output<string> {
   const configured = config.getSecret(namePart)
   if (configured) {
@@ -48,8 +64,13 @@ function resolveSecret(namePart: string, length: number): pulumi.Output<string> 
   return generated.result
 }
 
+/** Bearer token used by the API's machine-to-machine authentication middleware. */
 export const bearerToken = pulumi.secret(resolveSecret("bearerToken", 48))
+
+/** JWT signing secret used by the API's token endpoints. */
 export const jwtSecret = pulumi.secret(resolveSecret("jwtSecret", 64))
+
+/** HMAC secret used to sign and verify policy decision receipts. */
 export const decisionHmacSecret = pulumi.secret(resolveSecret("decisionHmacSecret", 64))
 const databaseUrl = usePostgres ? config.requireSecret("databaseUrl") : undefined
 
@@ -191,19 +212,45 @@ if (usePostgres && databaseUrl) {
   }, { dependsOn: [postgres] })
 }
 
+/** Kubernetes Service name for the public API. */
 export const apiServiceName = apiService.metadata.name
+
+/** Kubernetes namespace containing the API resources. */
 export const apiNamespace = namespace.metadata.name
+
+/** Internal cluster URL for callers running inside the Kubernetes network. */
 export const apiEndpoint = pulumi.interpolate`http://${apiService.metadata.name}.${namespace.metadata.name}.svc.cluster.local`
+
+/**
+ * Provider-assigned load-balancer hostname or IP address.
+ *
+ * It remains unknown until the Kubernetes Service receives an ingress address.
+ */
 export const apiServiceAddress = apiService.status.apply((status) => {
   const ingress = status?.loadBalancer?.ingress?.[0]
   return ingress?.hostname ?? ingress?.ip
 })
+
+/**
+ * Public API origin, using configured HTTPS DNS or the provider's HTTP
+ * load-balancer address when no hostname is configured.
+ */
 export const apiUrl = apiServiceAddress.apply((serviceAddress) =>
   buildApiUrl(apiDomain, serviceAddress),
 )
 const apiDocumentationUrls = apiUrl.apply(buildApiDocumentationUrls)
+
+/** Public URL for the versioned OpenAPI JSON document. */
 export const apiOpenApiJsonUrl = apiDocumentationUrls.apply((urls) => urls?.openApiJson)
+
+/** Public URL for the versioned OpenAPI YAML document. */
 export const apiOpenApiYamlUrl = apiDocumentationUrls.apply((urls) => urls?.openApiYaml)
+
+/** Public URL for the versioned Swagger UI. */
 export const apiDocsUrl = apiDocumentationUrls.apply((urls) => urls?.docs)
+
+/** Docker image reference deployed by the API Deployment. */
 export const apiImageReference = imageTag
+
+/** Persistence backend selected by `usePostgres`. */
 export const persistence = resolvePersistence(usePostgres)
