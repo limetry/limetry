@@ -16,6 +16,7 @@ import readline from "node:readline"
 import { fileURLToPath } from "node:url"
 
 import {
+  branchDevelopmentVersion,
   canonicalizeVersion,
   type DeployTarget,
   deployTargetFromChoice,
@@ -777,7 +778,9 @@ async function main(): Promise<void> {
         bump: releaseType,
       })
     }
-    const newVersion = plan.version
+    const newVersion = isStableReleaseBranch(currentBranch)
+      ? plan.version
+      : branchDevelopmentVersion(plan.version, currentVersion, currentBranch)
 
     if (plan.action === "adopt-peer") {
       console.log(`Using ${newVersion} already released on ${PEER_NAME}.`)
