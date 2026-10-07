@@ -7,7 +7,7 @@ info:
 
     Authentication: bearer API key (or local JWT in development). Mint keys with
     the Limetry CLI (`limetry setup`) against this server.
-  version: 1.0.1
+  version: 1.0.2
   contact:
     url: https://limetry.org
   license:
