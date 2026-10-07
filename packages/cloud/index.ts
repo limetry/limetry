@@ -24,10 +24,19 @@ import {
   resolvePersistence,
 } from "./config"
 
+/** Pulumi configuration namespace for this stack. */
 const config = new pulumi.Config()
+
+/** Logical name used as the Kubernetes resource prefix. */
 const name = config.get("name") ?? "limetry"
+
+/** Kubernetes namespace containing the Limetry API resources. */
 const namespaceName = config.get("namespace") ?? name
+
+/** Persistent-volume size used by the default SQLite store. */
 const storageSize = config.get("storageSize") ?? "1Gi"
+
+/** Selects the externally configured Postgres store instead of SQLite. */
 const usePostgres = config.getBoolean("usePostgres") ?? false
 
 /**
@@ -39,8 +48,14 @@ export const apiDomain = normalizeApiDomain(config.get("apiDomain"))
  * DNS zone associated with the configured API hostname.
  */
 export const apiDomainZone = config.get("apiDomainZone") ?? "limetry.org"
+
+/** Optional registry repository used when the built API image must be pushed. */
 const imageRepository = config.get("apiImageRepository")?.trim() || undefined
+
+/** Image reference shared by the build resource and API Deployment. */
 const imageTag = buildApiImageTag(name, pulumi.getStack(), imageRepository, config.get("apiImageTag"))
+
+/** Repository root used as the Docker build context. */
 const repoRoot = resolve(process.cwd(), "../..")
 
 /**
@@ -72,8 +87,11 @@ export const jwtSecret = pulumi.secret(resolveSecret("jwtSecret", 64))
 
 /** HMAC secret used to sign and verify policy decision receipts. */
 export const decisionHmacSecret = pulumi.secret(resolveSecret("decisionHmacSecret", 64))
+
+/** Required external database URL when Postgres persistence is selected. */
 const databaseUrl = usePostgres ? config.requireSecret("databaseUrl") : undefined
 
+/** Builds and optionally pushes the OSS API image for the target stack. */
 const apiImage = new dockerbuild.Image(`${name}-api-image`, {
   buildOnPreview: false,
   context: { location: repoRoot },
@@ -84,10 +102,12 @@ const apiImage = new dockerbuild.Image(`${name}-api-image`, {
   tags: [imageTag],
 })
 
+/** Creates the namespace shared by all stack resources. */
 const namespace = new k8s.core.v1.Namespace(`${name}-namespace`, {
   metadata: { name: namespaceName },
 })
 
+/** Stores API credentials and the optional Postgres connection string. */
 const runtimeSecret = new k8s.core.v1.Secret(`${name}-runtime`, {
   metadata: { namespace: namespace.metadata.name },
   stringData: {
@@ -99,6 +119,7 @@ const runtimeSecret = new k8s.core.v1.Secret(`${name}-runtime`, {
   type: "Opaque",
 })
 
+/** Durable SQLite volume, omitted when the API uses Postgres. */
 const sqliteVolume = usePostgres
   ? undefined
   : new k8s.core.v1.PersistentVolumeClaim(`${name}-sqlite`, {
@@ -109,8 +130,13 @@ const sqliteVolume = usePostgres
     },
   })
 
+/** Common labels used to connect the Deployment and Service. */
 const labels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": "evaluate-api" }
 
+/**
+ * Runs the API with one replica for SQLite or the configured replica count for
+ * Postgres, mounting durable SQLite storage only when required.
+ */
 const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
   metadata: { namespace: namespace.metadata.name },
   spec: {
@@ -154,6 +180,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
   ],
 })
 
+/** Public HTTP Service for the API, defaulting to a provider LoadBalancer. */
 const apiService = new k8s.core.v1.Service(`${name}-api`, {
   metadata: {
     namespace: namespace.metadata.name,
@@ -166,15 +193,23 @@ const apiService = new k8s.core.v1.Service(`${name}-api`, {
   },
 }, { dependsOn: [apiDeployment] })
 
+/** Stable in-cluster name for the optional development Postgres Service. */
 const postgresServiceName = `${name}-postgres`
 if (usePostgres && databaseUrl) {
+  /** Password used by the optional in-cluster Postgres development database. */
   const postgresPassword = config.requireSecret("postgresPassword")
+
+  /** Kubernetes Secret consumed by the optional Postgres StatefulSet. */
   const postgresSecret = new k8s.core.v1.Secret(`${name}-postgres`, {
     metadata: { namespace: namespace.metadata.name },
     stringData: { POSTGRES_PASSWORD: postgresPassword },
     type: "Opaque",
   })
+
+  /** Labels used to connect the Postgres StatefulSet and Service. */
   const postgresLabels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": "postgres" }
+
+  /** Optional single-replica Postgres database for development deployments. */
   const postgres = new k8s.apps.v1.StatefulSet(`${name}-postgres`, {
     metadata: { namespace: namespace.metadata.name },
     spec: {
@@ -206,6 +241,8 @@ if (usePostgres && databaseUrl) {
       }],
     },
   }, { dependsOn: [postgresSecret] })
+
+  /** Internal Service exposing the optional development Postgres database. */
   new k8s.core.v1.Service(postgresServiceName, {
     metadata: { namespace: namespace.metadata.name },
     spec: { selector: postgresLabels, ports: [{ name: "postgres", port: 5432 }] },
@@ -238,6 +275,8 @@ export const apiServiceAddress = apiService.status.apply((status) => {
 export const apiUrl = apiServiceAddress.apply((serviceAddress) =>
   buildApiUrl(apiDomain, serviceAddress),
 )
+
+/** Derived documentation links for the configured or assigned API origin. */
 const apiDocumentationUrls = apiUrl.apply(buildApiDocumentationUrls)
 
 /** Public URL for the versioned OpenAPI JSON document. */
