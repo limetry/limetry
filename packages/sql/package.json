@@ -1,6 +1,6 @@
 {
   "name": "@limetry/sql",
-  "version": "1.2.64-dev.cloud-agnostic-deploymen.6",
+  "version": "1.2.64-dev.cloud-agnostic-deploymen.7",
   "description": "Postgres/Supabase MCP write gate that evaluates SQL intents with Limetry",
   "license": "MIT",
   "type": "module",
