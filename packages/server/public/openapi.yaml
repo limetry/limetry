@@ -7,7 +7,7 @@ info:
 
     Authentication: bearer API key (or local JWT in development). Mint keys with
     the Limetry CLI (`limetry setup`) against this server.
-  version: 1.0.2
+  version: 1.0.3
   contact:
     url: https://limetry.org
   license:
@@ -15,7 +15,7 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: https://api.limetry.com
+  - url: https://api.limetry.org
     description: Hosted Limetry API
   - url: http://localhost:3810
     description: Local dev (default 3810)

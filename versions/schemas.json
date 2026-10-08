@@ -2,8 +2,8 @@
   "schemas": [
     {
       "id": "openapi.evaluate",
-      "version": "1.0.2",
-      "fingerprint": "0527de15689eaff5053aae2d629b422e4e3385da9580dc3c2dcfd4e5a8a19a63"
+      "version": "1.0.3",
+      "fingerprint": "772ff86330d1bc89dccf214bfaf19f5c504e4bb555ed2a1b2b54912d8411f7b5"
     },
     {
       "id": "openapi.custom-gpt",
