@@ -17,12 +17,17 @@ The default is SQLite:
 ```text
 managedDatabase=false
 SQLITE_DATABASE_PATH=/tmp/limetry.sqlite
+NODE_ENV=serverless
 ```
 
 The `/tmp` filesystem is ephemeral and local to one serverless instance. It
 is suitable for demos and single-instance evaluation only. It is not a
 durable shared database, and scaling to multiple instances can produce
 different policy and audit state in different instances.
+
+The `serverless` runtime marker keeps SQLite-compatible startup preflight
+enabled while still requiring production-strength bearer, JWT, and HMAC
+secrets.
 
 Set `managedDatabase=true` to provision PostgreSQL supported by the selected
 provider:

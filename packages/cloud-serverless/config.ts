@@ -129,7 +129,7 @@ export function buildServerEnvironment(
     LIMETRY_API_PATH_PREFIX: config.apiPathPrefix,
     LIMETRY_BEARER_TOKEN: secrets.bearerToken,
     LIMETRY_API_PORT: "3810",
-    NODE_ENV: "production",
+    NODE_ENV: "serverless",
     SQLITE_DATABASE_PATH: config.sqliteDatabasePath,
     USE_POSTGRES_STORE: String(config.managedDatabase),
   }
