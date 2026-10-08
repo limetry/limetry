@@ -1,6 +1,6 @@
 {
   "name": "@limetry/ui",
-  "version": "1.2.64-dev.cloud-agnostic-deploymen.8",
+  "version": "1.2.65-dev.cloud-agnostic-nav.1",
   "description": "Shared design system for Limetry — components, icons, and design tokens.",
   "license": "MIT",
   "type": "module",
