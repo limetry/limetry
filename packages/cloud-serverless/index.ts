@@ -86,9 +86,8 @@ const decisionHmacSecret = resolveSecret("decisionHmacSecret", 64)
 const databasePassword = serverlessConfig.databaseProvider === "rds"
   ? resolveSecret("databasePassword", 40)
   : pulumi.secret("")
-const databaseUrl = serverlessConfig.databaseProvider === "neon"
+const configuredDatabaseUrl = serverlessConfig.databaseProvider === "neon"
   ? config.getSecret("databaseUrl")
-    ?? (process.env.DATABASE_URL ? pulumi.secret(process.env.DATABASE_URL) : undefined)
   : undefined
 const neonApiKeyValue = process.env.LIMETRY_NEON_API_KEY ?? process.env.NEON_API_KEY
 const neonApiKey = config.getSecret("neonApiKey")
@@ -117,7 +116,7 @@ const providerArgs: ServerlessProviderArgs = {
   secrets: {
     bearerToken,
     databasePassword,
-    databaseUrl,
+    databaseUrl: configuredDatabaseUrl,
     decisionHmacSecret,
     jwtSecret,
     neonApiKey,
@@ -147,4 +146,10 @@ export const cloudProvider = serverlessConfig.cloudProvider
 export const databaseMode = serverlessConfig.databaseProvider
 
 /** Managed database connection string, hidden unless Pulumi shows secrets. */
-export const databaseConnection = provider.managedDatabaseConnection ?? pulumi.secret("")
+const resolvedDatabaseUrl = provider.managedDatabaseConnection ?? pulumi.secret("")
+
+/** Database URL created by the selected managed provider or supplied in Pulumi config. */
+export const databaseUrl = resolvedDatabaseUrl
+
+/** Backwards-compatible alias for the managed database connection output. */
+export const databaseConnection = resolvedDatabaseUrl

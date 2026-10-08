@@ -35,12 +35,12 @@ export function createNeonDatabase(args: ProviderArgs): {
       name: args.config.neonBranchName,
       roleName: args.config.neonRoleName,
     },
+    historyRetentionSeconds: 21600,
     name: args.config.neonProjectName,
     orgId: args.config.neonOrgId,
     pgVersion: 16,
     regionId: args.config.neonRegion,
     storePassword: "yes",
-    suspendTimeoutSeconds: 300,
   }, { provider })
 
   return {

@@ -119,7 +119,9 @@ The stack generates encrypted Pulumi secrets for `bearerToken`, `jwtSecret`,
 and `decisionHmacSecret`. RDS also generates `databasePassword` when it is
 selected. Neon can either provision a project with `NEON_API_KEY`,
 `LIMETRY_NEON_API_KEY`, or encrypted `neonApiKey`, or use an existing pooled
-connection string from `DATABASE_URL` or encrypted `databaseUrl`.
+connection string from encrypted `databaseUrl`. The stack deliberately does
+not import the shell's `DATABASE_URL`, because local development values can
+otherwise point a deployed Lambda at `localhost`.
 Provide stable values explicitly when rotating or restoring a deployment:
 
 ```sh
@@ -163,6 +165,9 @@ available through the `apiUrl` stack output.
 ```sh
 pulumi stack output apiUrl
 pulumi stack output databaseMode
+pulumi stack output databaseUrl
+# Use --show-secrets only when the connection string is needed.
+pulumi stack output --show-secrets databaseUrl
 pulumi destroy
 ```
 
