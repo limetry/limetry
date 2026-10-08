@@ -15,3 +15,5 @@ config:
 
   cloudflare:apiToken:
     secure: AAABAONbqpmG7lmgOfz5bG0m9BfIqN9wmg2GNR7Ph2ab4ZAlUqZY8hq7JVazqDPHvFljALyiF06d0+SxnlsOfWusHqORxPvx
+  limetry-serverless:neonApiKey:
+    secure: AAABAElagmVVjWQajkzqgkES/VGMIkNT82vRxX9hMkcA71XBw4JjZKzxT6ZcO9gHYUb/9gXO7m8Kjmv/esp6M2mrq66RTzU0BzyvyeXn+hi7WvoHv64b3RaZr2XNwx+Fd0acPbQ=
