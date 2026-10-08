@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process"
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 
 import * as aws from "@pulumi/aws"
@@ -16,6 +18,9 @@ import type { ServerlessProviderArgs, ServerlessProviderResources } from "./type
  * @returns AWS serverless resources and the public API URL.
  */
 export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProviderResources {
+  /** Lambda bundle path, generated automatically when a direct Pulumi deploy needs it. */
+  const lambdaBundle = ensureLambdaBundle(args.repoRoot)
+
   /** IAM role assumed by the Lambda function. */
   const lambdaRole = new aws.iam.Role(`${args.name}-lambda-role`, {
     assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
@@ -58,12 +63,11 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
   /** Lambda function running the Limetry server bundle. */
   const lambda = new aws.lambda.Function(`${args.name}-api`, {
     architectures: ["x86_64"],
-    code: new pulumi.asset.FileArchive(join(args.repoRoot, "packages/server/lambda-bundle")),
+    code: new pulumi.asset.FileArchive(lambdaBundle),
     environment: { variables: environment },
     handler: "lambda.handler",
     memorySize: args.config.memoryMb,
     role: lambdaRole.arn,
-    reservedConcurrentExecutions: args.config.maxInstances,
     runtime: "nodejs22.x",
     timeout: args.config.timeoutSeconds,
     vpcConfig: database
@@ -116,6 +120,31 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
     apiUrl: api.apiEndpoint,
     managedDatabaseConnection: database?.connectionString,
   }
+}
+
+/**
+ * Builds the Lambda bundle when it is not already present.
+ *
+ * Pulumi evaluates the program before registering the Lambda resource, so a
+ * direct `pulumi up` must prepare the archive before `FileArchive` hashes it.
+ *
+ * @param repoRoot - Repository root containing the server bundle script.
+ * @returns Existing or newly generated Lambda bundle directory.
+ */
+function ensureLambdaBundle(repoRoot: string): string {
+  const bundlePath = join(repoRoot, "packages/server/lambda-bundle")
+  const bundleEntryPoint = join(bundlePath, "lambda.js")
+  if (!existsSync(bundleEntryPoint)) {
+    execFileSync(
+      process.execPath,
+      [join(repoRoot, "packages/server/scripts/build-lambda-bundle.mjs")],
+      { cwd: repoRoot, stdio: "inherit" },
+    )
+  }
+  if (!existsSync(bundleEntryPoint)) {
+    throw new Error(`Lambda bundle was not created at ${bundleEntryPoint}`)
+  }
+  return bundlePath
 }
 
 /**
