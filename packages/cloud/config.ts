@@ -1,3 +1,5 @@
+import type * as pulumi from "@pulumi/pulumi"
+
 /**
  * Pure configuration helpers for the cloud-agnostic Limetry Kubernetes stack.
  */
@@ -8,8 +10,95 @@ export const API_PORT = 3810
 /** Public API route version used by the OSS server. */
 export const API_VERSION = "v1"
 
+/** Managed Kubernetes clouds supported by the cloud deployment stack. */
+export type CloudProvider = "aws" | "gcp" | "azure"
+
+/** Supported managed Kubernetes provider identifiers. */
+export const CLOUD_PROVIDERS: CloudProvider[] = ["aws", "gcp", "azure"]
+
 /** Persistence backends supported by the cloud-agnostic API deployment. */
 export type PersistenceMode = "postgres" | "sqlite"
+
+/** Configuration needed to select a managed or externally managed cluster. */
+export type CloudProviderConfig = {
+  clusterName: string
+  cloudProvider: CloudProvider
+  createCluster: boolean
+  createRegistry: boolean
+  location: string
+  kubeconfig?: pulumi.Input<string>
+  nodeCount: number
+  nodeMachineType: string
+  resourceGroupName?: string
+  registryRepository?: string
+}
+
+/**
+ * Parses a cloud provider identifier from Pulumi configuration.
+ *
+ * @param value - Raw provider configuration.
+ * @returns A supported provider identifier.
+ */
+export function parseCloudProvider(value: string | undefined): CloudProvider {
+  if (value === "aws" || value === "gcp" || value === "azure") {
+    return value
+  }
+  if (value) {
+    throw new Error(`Unsupported cloudProvider "${value}". Use aws, gcp, or azure.`)
+  }
+  return "aws"
+}
+
+/**
+ * Builds portable provider settings from string and boolean config values.
+ *
+ * @param values - Raw Pulumi configuration values.
+ * @returns Normalized provider settings.
+ */
+export function buildCloudProviderConfig(values: {
+  cloudProvider?: string
+  createCluster?: boolean
+  createRegistry?: boolean
+  clusterName?: string
+  location?: string
+  kubeconfig?: pulumi.Input<string>
+  nodeCount?: number
+  nodeMachineType?: string
+  resourceGroupName?: string
+  registryRepository?: string
+}): CloudProviderConfig {
+  const cloudProvider = parseCloudProvider(values.cloudProvider)
+  const defaults = {
+    azure: { location: "westus2", machineType: "Standard_D2s_v5" },
+    aws: { location: "us-west-2", machineType: "t3.medium" },
+    gcp: { location: "us-central1", machineType: "e2-medium" },
+  }[cloudProvider]
+
+  const nodeCount = values.nodeCount ?? 2
+  if (!Number.isInteger(nodeCount) || nodeCount < 1) {
+    throw new Error("nodeCount must be a positive integer")
+  }
+
+  const location = values.location?.trim() || defaults.location
+  if (location.length === 0) {
+    throw new Error("location must not be empty")
+  }
+
+  return {
+    cloudProvider,
+    createCluster: values.createCluster ?? false,
+    createRegistry: values.createRegistry ?? false,
+    clusterName: values.clusterName?.trim() || `limetry-${cloudProvider}`,
+    location,
+    kubeconfig: typeof values.kubeconfig === "string"
+      ? values.kubeconfig.trim() || undefined
+      : values.kubeconfig,
+    nodeCount,
+    nodeMachineType: values.nodeMachineType?.trim() || defaults.machineType,
+    resourceGroupName: values.resourceGroupName?.trim() || undefined,
+    registryRepository: values.registryRepository?.trim() || undefined,
+  }
+}
 
 /**
  * Removes an optional scheme and trailing slash from a configured hostname.

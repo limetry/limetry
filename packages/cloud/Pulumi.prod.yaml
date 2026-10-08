@@ -1,3 +1,10 @@
 config:
+  limetry-core:cloudProvider: aws
+  limetry-core:createCluster: "false"
+  limetry-core:createRegistry: "false"
+  limetry-core:location: us-west-2
   limetry-core:usePostgres: "false"
   limetry-core:apiDomain: cloud.limetry.org
+  # Use an existing cluster by setting kubeconfig as an encrypted secret.
+  # Set createCluster=true and createRegistry=true only after reviewing the
+  # managed-cluster costs for the selected cloud provider.

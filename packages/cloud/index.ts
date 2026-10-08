@@ -17,12 +17,13 @@ import {
   API_PORT,
   buildApiDnsAnnotations,
   buildApiDocumentationUrls,
-  buildApiImageTag,
   buildApiUrl,
+  buildCloudProviderConfig,
   buildSecretResourceName,
   normalizeApiDomain,
   resolvePersistence,
 } from "./config"
+import { createCloudProvider } from "./providers"
 
 /** Pulumi configuration namespace for this stack. */
 const config = new pulumi.Config()
@@ -39,6 +40,24 @@ const storageSize = config.get("storageSize") ?? "1Gi"
 /** Selects the externally configured Postgres store instead of SQLite. */
 const usePostgres = config.getBoolean("usePostgres") ?? false
 
+/** Optional existing image repository used when registry creation is disabled. */
+const configuredImageRepository = config.get("registryRepository") ?? config.get("apiImageRepository")
+
+/** Selects and provisions the configured cloud Kubernetes provider. */
+const cloudProviderConfig = buildCloudProviderConfig({
+  cloudProvider: config.get("cloudProvider"),
+  createCluster: config.getBoolean("createCluster"),
+  createRegistry: config.getBoolean("createRegistry"),
+  clusterName: config.get("clusterName"),
+  location: config.get("location"),
+  kubeconfig: config.getSecret("kubeconfig"),
+  nodeCount: config.getNumber("nodeCount"),
+  nodeMachineType: config.get("nodeMachineType"),
+  resourceGroupName: config.get("resourceGroupName"),
+  registryRepository: configuredImageRepository,
+})
+const cloudProvider = createCloudProvider(name, cloudProviderConfig)
+
 /**
  * Configured public hostname for the API, without a URL scheme or trailing slash.
  */
@@ -49,11 +68,9 @@ export const apiDomain = normalizeApiDomain(config.get("apiDomain"))
  */
 export const apiDomainZone = config.get("apiDomainZone") ?? "limetry.org"
 
-/** Optional registry repository used when the built API image must be pushed. */
-const imageRepository = config.get("apiImageRepository")?.trim() || undefined
-
 /** Image reference shared by the build resource and API Deployment. */
-const imageTag = buildApiImageTag(name, pulumi.getStack(), imageRepository, config.get("apiImageTag"))
+const imageTag = pulumi.interpolate`${cloudProvider.imageRepository}:${config.get("apiImageTag") ?? `pulumi-${pulumi.getStack()}`}`
+const shouldPushImage = Boolean(cloudProvider.registries) || Boolean(configuredImageRepository)
 
 /** Repository root used as the Docker build context. */
 const repoRoot = resolve(process.cwd(), "../..")
@@ -96,16 +113,17 @@ const apiImage = new dockerbuild.Image(`${name}-api-image`, {
   buildOnPreview: false,
   context: { location: repoRoot },
   dockerfile: { location: join(repoRoot, "packages/server/Dockerfile") },
-  load: !imageRepository,
+  load: !shouldPushImage,
   platforms: ["linux/amd64"],
-  push: Boolean(imageRepository),
+  push: shouldPushImage,
+  registries: cloudProvider.registries,
   tags: [imageTag],
 })
 
 /** Creates the namespace shared by all stack resources. */
 const namespace = new k8s.core.v1.Namespace(`${name}-namespace`, {
   metadata: { name: namespaceName },
-})
+}, { provider: cloudProvider.kubernetesProvider })
 
 /** Stores API credentials and the optional Postgres connection string. */
 const runtimeSecret = new k8s.core.v1.Secret(`${name}-runtime`, {
@@ -117,7 +135,7 @@ const runtimeSecret = new k8s.core.v1.Secret(`${name}-runtime`, {
     ...(databaseUrl ? { DATABASE_URL: databaseUrl } : {}),
   },
   type: "Opaque",
-})
+}, { provider: cloudProvider.kubernetesProvider })
 
 /** Durable SQLite volume, omitted when the API uses Postgres. */
 const sqliteVolume = usePostgres
@@ -128,7 +146,7 @@ const sqliteVolume = usePostgres
       accessModes: ["ReadWriteOnce"],
       resources: { requests: { storage: storageSize } },
     },
-  })
+  }, { provider: cloudProvider.kubernetesProvider })
 
 /** Common labels used to connect the Deployment and Service. */
 const labels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": "evaluate-api" }
@@ -173,6 +191,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
     },
   },
 }, {
+  provider: cloudProvider.kubernetesProvider,
   dependsOn: [
     runtimeSecret,
     ...(sqliteVolume ? [sqliteVolume] : []),
@@ -191,7 +210,7 @@ const apiService = new k8s.core.v1.Service(`${name}-api`, {
     ports: [{ name: "http", port: 80, targetPort: "http" }],
     type: config.get("serviceType") ?? "LoadBalancer",
   },
-}, { dependsOn: [apiDeployment] })
+}, { dependsOn: [apiDeployment], provider: cloudProvider.kubernetesProvider })
 
 /** Stable in-cluster name for the optional development Postgres Service. */
 const postgresServiceName = `${name}-postgres`
@@ -204,7 +223,7 @@ if (usePostgres && databaseUrl) {
     metadata: { namespace: namespace.metadata.name },
     stringData: { POSTGRES_PASSWORD: postgresPassword },
     type: "Opaque",
-  })
+  }, { provider: cloudProvider.kubernetesProvider })
 
   /** Labels used to connect the Postgres StatefulSet and Service. */
   const postgresLabels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": "postgres" }
@@ -240,13 +259,13 @@ if (usePostgres && databaseUrl) {
         },
       }],
     },
-  }, { dependsOn: [postgresSecret] })
+  }, { dependsOn: [postgresSecret], provider: cloudProvider.kubernetesProvider })
 
   /** Internal Service exposing the optional development Postgres database. */
   new k8s.core.v1.Service(postgresServiceName, {
     metadata: { namespace: namespace.metadata.name },
     spec: { selector: postgresLabels, ports: [{ name: "postgres", port: 5432 }] },
-  }, { dependsOn: [postgres] })
+  }, { dependsOn: [postgres], provider: cloudProvider.kubernetesProvider })
 }
 
 /** Kubernetes Service name for the public API. */
