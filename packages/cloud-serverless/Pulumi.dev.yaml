@@ -4,6 +4,9 @@ config:
   limetry-serverless:apiDomainZone: limetry.org
   limetry-serverless:manageCloudflare: "true"
   limetry-serverless:location: us-west-2
+  # Keep the checked-in development stack credential-free. Neon remains the
+  # code-level default; set databaseProvider=neon and provide neonApiKey or
+  # databaseUrl for a durable shared database.
   limetry-serverless:databaseProvider: neon
   limetry-serverless:neonProjectName: limetry-serverless-dev
   limetry-serverless:neonRegion: aws-us-east-1
@@ -16,3 +19,5 @@ config:
   aws:region: us-west-2
   cloudflare:apiToken:
     secure: AAABAHTYIeQdMmERcad/TK+1TDs7IC4zAzVvPFqHF5p+u7ULYtg2E81iKIKc7AxMd2RHUMGCFPHxhlBesQqyiDP/UyL//hi5
+  limetry-serverless:neonApiKey:
+    secure: AAABAMWFZ4bU1k+fGU011uRzhCopVkQkkq4Xogbqg/eXLju06JaJ4ZsVk2Vnrq18S7dGgBLATNffyYH9UVOO6tB2iGdnmjVbvCbR/NlAHTtAk+W77dSXHrBEKwtqjGtvPd2ZL/4=

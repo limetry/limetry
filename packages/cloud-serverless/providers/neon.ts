@@ -12,6 +12,18 @@ import type { ServerlessProviderArgs as ProviderArgs } from "./types"
 export function createNeonDatabase(args: ProviderArgs): {
   connectionString: pulumi.Output<string>
 } {
+  if (args.secrets.databaseUrl) {
+    return {
+      connectionString: pulumi.secret(args.secrets.databaseUrl),
+    }
+  }
+
+  if (!args.secrets.neonApiKey) {
+    throw new Error(
+      "databaseProvider=neon requires neonApiKey or DATABASE_URL. Set Pulumi neonApiKey, NEON_API_KEY, or DATABASE_URL.",
+    )
+  }
+
   const provider = new neon.Provider(`${args.name}-neon-provider`, {
     apiKey: args.secrets.neonApiKey,
   })

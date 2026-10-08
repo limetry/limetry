@@ -20,6 +20,10 @@ neonRegion=aws-us-east-1
 NODE_ENV=serverless
 ```
 
+The checked-in `dev` Pulumi stack selects SQLite so a fresh local preview does
+not require external database credentials. Set `databaseProvider=neon` when
+deploying a shared durable database.
+
 The `/tmp` filesystem is ephemeral and local to one serverless instance. It
 is suitable for demos and single-instance evaluation only. It is not a
 durable shared database, and scaling to multiple instances can produce
@@ -113,8 +117,9 @@ Container Registry, and Neon API access when the default database is used.
 
 The stack generates encrypted Pulumi secrets for `bearerToken`, `jwtSecret`,
 and `decisionHmacSecret`. RDS also generates `databasePassword` when it is
-selected. Neon uses the `NEON_API_KEY` environment variable or the encrypted
-`neonApiKey` Pulumi config value.
+selected. Neon can either provision a project with `NEON_API_KEY`,
+`LIMETRY_NEON_API_KEY`, or encrypted `neonApiKey`, or use an existing pooled
+connection string from `DATABASE_URL` or encrypted `databaseUrl`.
 Provide stable values explicitly when rotating or restoring a deployment:
 
 ```sh
@@ -123,6 +128,7 @@ pulumi config set --secret jwtSecret "replace-with-a-long-secret"
 pulumi config set --secret decisionHmacSecret "replace-with-a-long-secret"
 pulumi config set --secret databasePassword "replace-with-a-long-password"
 pulumi config set --secret neonApiKey "replace-with-a-neon-api-key"
+pulumi config set --secret databaseUrl "postgresql://USER:PASSWORD@HOST/neondb?sslmode=verify-full"
 ```
 
 Useful settings include:
