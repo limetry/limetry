@@ -1,0 +1,11 @@
+config:
+  limetry-serverless:cloudProvider: aws
+  limetry-serverless:location: us-west-2
+  limetry-serverless:managedDatabase: "false"
+  limetry-serverless:minInstances: "0"
+  limetry-serverless:maxInstances: "1"
+  limetry-serverless:sqliteDatabasePath: /tmp/limetry.sqlite
+  # SQLite is ephemeral in serverless runtimes. Set managedDatabase=true
+  # before using more than one instance or requiring durable shared state.
+  # Azure managed PostgreSQL also requires allowPublicDatabase=true; use VNet
+  # integration for private production database connectivity.
