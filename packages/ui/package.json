@@ -21,6 +21,20 @@
       "import": "./src/components/drawer-menu.web.tsx",
       "default": "./src/components/drawer-menu.web.tsx"
     },
+    "./site-header": {
+      "types": "./src/components/site-header.web.tsx",
+      "react-native": "./src/components/site-header.tsx",
+      "browser": "./src/components/site-header.web.tsx",
+      "import": "./src/components/site-header.web.tsx",
+      "default": "./src/components/site-header.web.tsx"
+    },
+    "./theme-toggle": {
+      "types": "./src/components/theme-toggle.web.tsx",
+      "react-native": "./src/components/theme-toggle.tsx",
+      "browser": "./src/components/theme-toggle.web.tsx",
+      "import": "./src/components/theme-toggle.web.tsx",
+      "default": "./src/components/theme-toggle.web.tsx"
+    },
     "./tailwind": "./tailwind.config.ts",
     "./global.css": "./src/global.css"
   },

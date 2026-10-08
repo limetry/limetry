@@ -36,6 +36,18 @@ export type DrawerLinkProps = {
    * Optional Tailwind / NativeWind class names for the link root.
    */
   className?: string
+  /**
+   * Optional browser target for header links.
+   */
+  target?: string
+  /**
+   * Optional browser relationship for header links.
+   */
+  rel?: string
+  /**
+   * Optional current-page marker for header links.
+   */
+  ariaCurrent?: "page"
 }
 
 /**
