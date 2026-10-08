@@ -56,6 +56,8 @@ const cloudProviderConfig = buildCloudProviderConfig({
   resourceGroupName: config.get("resourceGroupName"),
   registryRepository: configuredImageRepository,
 })
+
+/** Selected cloud adapter supplying Kubernetes and registry resources. */
 const cloudProvider = createCloudProvider(name, cloudProviderConfig)
 
 /**
@@ -70,6 +72,8 @@ export const apiDomainZone = config.get("apiDomainZone") ?? "limetry.org"
 
 /** Image reference shared by the build resource and API Deployment. */
 const imageTag = pulumi.interpolate`${cloudProvider.imageRepository}:${config.get("apiImageTag") ?? `pulumi-${pulumi.getStack()}`}`
+
+/** Whether the image builder should push to a registry instead of loading locally. */
 const shouldPushImage = Boolean(cloudProvider.registries) || Boolean(configuredImageRepository)
 
 /** Repository root used as the Docker build context. */
@@ -89,6 +93,7 @@ function resolveSecret(namePart: string, length: number): pulumi.Output<string> 
     return configured
   }
 
+  /** Pulumi-managed password resource used when no secret is configured. */
   const generated = new random.RandomPassword(buildSecretResourceName(name, namePart), {
     length,
     special: false,

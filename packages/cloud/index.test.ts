@@ -1,13 +1,17 @@
 import * as pulumi from "@pulumi/pulumi"
 import { beforeAll, describe, expect, it } from "vitest"
 
+/** Captured Pulumi resource inputs used by the workload contract tests. */
 type MockResource = {
   inputs: Record<string, unknown>
   name: string
   type: string
 }
 
+/** Resources registered by the Pulumi mock runtime. */
 const resources: MockResource[] = []
+
+/** Dynamically imported Pulumi stack exports under test. */
 let cloudStack: typeof import("./index")
 
 /**
@@ -29,7 +33,15 @@ function promiseOf<T>(output: pulumi.Output<T>): Promise<T> {
   })
 }
 
+/**
+ * Finds a captured resource by Pulumi type and logical name.
+ *
+ * @param type - Pulumi resource type.
+ * @param name - Pulumi logical resource name.
+ * @returns Captured resource inputs.
+ */
 function findResource(type: string, name: string): MockResource {
+  /** Resource matching the requested Pulumi type and logical name. */
   const resource = resources.find((candidate) => candidate.type === type && candidate.name === name)
   expect(
     resource,
@@ -38,12 +50,19 @@ function findResource(type: string, name: string): MockResource {
   return resource as MockResource
 }
 
+/**
+ * Narrows a captured Pulumi input to an object record.
+ *
+ * @param value - Captured Pulumi input.
+ * @returns Object record for assertions.
+ */
 function readRecord(value: unknown): Record<string, unknown> {
   expect(value).toBeTypeOf("object")
   expect(value).not.toBeNull()
   return value as Record<string, unknown>
 }
 
+/** Verifies the shared Kubernetes workload contract. */
 describe("cloud Pulumi stack", () => {
   beforeAll(async () => {
     pulumi.runtime.setMocks({
@@ -68,17 +87,26 @@ describe("cloud Pulumi stack", () => {
     ])
   })
 
+  /** Verifies the default SQLite workload contract. */
   it("builds the default SQLite deployment contract", () => {
     expect(cloudStack.persistence).toBe("sqlite")
     expect(cloudStack.apiDomain).toBeUndefined()
     expect(cloudStack.apiDomainZone).toBe("limetry.org")
 
+    /** Captured API Deployment resource. */
     const deployment = findResource("kubernetes:apps/v1:Deployment", "limetry-api")
+
+    /** Deployment specification passed to Kubernetes. */
     const deploymentSpec = readRecord(deployment.inputs.spec)
     expect(deploymentSpec.replicas).toBe(1)
 
+    /** Pod template used by the API Deployment. */
     const template = readRecord(deploymentSpec.template)
+
+    /** Pod specification used by the API Deployment. */
     const podSpec = readRecord(template.spec)
+
+    /** API container definitions in the pod specification. */
     const containers = podSpec.containers as Array<Record<string, unknown>>
     expect(containers).toHaveLength(1)
     expect(containers[0]?.image).toMatch(/^limetry-server:pulumi-/)
@@ -86,7 +114,10 @@ describe("cloud Pulumi stack", () => {
     expect(containers[0]?.volumeMounts).toEqual([{ name: "sqlite", mountPath: "/data" }])
     expect(podSpec.volumes).toBeDefined()
 
+    /** Captured API Service resource. */
     const service = findResource("kubernetes:core/v1:Service", "limetry-api")
+
+    /** Service specification passed to Kubernetes. */
     const serviceSpec = readRecord(service.inputs.spec)
     expect(serviceSpec.type).toBe("LoadBalancer")
 
@@ -96,8 +127,12 @@ describe("cloud Pulumi stack", () => {
     expect(resources.some((resource) => resource.name === "limetry-decisionHmacSecret")).toBe(true)
   })
 
+  /** Verifies generated credentials are wired into the runtime Secret. */
   it("wires generated secrets into the runtime Secret", async () => {
+    /** Captured runtime Secret resource. */
     const runtimeSecret = findResource("kubernetes:core/v1:Secret", "limetry-runtime")
+
+    /** Secret key/value payload passed to Kubernetes. */
     const stringData = readRecord(runtimeSecret.inputs.stringData)
 
     expect(stringData.value).toBeTypeOf("object")

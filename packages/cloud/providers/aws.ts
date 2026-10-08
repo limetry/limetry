@@ -18,17 +18,20 @@ export function createAwsProvider(
   name: string,
   config: CloudProviderConfig,
 ): CloudProviderResources {
+  /** ECR repository created for managed AWS deployments. */
   const repository = config.createRegistry
     ? new aws.ecr.Repository(`${name}-registry`, {
       forceDelete: config.createCluster,
       imageScanningConfiguration: { scanOnPush: true },
     })
     : undefined
+  /** Image repository URL used by the shared workload. */
   const repositoryUrl = repository?.repositoryUrl ?? config.registryRepository ?? `${name}-server`
   if (config.createCluster && !repository) {
     throw new Error("AWS managed clusters require createRegistry=true or registryRepository")
   }
 
+  /** EKS cluster created when managed-cluster mode is enabled. */
   const cluster = config.createCluster
     ? new eks.Cluster(`${name}-cluster`, {
       desiredCapacity: config.nodeCount,
@@ -38,12 +41,17 @@ export function createAwsProvider(
       version: "1.31",
     })
     : undefined
+  /** Kubeconfig supplied by EKS or the externally managed cluster. */
   const kubeconfig = cluster?.kubeconfigJson ?? requireKubeconfig(config)
+
+  /** Kubernetes provider connected to the selected EKS or external cluster. */
   const kubernetesProvider = new k8s.Provider(`${name}-kubernetes`, { kubeconfig })
 
+  /** ECR authorization token used by the image builder. */
   const authToken = repository
     ? aws.ecr.getAuthorizationTokenOutput({ registryId: repository.registryId })
     : undefined
+  /** Docker registry credentials passed to the image builder. */
   const registries: pulumi.Input<RegistryArgs[]> | undefined = repository && authToken
     ? [{
       address: repository.repositoryUrl,

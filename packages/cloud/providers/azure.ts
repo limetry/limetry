@@ -17,11 +17,14 @@ export function createAzureProvider(
   name: string,
   config: CloudProviderConfig,
 ): CloudProviderResources {
+  /** Resource group created for managed Azure deployments. */
   const resourceGroup = config.createCluster
     ? new azure.resources.ResourceGroup(`${name}-resource-group`, {
       location: config.location,
     })
     : undefined
+
+  /** ACR registry created for managed Azure deployments. */
   const registry = config.createRegistry
     ? new azure.containerregistry.Registry(`${name}-registry`, {
       adminUserEnabled: true,
@@ -30,6 +33,8 @@ export function createAzureProvider(
       sku: { name: "Basic" },
     })
     : undefined
+
+  /** Image repository URL used by the shared workload. */
   const repository = registry
     ? pulumi.interpolate`${registry.loginServer}/${name}/api`
     : config.registryRepository
@@ -37,6 +42,7 @@ export function createAzureProvider(
     throw new Error("Azure managed clusters require createRegistry=true or registryRepository")
   }
 
+  /** AKS cluster created when managed-cluster mode is enabled. */
   const cluster = config.createCluster
     ? new azure.containerservice.ManagedCluster(`${name}-cluster`, {
       agentPoolProfiles: [{
@@ -54,16 +60,21 @@ export function createAzureProvider(
       resourceGroupName: resourceGroup?.name ?? requireResourceGroup(config),
     })
     : undefined
+  /** Kubeconfig supplied by AKS or the externally managed cluster. */
   const kubeconfig = cluster
     ? buildAksKubeconfig(cluster, resourceGroup?.name ?? requireResourceGroup(config))
     : requireKubeconfig(config)
+  /** Kubernetes provider connected to the selected AKS or external cluster. */
   const kubernetesProvider = new k8s.Provider(`${name}-kubernetes`, { kubeconfig })
+
+  /** ACR credentials used by the image builder. */
   const credentials = registry
     ? azure.containerregistry.listRegistryCredentialsOutput({
       registryName: registry.name,
       resourceGroupName: resourceGroup?.name ?? requireResourceGroup(config),
     })
     : undefined
+  /** Docker registry credentials passed to the image builder. */
   const registries: pulumi.Input<RegistryArgs[]> | undefined = registry && credentials
     ? [{
       address: registry.loginServer,
