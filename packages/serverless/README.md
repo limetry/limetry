@@ -39,6 +39,11 @@ npx sst version
 The package manager only installs and runs tooling; the deployment configuration
 does not require Corepack or a specific package manager.
 
+For local SST deployments, put your non-secret settings in
+`packages/serverless/.env`. SST loads that file when commands run from this
+package directory. Keep `LIMETRY_NEON_API_KEY` in that ignored file or export it
+in the shell; it is required when `LIMETRY_DATABASE_PROVIDER=neon`.
+
 Authenticate the selected cloud before deploying:
 
 ```sh
