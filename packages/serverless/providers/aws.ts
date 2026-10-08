@@ -1,3 +1,4 @@
+import { createNeonDatabase } from "./neon"
 import type { ProviderArgs, ProviderResources } from "./types"
 
 /**
@@ -7,7 +8,9 @@ import type { ProviderArgs, ProviderResources } from "./types"
  * @returns AWS resources and their public URL.
  */
 export function createAwsProvider(args: ProviderArgs): ProviderResources {
-  const database = args.config.managedDatabase ? createDatabase(args) : undefined
+  const rdsDatabase = args.config.databaseProvider === "rds" ? createDatabase(args) : undefined
+  const neonDatabase = args.config.databaseProvider === "neon" ? createNeonDatabase(args) : undefined
+  const database = rdsDatabase ?? neonDatabase
   const environment = database
     ? {
       ...args.environment,
@@ -22,10 +25,10 @@ export function createAwsProvider(args: ProviderArgs): ProviderResources {
     memory: `${args.config.memoryMb} MB` as `${number} MB`,
     runtime: "nodejs22.x" as const,
     timeout: `${args.config.timeoutSeconds} seconds` as `${number} seconds`,
-    vpc: database
+    vpc: rdsDatabase
       ? {
-        securityGroups: [database.lambdaSecurityGroup.id],
-        privateSubnets: database.subnetIds,
+        securityGroups: [rdsDatabase.lambdaSecurityGroup.id],
+        privateSubnets: rdsDatabase.subnetIds,
       }
       : undefined,
   }
@@ -51,7 +54,7 @@ export function createAwsProvider(args: ProviderArgs): ProviderResources {
   return {
     apiImageReference: lambda.name,
     apiUrl: api.url,
-    managedDatabaseConnection: database?.connectionString,
+    managedDatabaseConnection: rdsDatabase?.connectionString ?? neonDatabase?.connectionString,
     provider: "aws",
   }
 }

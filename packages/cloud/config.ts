@@ -19,6 +19,9 @@ export const CLOUD_PROVIDERS: CloudProvider[] = ["aws", "gcp", "azure"]
 /** Persistence backends supported by the cloud-agnostic API deployment. */
 export type PersistenceMode = "postgres" | "sqlite"
 
+/** Database providers supported by the cloud-agnostic deployment. */
+export type DatabaseProvider = "neon" | "rds" | "sqlite"
+
 /** Configuration needed to select a managed or externally managed cluster. */
 export type CloudProviderConfig = {
   clusterName: string
@@ -29,8 +32,19 @@ export type CloudProviderConfig = {
   manageCloudflare: boolean
   createCluster: boolean
   createRegistry: boolean
+  databaseAllowedCidr: string
+  databaseName: string
+  databaseProvider: DatabaseProvider
+  databaseUsername: string
   location: string
   kubeconfig?: pulumi.Input<string>
+  neonApiKey?: pulumi.Input<string>
+  neonBranchName: string
+  neonDatabaseName: string
+  neonOrgId?: string
+  neonProjectName: string
+  neonRegion: string
+  neonRoleName: string
   nodeCount: number
   nodeMachineType: string
   resourceGroupName?: string
@@ -54,6 +68,29 @@ export function parseCloudProvider(value: string | undefined): CloudProvider {
 }
 
 /**
+ * Parses a database provider identifier.
+ *
+ * @param value - Raw database provider value.
+ * @param legacyUsePostgres - Legacy boolean database setting.
+ * @returns A supported database provider.
+ */
+export function parseDatabaseProvider(
+  value: string | undefined,
+  legacyUsePostgres?: boolean,
+): DatabaseProvider {
+  if (value === "neon" || value === "rds" || value === "sqlite") {
+    return value
+  }
+  if (value) {
+    throw new Error(`Unsupported databaseProvider "${value}". Use neon, rds, or sqlite.`)
+  }
+  if (legacyUsePostgres !== undefined) {
+    return legacyUsePostgres ? "neon" : "sqlite"
+  }
+  return "neon"
+}
+
+/**
  * Builds portable provider settings from string and boolean config values.
  *
  * @param values - Raw Pulumi configuration values.
@@ -67,15 +104,31 @@ export function buildCloudProviderConfig(values: {
   cloudProvider?: string
   createCluster?: boolean
   createRegistry?: boolean
+  databaseAllowedCidr?: string
+  databaseName?: string
+  databaseProvider?: string
+  databaseUsername?: string
   clusterName?: string
   location?: string
   kubeconfig?: pulumi.Input<string>
   nodeCount?: number
   nodeMachineType?: string
+  neonApiKey?: pulumi.Input<string>
+  neonBranchName?: string
+  neonDatabaseName?: string
+  neonOrgId?: string
+  neonProjectName?: string
+  neonRegion?: string
+  neonRoleName?: string
   resourceGroupName?: string
   registryRepository?: string
+  usePostgres?: boolean
 }): CloudProviderConfig {
   const cloudProvider = parseCloudProvider(values.cloudProvider)
+  const databaseProvider = parseDatabaseProvider(values.databaseProvider, values.usePostgres)
+  if (databaseProvider === "rds" && cloudProvider !== "aws") {
+    throw new Error("databaseProvider=rds requires cloudProvider=aws")
+  }
   const defaults = {
     azure: { location: "westus2", machineType: "Standard_D2s_v5" },
     aws: { location: "us-west-2", machineType: "t3.medium" },
@@ -106,11 +159,22 @@ export function buildCloudProviderConfig(values: {
     cloudProvider,
     createCluster: values.createCluster ?? false,
     createRegistry: values.createRegistry ?? false,
+    databaseAllowedCidr: values.databaseAllowedCidr?.trim() || "10.0.0.0/8",
+    databaseName: values.databaseName?.trim() || "limetry",
+    databaseProvider,
+    databaseUsername: values.databaseUsername?.trim() || "limetry",
     clusterName: values.clusterName?.trim() || `limetry-${cloudProvider}`,
     location,
     kubeconfig: typeof values.kubeconfig === "string"
       ? values.kubeconfig.trim() || undefined
       : values.kubeconfig,
+    neonApiKey: values.neonApiKey,
+    neonBranchName: values.neonBranchName?.trim() || "main",
+    neonDatabaseName: values.neonDatabaseName?.trim() || values.databaseName?.trim() || "limetry",
+    neonOrgId: values.neonOrgId?.trim() || undefined,
+    neonProjectName: values.neonProjectName?.trim() || "limetry-cloud",
+    neonRegion: values.neonRegion?.trim() || "aws-us-east-1",
+    neonRoleName: values.neonRoleName?.trim() || values.databaseUsername?.trim() || "limetry",
     nodeCount,
     nodeMachineType: values.nodeMachineType?.trim() || defaults.machineType,
     resourceGroupName: values.resourceGroupName?.trim() || undefined,
@@ -244,11 +308,14 @@ export function buildApiDocumentationUrls(apiUrl: string | undefined): {
 /**
  * Resolves the configured persistence mode.
  *
- * @param usePostgres - Whether the deployment uses the Postgres store.
+ * @param provider - Database provider or legacy Postgres boolean.
  * @returns The selected persistence mode.
  */
-export function resolvePersistence(usePostgres: boolean): PersistenceMode {
-  return usePostgres ? "postgres" : "sqlite"
+export function resolvePersistence(provider: DatabaseProvider | boolean): PersistenceMode {
+  if (typeof provider === "boolean") {
+    return provider ? "postgres" : "sqlite"
+  }
+  return provider === "sqlite" ? "sqlite" : "postgres"
 }
 
 /**

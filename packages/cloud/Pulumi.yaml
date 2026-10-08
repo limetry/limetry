@@ -8,3 +8,9 @@ config:
   pulumi:tags:
     value:
       pulumi:template: typescript
+packages:
+  neon:
+    source: terraform-provider
+    version: 1.4.0
+    parameters:
+      - kislerdm/neon

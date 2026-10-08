@@ -24,6 +24,7 @@ export type ProviderArgs = {
     databasePassword: pulumi.Input<string>
     decisionHmacSecret: pulumi.Input<string>
     jwtSecret: pulumi.Input<string>
+    neonApiKey?: pulumi.Input<string>
   }
 }
 

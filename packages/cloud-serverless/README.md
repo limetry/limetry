@@ -12,11 +12,11 @@ configuration defaults to AWS in `us-west-2`.
 
 ## Persistence defaults
 
-The default is SQLite:
+The default is Neon Serverless Postgres:
 
 ```text
-managedDatabase=false
-SQLITE_DATABASE_PATH=/tmp/limetry.sqlite
+databaseProvider=neon
+neonRegion=aws-us-east-1
 NODE_ENV=serverless
 ```
 
@@ -29,18 +29,12 @@ The `serverless` runtime marker keeps SQLite-compatible startup preflight
 enabled while still requiring production-strength bearer, JWT, and HMAC
 secrets.
 
-Set `managedDatabase=true` to provision PostgreSQL supported by the selected
-provider:
+Set `databaseProvider=sqlite` for ephemeral local storage, or
+`databaseProvider=rds` with `cloudProvider=aws` to provision:
 
-- AWS: Aurora Serverless v2, starting at 0.5 ACU, in the default VPC.
-- GCP: the smallest shared-core Cloud SQL PostgreSQL instance.
-- Azure: the smallest burstable PostgreSQL Flexible Server tier.
-
-AWS and GCP use private/provider-managed connectivity. Azure Container Apps
-does not have a stable egress address without VNet integration, so Azure
-requires `allowPublicDatabase=true` and creates a temporary allow rule for
-the public database. Do not use that mode for sensitive production data;
-configure Azure VNet integration before production use.
+AWS provisions Aurora Serverless v2, starting at 0.5 ACU, in the default VPC.
+Neon is managed outside the selected compute provider and uses a pooled
+connection string. RDS uses private AWS connectivity from Lambda.
 
 Managed PostgreSQL adds ongoing charges even when request volume is low. Review
 the current provider pricing before enabling it. `pulumi destroy` removes the
@@ -80,7 +74,7 @@ pulumi up
 ```
 
 The AWS identity needs permissions for Lambda, API Gateway, IAM, VPC
-descriptions, security groups, and, when `managedDatabase=true`, Aurora and
+descriptions, security groups, and, when `databaseProvider=rds`, Aurora and
 subnet resources. The managed database uses the default VPC and private
 security-group access from Lambda.
 
@@ -98,7 +92,7 @@ pulumi up
 ```
 
 The Google identity needs permissions for Artifact Registry, Cloud Run,
-service accounts, IAM, and, when enabled, Cloud SQL.
+service accounts, IAM, and Neon API access when the default database is used.
 
 ## Azure
 
@@ -113,19 +107,14 @@ pulumi up
 ```
 
 The Azure identity needs permissions for resource groups, Container Apps,
-Container Registry, and, when enabled, PostgreSQL Flexible Server. Azure
-managed database mode also requires:
-
-```sh
-pulumi config set allowPublicDatabase true
-```
-
-That setting is intentionally not enabled by default.
+Container Registry, and Neon API access when the default database is used.
 
 ## Secrets and configuration
 
 The stack generates encrypted Pulumi secrets for `bearerToken`, `jwtSecret`,
-`decisionHmacSecret`, and `databasePassword` when they are not supplied.
+and `decisionHmacSecret`. RDS also generates `databasePassword` when it is
+selected. Neon uses the `NEON_API_KEY` environment variable or the encrypted
+`neonApiKey` Pulumi config value.
 Provide stable values explicitly when rotating or restoring a deployment:
 
 ```sh
@@ -133,6 +122,7 @@ pulumi config set --secret bearerToken "replace-with-a-long-token"
 pulumi config set --secret jwtSecret "replace-with-a-long-secret"
 pulumi config set --secret decisionHmacSecret "replace-with-a-long-secret"
 pulumi config set --secret databasePassword "replace-with-a-long-password"
+pulumi config set --secret neonApiKey "replace-with-a-neon-api-key"
 ```
 
 Useful settings include:

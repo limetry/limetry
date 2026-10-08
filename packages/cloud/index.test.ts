@@ -87,9 +87,9 @@ describe("cloud Pulumi stack", () => {
     ])
   })
 
-  /** Verifies the default SQLite workload contract. */
-  it("builds the default SQLite deployment contract", () => {
-    expect(cloudStack.persistence).toBe("sqlite")
+  /** Verifies the default Neon workload contract. */
+  it("builds the default Neon deployment contract", () => {
+    expect(cloudStack.persistence).toBe("postgres")
     expect(cloudStack.apiDomain).toBeUndefined()
     expect(cloudStack.apiDomainZone).toBe("limetry.org")
 
@@ -98,7 +98,7 @@ describe("cloud Pulumi stack", () => {
 
     /** Deployment specification passed to Kubernetes. */
     const deploymentSpec = readRecord(deployment.inputs.spec)
-    expect(deploymentSpec.replicas).toBe(1)
+    expect(deploymentSpec.replicas).toBe(2)
 
     /** Pod template used by the API Deployment. */
     const template = readRecord(deploymentSpec.template)
@@ -111,8 +111,8 @@ describe("cloud Pulumi stack", () => {
     expect(containers).toHaveLength(1)
     expect(containers[0]?.image).toMatch(/^limetry-server:pulumi-/)
     expect(containers[0]?.ports).toEqual([{ name: "http", containerPort: 3810 }])
-    expect(containers[0]?.volumeMounts).toEqual([{ name: "sqlite", mountPath: "/data" }])
-    expect(podSpec.volumes).toBeDefined()
+    expect(containers[0]?.volumeMounts).toBeUndefined()
+    expect(podSpec.volumes).toBeUndefined()
 
     /** Captured API Service resource. */
     const service = findResource("kubernetes:core/v1:Service", "limetry-api")
@@ -121,7 +121,14 @@ describe("cloud Pulumi stack", () => {
     const serviceSpec = readRecord(service.inputs.spec)
     expect(serviceSpec.type).toBe("LoadBalancer")
 
-    expect(resources.some((resource) => resource.name === "limetry-sqlite")).toBe(true)
+    expect(resources.some((resource) => resource.type === "neon:index/project:Project")).toBe(true)
+    const neonProject = findResource("neon:index/project:Project", "limetry-neon-project")
+    expect(neonProject.inputs.regionId).toBe("aws-us-east-1")
+    expect(readRecord(neonProject.inputs.branch)).toMatchObject({
+      databaseName: "limetry",
+      name: "main",
+      roleName: "limetry",
+    })
     expect(resources.some((resource) => resource.name === "limetry-bearerToken")).toBe(true)
     expect(resources.some((resource) => resource.name === "limetry-jwtSecret")).toBe(true)
     expect(resources.some((resource) => resource.name === "limetry-decisionHmacSecret")).toBe(true)

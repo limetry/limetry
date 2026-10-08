@@ -27,6 +27,7 @@ import {
   buildSecretResourceName,
   resolvePersistence,
 } from "./config"
+import { createNeonDatabase } from "./neon"
 import { createCloudProvider } from "./providers"
 
 /** Pulumi configuration namespace for this stack. */
@@ -41,9 +42,6 @@ const namespaceName = config.get("namespace") ?? name
 /** Persistent-volume size used by the default SQLite store. */
 const storageSize = config.get("storageSize") ?? "1Gi"
 
-/** Selects the externally configured Postgres store instead of SQLite. */
-const usePostgres = config.getBoolean("usePostgres") ?? false
-
 /** Optional existing image repository used when registry creation is disabled. */
 const configuredImageRepository = config.get("registryRepository") ?? config.get("apiImageRepository")
 
@@ -57,16 +55,33 @@ const cloudProviderConfig = buildCloudProviderConfig({
   createCluster: config.getBoolean("createCluster"),
   createRegistry: config.getBoolean("createRegistry"),
   clusterName: config.get("clusterName"),
+  databaseAllowedCidr: config.get("databaseAllowedCidr"),
+  databaseName: config.get("databaseName"),
+  databaseProvider: config.get("databaseProvider"),
+  databaseUsername: config.get("databaseUsername"),
   location: config.get("location"),
   kubeconfig: config.getSecret("kubeconfig"),
+  neonApiKey: config.getSecret("neonApiKey")
+    ?? (process.env.NEON_API_KEY ? pulumi.secret(process.env.NEON_API_KEY) : undefined),
+  neonBranchName: config.get("neonBranchName"),
+  neonDatabaseName: config.get("neonDatabaseName"),
+  neonOrgId: config.get("neonOrgId"),
+  neonProjectName: config.get("neonProjectName"),
+  neonRegion: config.get("neonRegion"),
+  neonRoleName: config.get("neonRoleName"),
   nodeCount: config.getNumber("nodeCount"),
   nodeMachineType: config.get("nodeMachineType"),
   resourceGroupName: config.get("resourceGroupName"),
   registryRepository: configuredImageRepository,
+  usePostgres: config.getBoolean("usePostgres"),
 })
 
 /** Selected cloud adapter supplying Kubernetes and registry resources. */
 const cloudProvider = createCloudProvider(name, cloudProviderConfig)
+const neonDatabase = cloudProviderConfig.databaseProvider === "neon"
+  ? createNeonDatabase(name, cloudProviderConfig)
+  : undefined
+const databaseUrl = cloudProvider.databaseUrl ?? neonDatabase?.connectionString
 
 /**
  * Configured public hostname for the API, without a URL scheme or trailing slash.
@@ -122,9 +137,6 @@ export const jwtSecret = pulumi.secret(resolveSecret("jwtSecret", 64))
 /** HMAC secret used to sign and verify policy decision receipts. */
 export const decisionHmacSecret = pulumi.secret(resolveSecret("decisionHmacSecret", 64))
 
-/** Required external database URL when Postgres persistence is selected. */
-const databaseUrl = usePostgres ? config.requireSecret("databaseUrl") : undefined
-
 /** Builds and optionally pushes the OSS API image for the target stack. */
 const apiImage = new dockerbuild.Image(`${name}-api-image`, {
   buildOnPreview: false,
@@ -155,15 +167,15 @@ const runtimeSecret = new k8s.core.v1.Secret(`${name}-runtime`, {
 }, { provider: cloudProvider.kubernetesProvider })
 
 /** Durable SQLite volume, omitted when the API uses Postgres. */
-const sqliteVolume = usePostgres
-  ? undefined
-  : new k8s.core.v1.PersistentVolumeClaim(`${name}-sqlite`, {
+const sqliteVolume = cloudProviderConfig.databaseProvider === "sqlite"
+  ? new k8s.core.v1.PersistentVolumeClaim(`${name}-sqlite`, {
     metadata: { namespace: namespace.metadata.name },
     spec: {
       accessModes: ["ReadWriteOnce"],
       resources: { requests: { storage: storageSize } },
     },
   }, { provider: cloudProvider.kubernetesProvider })
+  : undefined
 
 /** Common labels used to connect the Deployment and Service. */
 const labels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": "evaluate-api" }
@@ -175,7 +187,7 @@ const labels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": 
 const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
   metadata: { namespace: namespace.metadata.name },
   spec: {
-    replicas: usePostgres ? config.getNumber("replicas") ?? 2 : 1,
+    replicas: cloudProviderConfig.databaseProvider === "sqlite" ? 1 : config.getNumber("replicas") ?? 2,
     selector: { matchLabels: labels },
     template: {
       metadata: { labels },
@@ -188,7 +200,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
           env: [
             { name: "NODE_ENV", value: "production" },
             { name: "LIMETRY_API_PORT", value: String(API_PORT) },
-            { name: "USE_POSTGRES_STORE", value: String(usePostgres) },
+            { name: "USE_POSTGRES_STORE", value: String(cloudProviderConfig.databaseProvider !== "sqlite") },
             { name: "SQLITE_DATABASE_PATH", value: "/data/limetry.sqlite" },
             { name: "LIMETRY_BEARER_TOKEN", valueFrom: { secretKeyRef: { name: runtimeSecret.metadata.name, key: "LIMETRY_BEARER_TOKEN" } } },
             { name: "JWT_SECRET", valueFrom: { secretKeyRef: { name: runtimeSecret.metadata.name, key: "JWT_SECRET" } } },
@@ -230,62 +242,6 @@ const apiService = new k8s.core.v1.Service(`${name}-api`, {
     type: config.get("serviceType") ?? "LoadBalancer",
   },
 }, { dependsOn: [apiDeployment], provider: cloudProvider.kubernetesProvider })
-
-/** Stable in-cluster name for the optional development Postgres Service. */
-const postgresServiceName = `${name}-postgres`
-if (usePostgres && databaseUrl) {
-  /** Password used by the optional in-cluster Postgres development database. */
-  const postgresPassword = config.requireSecret("postgresPassword")
-
-  /** Kubernetes Secret consumed by the optional Postgres StatefulSet. */
-  const postgresSecret = new k8s.core.v1.Secret(`${name}-postgres`, {
-    metadata: { namespace: namespace.metadata.name },
-    stringData: { POSTGRES_PASSWORD: postgresPassword },
-    type: "Opaque",
-  }, { provider: cloudProvider.kubernetesProvider })
-
-  /** Labels used to connect the Postgres StatefulSet and Service. */
-  const postgresLabels = { "app.kubernetes.io/name": name, "app.kubernetes.io/component": "postgres" }
-
-  /** Optional single-replica Postgres database for development deployments. */
-  const postgres = new k8s.apps.v1.StatefulSet(`${name}-postgres`, {
-    metadata: { namespace: namespace.metadata.name },
-    spec: {
-      serviceName: postgresServiceName,
-      replicas: 1,
-      selector: { matchLabels: postgresLabels },
-      template: {
-        metadata: { labels: postgresLabels },
-        spec: {
-          containers: [{
-            name: "postgres",
-            image: config.get("postgresImage") ?? "postgres:16",
-            ports: [{ name: "postgres", containerPort: 5432 }],
-            env: [
-              { name: "POSTGRES_USER", value: "limetry" },
-              { name: "POSTGRES_DB", value: "limetry" },
-              { name: "POSTGRES_PASSWORD", valueFrom: { secretKeyRef: { name: postgresSecret.metadata.name, key: "POSTGRES_PASSWORD" } } },
-            ],
-            volumeMounts: [{ name: "postgres-data", mountPath: "/var/lib/postgresql/data" }],
-          }],
-        },
-      },
-      volumeClaimTemplates: [{
-        metadata: { name: "postgres-data" },
-        spec: {
-          accessModes: ["ReadWriteOnce"],
-          resources: { requests: { storage: config.get("postgresStorageSize") ?? "10Gi" } },
-        },
-      }],
-    },
-  }, { dependsOn: [postgresSecret], provider: cloudProvider.kubernetesProvider })
-
-  /** Internal Service exposing the optional development Postgres database. */
-  new k8s.core.v1.Service(postgresServiceName, {
-    metadata: { namespace: namespace.metadata.name },
-    spec: { selector: postgresLabels, ports: [{ name: "postgres", port: 5432 }] },
-  }, { dependsOn: [postgres], provider: cloudProvider.kubernetesProvider })
-}
 
 /** Kubernetes Service name for the public API. */
 export const apiServiceName = apiService.metadata.name
@@ -339,5 +295,11 @@ export const apiDocsUrl = apiDocumentationUrls.apply((urls) => urls?.docs)
 /** Docker image reference deployed by the API Deployment. */
 export const apiImageReference = imageTag
 
-/** Persistence backend selected by `usePostgres`. */
-export const persistence = resolvePersistence(usePostgres)
+/** Database provider selected by stack configuration. */
+export const databaseProvider = cloudProviderConfig.databaseProvider
+
+/** Persistence backend selected by database provider configuration. */
+export const persistence = resolvePersistence(cloudProviderConfig.databaseProvider)
+
+/** Neon project name when the Neon provider is selected. */
+export const neonProjectName = neonDatabase?.projectName ?? pulumi.output("")

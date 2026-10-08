@@ -19,6 +19,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/.next/**",
+      "**/.sst/**",
       "**/.source/**",
       "**/.turbo/**",
       "**/.vercel/**",
@@ -31,6 +32,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/next-env.d.ts",
       "**/out/**",
+      "**/sdks/**",
       "archive/**",
       "docs/api/**",
       "target/**",

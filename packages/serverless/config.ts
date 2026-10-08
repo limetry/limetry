@@ -3,6 +3,9 @@ import type * as pulumi from "@pulumi/pulumi"
 /** Serverless compute providers supported by the SST stack. */
 export type ServerlessProvider = "aws" | "gcp" | "azure"
 
+/** Database providers supported by the SST stack. */
+export type DatabaseProvider = "neon" | "rds" | "sqlite"
+
 /** Normalized configuration shared by all serverless provider adapters. */
 export type ServerlessConfig = {
   allowPublicDatabase: boolean
@@ -13,9 +16,16 @@ export type ServerlessConfig = {
   apiImageTag: string
   apiPathPrefix: string
   cloudProvider: ServerlessProvider
+  databaseProvider: DatabaseProvider
   databaseName: string
   databaseUsername: string
   location: string
+  neonBranchName: string
+  neonDatabaseName: string
+  neonOrgId?: string
+  neonProjectName: string
+  neonRegion: string
+  neonRoleName: string
   managedDatabase: boolean
   maxInstances: number
   memoryMb: number
@@ -47,6 +57,29 @@ export function parseServerlessProvider(value: string | undefined): ServerlessPr
 }
 
 /**
+ * Parses a database provider identifier.
+ *
+ * @param value - Raw database provider value.
+ * @param legacyManagedDatabase - Legacy boolean database setting.
+ * @returns A supported database provider.
+ */
+export function parseDatabaseProvider(
+  value: string | undefined,
+  legacyManagedDatabase?: boolean,
+): DatabaseProvider {
+  if (value === "neon" || value === "rds" || value === "sqlite") {
+    return value
+  }
+  if (value) {
+    throw new Error(`Unsupported LIMETRY_DATABASE_PROVIDER "${value}". Use neon, rds, or sqlite.`)
+  }
+  if (legacyManagedDatabase !== undefined) {
+    return legacyManagedDatabase ? "neon" : "sqlite"
+  }
+  return "neon"
+}
+
+/**
  * Builds normalized deployment settings from environment variables.
  *
  * @param values - SST deployment environment values.
@@ -54,6 +87,13 @@ export function parseServerlessProvider(value: string | undefined): ServerlessPr
  */
 export function buildServerlessConfig(values: ServerlessEnvironment): ServerlessConfig {
   const cloudProvider = parseServerlessProvider(values.LIMETRY_CLOUD_PROVIDER)
+  const legacyManagedDatabase = values.LIMETRY_MANAGED_DATABASE === undefined
+    ? undefined
+    : parseBoolean(values.LIMETRY_MANAGED_DATABASE, false)
+  const databaseProvider = parseDatabaseProvider(values.LIMETRY_DATABASE_PROVIDER, legacyManagedDatabase)
+  if (databaseProvider === "rds" && cloudProvider !== "aws") {
+    throw new Error("LIMETRY_DATABASE_PROVIDER=rds requires LIMETRY_CLOUD_PROVIDER=aws")
+  }
   const defaults = {
     azure: { location: "westus2", memoryMb: 512 },
     aws: { location: "us-west-2", memoryMb: 1024 },
@@ -83,10 +123,21 @@ export function buildServerlessConfig(values: ServerlessEnvironment): Serverless
     apiImageTag: values.LIMETRY_API_IMAGE_TAG?.trim() || "latest",
     apiPathPrefix: normalizePathPrefix(values.LIMETRY_API_PATH_PREFIX),
     cloudProvider,
+    databaseProvider,
     databaseName: values.LIMETRY_DATABASE_NAME?.trim() || "limetry",
     databaseUsername: values.LIMETRY_DATABASE_USERNAME?.trim() || "limetry",
     location: values.LIMETRY_LOCATION?.trim() || defaults.location,
-    managedDatabase: parseBoolean(values.LIMETRY_MANAGED_DATABASE, false),
+    neonBranchName: values.LIMETRY_NEON_BRANCH_NAME?.trim() || "main",
+    neonDatabaseName: values.LIMETRY_NEON_DATABASE_NAME?.trim()
+      || values.LIMETRY_DATABASE_NAME?.trim()
+      || "limetry",
+    neonOrgId: values.LIMETRY_NEON_ORG_ID?.trim() || undefined,
+    neonProjectName: values.LIMETRY_NEON_PROJECT_NAME?.trim() || "limetry-serverless",
+    neonRegion: values.LIMETRY_NEON_REGION?.trim() || "aws-us-east-1",
+    neonRoleName: values.LIMETRY_NEON_ROLE_NAME?.trim()
+      || values.LIMETRY_DATABASE_USERNAME?.trim()
+      || "limetry",
+    managedDatabase: databaseProvider !== "sqlite",
     maxInstances,
     memoryMb,
     minInstances,
@@ -118,7 +169,7 @@ export function buildServerEnvironment(
     LIMETRY_BEARER_TOKEN: secrets.bearerToken,
     NODE_ENV: "serverless",
     SQLITE_DATABASE_PATH: config.sqliteDatabasePath,
-    USE_POSTGRES_STORE: String(config.managedDatabase),
+    USE_POSTGRES_STORE: String(config.databaseProvider !== "sqlite"),
   }
 }
 

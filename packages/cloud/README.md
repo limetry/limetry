@@ -17,9 +17,9 @@ An existing cluster can be used instead by leaving `createCluster=false` and
 supplying `kubeconfig` as an encrypted Pulumi secret. If no secret is supplied,
 the Kubernetes provider uses the normal local kubeconfig environment.
 
-## Zero-configuration SQLite deployment
+## Default Neon deployment
 
-The default is one API replica backed by SQLite on a persistent volume:
+The default is two API replicas backed by Neon Serverless Postgres:
 
 ```sh
 cd packages/cloud
@@ -43,27 +43,33 @@ pulumi config set --secret jwtSecret "replace-with-a-long-secret"
 pulumi config set --secret decisionHmacSecret "replace-with-a-long-secret"
 ```
 
-SQLite is the affordable, provider-neutral default, but it is deliberately
-limited to one API replica and requires a persistent-volume provisioner. It is
-well suited to local development and small self-hosted deployments. Use
-Postgres before scaling the API horizontally or when the platform does not
-provide durable volumes.
+Neon is provisioned outside the selected Kubernetes provider and uses a pooled
+connection. Set `databaseProvider=sqlite` for a one-replica persistent-volume
+deployment.
 
-## Postgres mode
+## Database providers
 
-Set `usePostgres=true` and provide a reachable encrypted `databaseUrl`:
+Neon is the default. Configure its project and region, and provide either
+`NEON_API_KEY` or an encrypted `neonApiKey`:
 
 ```sh
-pulumi config set usePostgres true
+pulumi config set databaseProvider neon
+pulumi config set neonProjectName limetry-core-dev
+pulumi config set neonRegion aws-us-east-1
+pulumi config set --secret neonApiKey "replace-with-a-neon-api-key"
 pulumi config set replicas 2
-pulumi config set --secret databaseUrl "postgresql://limetry:password@postgres.example/limetry"
+```
+
+On AWS, select RDS instead:
+
+```sh
+pulumi config set databaseProvider rds
+pulumi config set databaseAllowedCidr 10.0.0.0/8
 pulumi up
 ```
 
-`postgresPassword` is required only when the optional in-cluster development
-Postgres resource is used. A managed Postgres service is recommended for
-production. The default in-cluster image and storage settings can be changed
-with `postgresImage` and `postgresStorageSize`.
+RDS is private and only available with `cloudProvider=aws`. Neon and RDS add
+ongoing database charges; review provider pricing before deployment.
 
 ## Cloud provider configuration
 
@@ -149,12 +155,11 @@ ExternalDNS installation for automatic DNS records. Without `apiDomain`, the
 stack exports the provider-assigned HTTP load-balancer URL once Kubernetes
 assigns an address. This fallback is not TLS-enabled.
 
-## Postgres, costs, and teardown
+## Costs and teardown
 
-SQLite is the affordable, provider-neutral default, but it is deliberately
-limited to one API replica and requires a durable-volume provisioner. Set
-`usePostgres=true` and provide an encrypted `databaseUrl` before scaling the
-API horizontally.
+SQLite requires a durable-volume provisioner and is deliberately limited to
+one API replica. Neon and RDS support horizontal scaling, but add ongoing
+database charges.
 
 Managed Kubernetes is not free. Review the provider's current pricing for
 control planes, worker nodes, load balancers, disks, registries, and network

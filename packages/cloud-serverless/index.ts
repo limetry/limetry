@@ -34,7 +34,14 @@ const serverlessConfig = buildServerlessConfig({
   cloudProvider: config.get("cloudProvider"),
   databaseName: config.get("databaseName"),
   databaseUsername: config.get("databaseUsername"),
+  databaseProvider: config.get("databaseProvider"),
   location: config.get("location"),
+  neonBranchName: config.get("neonBranchName"),
+  neonDatabaseName: config.get("neonDatabaseName"),
+  neonOrgId: config.get("neonOrgId"),
+  neonProjectName: config.get("neonProjectName"),
+  neonRegion: config.get("neonRegion"),
+  neonRoleName: config.get("neonRoleName"),
   managedDatabase: config.getBoolean("managedDatabase"),
   maxInstances: config.getNumber("maxInstances"),
   memoryMb: config.getNumber("memoryMb"),
@@ -76,9 +83,11 @@ const jwtSecret = resolveSecret("jwtSecret", 64)
 const decisionHmacSecret = resolveSecret("decisionHmacSecret", 64)
 
 /** Database password created only when managed PostgreSQL is enabled. */
-const databasePassword = serverlessConfig.managedDatabase
+const databasePassword = serverlessConfig.databaseProvider === "rds"
   ? resolveSecret("databasePassword", 40)
   : pulumi.secret("")
+const neonApiKey = config.getSecret("neonApiKey")
+  ?? (process.env.LIMETRY_NEON_API_KEY ? pulumi.secret(process.env.LIMETRY_NEON_API_KEY) : undefined)
 
 /** Environment variables shared by all serverless provider adapters. */
 const environment = buildServerEnvironment(serverlessConfig, {
@@ -105,6 +114,7 @@ const providerArgs: ServerlessProviderArgs = {
     databasePassword,
     decisionHmacSecret,
     jwtSecret,
+    neonApiKey,
   },
 }
 
@@ -128,7 +138,7 @@ export const apiImageReference = provider.apiImageReference
 export const cloudProvider = serverlessConfig.cloudProvider
 
 /** Whether the deployment uses a managed PostgreSQL database. */
-export const databaseMode = serverlessConfig.managedDatabase ? "managed-postgres" : "sqlite"
+export const databaseMode = serverlessConfig.databaseProvider
 
 /** Managed database connection string, hidden unless Pulumi shows secrets. */
 export const databaseConnection = provider.managedDatabaseConnection ?? pulumi.secret("")

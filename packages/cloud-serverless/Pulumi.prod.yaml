@@ -4,14 +4,14 @@ config:
   limetry-serverless:apiDomainZone: limetry.org
   limetry-serverless:manageCloudflare: "true"
   limetry-serverless:location: us-west-2
-  limetry-serverless:managedDatabase: "true"
+  limetry-serverless:databaseProvider: neon
+  limetry-serverless:neonProjectName: limetry-serverless-prod
+  limetry-serverless:neonRegion: aws-us-east-1
   limetry-serverless:minInstances: "0"
   limetry-serverless:maxInstances: "1"
   # limetry-serverless:sqliteDatabasePath: /tmp/limetry.sqlite
-  # SQLite is ephemeral in serverless runtimes. Set managedDatabase=true
-  # before using more than one instance or requiring durable shared state.
-  # Azure managed PostgreSQL also requires allowPublicDatabase=true; use VNet
-  # integration for private production database connectivity.
+  # Neon is the default durable database. Set databaseProvider=sqlite only
+  # for an intentional single-instance ephemeral deployment.
 
   cloudflare:apiToken:
     secure: AAABAONbqpmG7lmgOfz5bG0m9BfIqN9wmg2GNR7Ph2ab4ZAlUqZY8hq7JVazqDPHvFljALyiF06d0+SxnlsOfWusHqORxPvx

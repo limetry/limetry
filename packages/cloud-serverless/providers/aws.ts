@@ -5,6 +5,7 @@ import { join } from "node:path"
 import * as aws from "@pulumi/aws"
 import * as pulumi from "@pulumi/pulumi"
 
+import { createNeonDatabase } from "./neon"
 import type {
   ServerlessDnsRecord,
   ServerlessProviderArgs,
@@ -43,7 +44,7 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
   })
 
   /** VPC networking permissions used only when Aurora is enabled. */
-  const vpcExecutionPolicy = args.config.managedDatabase
+  const vpcExecutionPolicy = args.config.databaseProvider === "rds"
     ? new aws.iam.RolePolicyAttachment(`${args.name}-lambda-vpc-policy`, {
       policyArn: aws.iam.ManagedPolicy.AWSLambdaVPCAccessExecutionRole,
       role: lambdaRole.name,
@@ -51,9 +52,13 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
     : undefined
 
   /** Optional Aurora Serverless v2 database connection details. */
-  const database = args.config.managedDatabase
+  const rdsDatabase = args.config.databaseProvider === "rds"
     ? createAwsDatabase(args)
     : undefined
+  const neonDatabase = args.config.databaseProvider === "neon"
+    ? createNeonDatabase(args)
+    : undefined
+  const database = rdsDatabase ?? neonDatabase
 
   /** Lambda environment including the selected persistence configuration. */
   const environment = database
@@ -74,10 +79,10 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
     role: lambdaRole.arn,
     runtime: "nodejs22.x",
     timeout: args.config.timeoutSeconds,
-    vpcConfig: database
+    vpcConfig: rdsDatabase
       ? {
-        securityGroupIds: [database.lambdaSecurityGroup.id],
-        subnetIds: database.subnetIds,
+        securityGroupIds: [rdsDatabase.lambdaSecurityGroup.id],
+        subnetIds: rdsDatabase.subnetIds,
       }
       : undefined,
   }, {
@@ -170,7 +175,7 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`
       : api.apiEndpoint,
-    managedDatabaseConnection: database?.connectionString,
+    managedDatabaseConnection: rdsDatabase?.connectionString ?? neonDatabase?.connectionString,
   }
 }
 

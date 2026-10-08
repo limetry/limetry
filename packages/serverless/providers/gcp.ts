@@ -1,3 +1,4 @@
+import { createNeonDatabase } from "./neon"
 import type { DnsRecord, ProviderArgs, ProviderResources } from "./types"
 
 /**
@@ -63,9 +64,13 @@ export function createGcpProvider(args: ProviderArgs): ProviderResources {
   })
 
   /** Optional Cloud SQL PostgreSQL connection details. */
-  const database = args.config.managedDatabase
+  const cloudSqlDatabase = args.config.databaseProvider === "rds"
     ? createDatabase(args, project, serviceAccount)
     : undefined
+  const neonDatabase = args.config.databaseProvider === "neon"
+    ? createNeonDatabase(args)
+    : undefined
+  const database = cloudSqlDatabase ?? neonDatabase
 
   /** Cloud Run environment variables for the selected persistence mode. */
   const environment = database
@@ -93,7 +98,7 @@ export function createGcpProvider(args: ProviderArgs): ProviderResources {
             memory: `${args.config.memoryMb}Mi`,
           },
         },
-        volumeMounts: database
+        volumeMounts: cloudSqlDatabase
           ? [{ mountPath: "/cloudsql", name: "cloudsql" }]
           : undefined,
       }],
@@ -103,9 +108,9 @@ export function createGcpProvider(args: ProviderArgs): ProviderResources {
       },
       serviceAccount: serviceAccount.email,
       timeout: `${args.config.timeoutSeconds}s`,
-      volumes: database
+      volumes: cloudSqlDatabase
         ? [{
-          cloudSqlInstance: { instances: [database.connectionName] },
+          cloudSqlInstance: { instances: [cloudSqlDatabase.connectionName] },
           name: "cloudsql",
         }]
         : undefined,
@@ -148,7 +153,7 @@ export function createGcpProvider(args: ProviderArgs): ProviderResources {
         type: record.type === "CNAME" ? "CNAME" : "A",
       })))
       : undefined,
-    managedDatabaseConnection: database?.connectionString,
+    managedDatabaseConnection: cloudSqlDatabase?.connectionString ?? neonDatabase?.connectionString,
     provider: "gcp",
   }
 }

@@ -11,6 +11,7 @@ import {
   buildSecretResourceName,
   normalizeApiDomain,
   parseCloudProvider,
+  parseDatabaseProvider,
   resolvePersistence,
 } from "./config"
 import { createAwsProvider } from "./providers/aws"
@@ -77,6 +78,20 @@ describe("cloud stack configuration", () => {
   it("resolves the supported storage modes", () => {
     expect(resolvePersistence(false)).toBe("sqlite")
     expect(resolvePersistence(true)).toBe("postgres")
+    expect(resolvePersistence("neon")).toBe("postgres")
+    expect(resolvePersistence("rds")).toBe("postgres")
+    expect(resolvePersistence("sqlite")).toBe("sqlite")
+  })
+
+  /** Verifies database provider defaults and AWS-only RDS validation. */
+  it("selects database providers by configuration", () => {
+    expect(parseDatabaseProvider(undefined)).toBe("neon")
+    expect(parseDatabaseProvider(undefined, false)).toBe("sqlite")
+    expect(parseDatabaseProvider("rds")).toBe("rds")
+    expect(() => buildCloudProviderConfig({
+      cloudProvider: "gcp",
+      databaseProvider: "rds",
+    })).toThrow("requires cloudProvider=aws")
   })
 
   /** Verifies supported and unsupported cloud provider identifiers. */
@@ -100,6 +115,7 @@ describe("cloud stack configuration", () => {
       cloudProvider: "aws",
       createCluster: false,
       createRegistry: false,
+      databaseProvider: "neon",
       location: "us-west-2",
       nodeCount: 2,
       nodeMachineType: "t3.medium",

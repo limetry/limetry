@@ -12,6 +12,7 @@ export default $config({
         azure: { package: "@pulumi/azure", version: "6.40.0" },
         "azure-native": { package: "@pulumi/azure-native", version: "3.28.0" },
         "docker-build": { package: "@pulumi/docker-build", version: "0.0.22" },
+        neon: { package: "@pulumi/neon", version: "0.18.0" },
         random: { package: "@pulumi/random", version: "4.21.2" },
       },
     }
@@ -61,10 +62,13 @@ export default $config({
     /** HMAC secret used to sign and verify policy decision receipts. */
     const decisionHmacSecret = resolveSecret("decisionHmacSecret", "DECISION_HMAC_SECRET", 64)
 
-    /** Database password created only when managed PostgreSQL is enabled. */
-    const databasePassword = config.managedDatabase
+    /** Database password created only when AWS RDS is selected. */
+    const databasePassword = config.databaseProvider === "rds"
       ? resolveSecret("databasePassword", "DATABASE_PASSWORD", 40)
       : $util.secret("")
+    const neonApiKey = process.env.LIMETRY_NEON_API_KEY ?? process.env.NEON_API_KEY
+      ? $util.secret(process.env.LIMETRY_NEON_API_KEY ?? process.env.NEON_API_KEY ?? "")
+      : undefined
 
     /** Environment variables shared by all provider adapters. */
     const environment = buildServerEnvironment(config, {
@@ -84,6 +88,7 @@ export default $config({
         databasePassword,
         decisionHmacSecret,
         jwtSecret,
+        neonApiKey,
       },
     }
 
@@ -106,7 +111,7 @@ export default $config({
       apiImageReference: provider.apiImageReference,
       apiUrl,
       cloudProvider: config.cloudProvider,
-      databaseMode: config.managedDatabase ? "managed-postgres" : "sqlite",
+      databaseMode: config.databaseProvider,
       databaseConnection: provider.managedDatabaseConnection ?? $util.secret(""),
       dnsRecords: provider.dnsRecords ?? [],
       docsUrl,

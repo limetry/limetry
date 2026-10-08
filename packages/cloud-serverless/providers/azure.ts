@@ -4,6 +4,7 @@ import * as dockerbuild from "@pulumi/docker-build"
 import type { RegistryArgs } from "@pulumi/docker-build/types/input"
 import * as pulumi from "@pulumi/pulumi"
 
+import { createNeonDatabase } from "./neon"
 import type { ServerlessProviderArgs, ServerlessProviderResources } from "./types"
 import type { ServerlessDnsRecord } from "./types"
 
@@ -85,9 +86,11 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     : undefined
 
   /** Optional PostgreSQL Flexible Server connection details. */
-  const database = args.config.managedDatabase
-    ? createAzureDatabase(args, resourceGroup.name)
-    : undefined
+  const database = args.config.databaseProvider === "neon"
+    ? createNeonDatabase(args)
+    : args.config.databaseProvider === "rds"
+      ? createAzureDatabase(args, resourceGroup.name)
+      : undefined
 
   /** Container App environment variables for the selected persistence mode. */
   const serverEnvironment = database

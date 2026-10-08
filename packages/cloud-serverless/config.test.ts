@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   buildServerEnvironment,
   buildServerlessConfig,
+  parseDatabaseProvider,
   parseServerlessProvider,
 } from "./config"
 
@@ -21,7 +22,9 @@ describe("serverless configuration", () => {
     expect(buildServerlessConfig({ cloudProvider: "aws" })).toMatchObject({
       cloudProvider: "aws",
       location: "us-west-2",
-      managedDatabase: false,
+      databaseProvider: "neon",
+      managedDatabase: true,
+      neonProjectName: "limetry-serverless",
       sqliteDatabasePath: "/tmp/limetry.sqlite",
     })
     expect(buildServerlessConfig({ allowPublicDatabase: true }).allowPublicDatabase).toBe(true)
@@ -54,10 +57,10 @@ describe("serverless configuration", () => {
     expect(() => buildServerlessConfig({ memoryMb: 64 })).toThrow("memoryMb")
   })
 
-  /** Verifies SQLite and managed PostgreSQL runtime environments. */
+  /** Verifies Neon, RDS, and SQLite runtime environments. */
   it("builds persistence-specific server environments", () => {
-    const sqliteConfig = buildServerlessConfig({ managedDatabase: false })
-    const managedConfig = buildServerlessConfig({ managedDatabase: true })
+    const sqliteConfig = buildServerlessConfig({ databaseProvider: "sqlite" })
+    const managedConfig = buildServerlessConfig({ databaseProvider: "neon" })
     const secrets = {
       bearerToken: "bearer",
       decisionHmacSecret: "hmac",
@@ -69,5 +72,16 @@ describe("serverless configuration", () => {
       USE_POSTGRES_STORE: "false",
     })
     expect(buildServerEnvironment(managedConfig, secrets).USE_POSTGRES_STORE).toBe("true")
+  })
+
+  /** Verifies database provider defaults and AWS-only RDS validation. */
+  it("selects database providers by configuration", () => {
+    expect(parseDatabaseProvider(undefined)).toBe("neon")
+    expect(parseDatabaseProvider(undefined, false)).toBe("sqlite")
+    expect(parseDatabaseProvider("rds")).toBe("rds")
+    expect(() => buildServerlessConfig({
+      cloudProvider: "gcp",
+      databaseProvider: "rds",
+    })).toThrow("requires cloudProvider=aws")
   })
 })

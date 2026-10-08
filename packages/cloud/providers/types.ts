@@ -7,6 +7,7 @@ import type { CloudProviderConfig } from "../config"
 /** Resources and connection details supplied to the shared workload stack. */
 export type CloudProviderResources = {
   cloudProvider: CloudProviderConfig["cloudProvider"]
+  databaseUrl?: pulumi.Output<string>
   imageRepository: pulumi.Input<string>
   kubernetesProvider: k8s.Provider
   registries?: pulumi.Input<RegistryArgs[]>

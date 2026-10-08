@@ -3,6 +3,7 @@ import type { RegistryArgs } from "@pulumi/docker-build/types/input"
 import * as eks from "@pulumi/eks"
 import * as k8s from "@pulumi/kubernetes"
 import * as pulumi from "@pulumi/pulumi"
+import * as random from "@pulumi/random"
 
 import type { CloudProviderConfig } from "../config"
 import type { CloudProviderResources } from "./types"
@@ -59,12 +60,69 @@ export function createAwsProvider(
       username: authToken.userName,
     }]
     : undefined
+  const database = config.databaseProvider === "rds"
+    ? createRdsDatabase(name, config)
+    : undefined
 
   return {
     cloudProvider: "aws",
+    databaseUrl: database?.connectionString,
     imageRepository: repositoryUrl,
     kubernetesProvider,
     registries,
+  }
+}
+
+/**
+ * Creates a low-capacity RDS PostgreSQL instance in the default VPC.
+ *
+ * @param name - Logical Limetry resource prefix.
+ * @param config - Normalized cloud deployment configuration.
+ * @returns RDS connection details.
+ */
+function createRdsDatabase(
+  name: string,
+  config: CloudProviderConfig,
+): {
+  connectionString: pulumi.Output<string>
+} {
+  const vpc = aws.ec2.getVpcOutput({ default: true })
+  const subnetIds = aws.ec2.getSubnetsOutput({
+    filters: [{ name: "vpc-id", values: [vpc.id] }],
+  }).ids
+  const subnetGroup = new aws.rds.SubnetGroup(`${name}-database-subnets`, { subnetIds })
+  const securityGroup = new aws.ec2.SecurityGroup(`${name}-database-sg`, {
+    description: "Allow Limetry Kubernetes workloads to reach RDS PostgreSQL",
+    egress: [{ cidrBlocks: ["0.0.0.0/0"], fromPort: 0, protocol: "-1", toPort: 0 }],
+    ingress: [{
+      cidrBlocks: [config.databaseAllowedCidr],
+      fromPort: 5432,
+      protocol: "tcp",
+      toPort: 5432,
+    }],
+    vpcId: vpc.id,
+  })
+  const password = new random.RandomPassword(`${name}-database-password`, {
+    length: 40,
+    special: false,
+  })
+  const instance = new aws.rds.Instance(`${name}-database`, {
+    allocatedStorage: 20,
+    dbName: config.databaseName,
+    dbSubnetGroupName: subnetGroup.name,
+    engine: "postgres",
+    engineVersion: "16",
+    instanceClass: "db.t4g.micro",
+    password: password.result,
+    publiclyAccessible: false,
+    skipFinalSnapshot: true,
+    storageType: "gp3",
+    username: config.databaseUsername,
+    vpcSecurityGroupIds: [securityGroup.id],
+  })
+
+  return {
+    connectionString: pulumi.secret(pulumi.interpolate`postgresql://${config.databaseUsername}:${password.result}@${instance.address}:${instance.port}/${config.databaseName}?sslmode=require`),
   }
 }
 

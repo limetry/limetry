@@ -1,3 +1,4 @@
+import { createNeonDatabase } from "./neon"
 import type { ProviderArgs, ProviderResources } from "./types"
 
 /**
@@ -66,9 +67,11 @@ export function createAzureProvider(args: ProviderArgs): ProviderResources {
   })
 
   /** Optional PostgreSQL Flexible Server connection details. */
-  const database = args.config.managedDatabase
-    ? createDatabase(args, resourceGroup.name)
-    : undefined
+  const database = args.config.databaseProvider === "neon"
+    ? createNeonDatabase(args)
+    : args.config.databaseProvider === "rds"
+      ? createDatabase(args, resourceGroup.name)
+      : undefined
 
   /** Container App environment variables for the selected persistence mode. */
   const serverEnvironment = database

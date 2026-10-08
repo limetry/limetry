@@ -4,7 +4,9 @@ config:
   limetry-serverless:apiDomainZone: limetry.org
   limetry-serverless:manageCloudflare: "true"
   limetry-serverless:location: us-west-2
-  limetry-serverless:managedDatabase: "true"
+  limetry-serverless:databaseProvider: neon
+  limetry-serverless:neonProjectName: limetry-serverless-dev
+  limetry-serverless:neonRegion: aws-us-east-1
   limetry-serverless:minInstances: "0"
   limetry-serverless:maxInstances: "1"
   # limetry-serverless:sqliteDatabasePath: /tmp/limetry.sqlite

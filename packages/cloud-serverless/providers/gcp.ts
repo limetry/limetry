@@ -3,6 +3,7 @@ import type { RegistryArgs } from "@pulumi/docker-build/types/input"
 import * as gcp from "@pulumi/gcp"
 import * as pulumi from "@pulumi/pulumi"
 
+import { createNeonDatabase } from "./neon"
 import type { ServerlessProviderArgs, ServerlessProviderResources } from "./types"
 import type { ServerlessDnsRecord, ServerlessDnsRecordType } from "./types"
 
@@ -67,9 +68,13 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
   })
 
   /** Optional Cloud SQL PostgreSQL connection details. */
-  const database = args.config.managedDatabase
+  const cloudSqlDatabase = args.config.databaseProvider === "rds"
     ? createGcpDatabase(args, project, serviceAccount)
     : undefined
+  const neonDatabase = args.config.databaseProvider === "neon"
+    ? createNeonDatabase(args)
+    : undefined
+  const database = cloudSqlDatabase ?? neonDatabase
 
   /** Cloud Run environment variables for the selected persistence mode. */
   const environment = database
@@ -92,7 +97,7 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
         envs: Object.entries(environment).map(([name, value]) => ({ name, value })),
         image: image.ref,
         ports: { containerPort: 3810 },
-        volumeMounts: database
+        volumeMounts: cloudSqlDatabase
           ? [{ mountPath: "/cloudsql", name: "cloudsql" }]
           : undefined,
       }],
@@ -101,9 +106,9 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
         minInstanceCount: args.config.minInstances,
       },
       serviceAccount: serviceAccount.email,
-      volumes: database
+      volumes: cloudSqlDatabase
         ? [{
-          cloudSqlInstance: { instances: [database.connectionName] },
+          cloudSqlInstance: { instances: [cloudSqlDatabase.connectionName] },
           name: "cloudsql",
         }]
         : undefined,
@@ -145,7 +150,7 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`
       : service.uri,
-    managedDatabaseConnection: database?.connectionString,
+    managedDatabaseConnection: cloudSqlDatabase?.connectionString ?? neonDatabase?.connectionString,
   }
 }
 

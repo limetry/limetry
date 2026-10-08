@@ -6,6 +6,12 @@ export type ServerlessProvider = "aws" | "gcp" | "azure"
 /** Supported serverless provider identifiers. */
 export const SERVERLESS_PROVIDERS: ServerlessProvider[] = ["aws", "gcp", "azure"]
 
+/** Database providers supported by this stack. */
+export type DatabaseProvider = "neon" | "rds" | "sqlite"
+
+/** Supported database provider identifiers. */
+export const DATABASE_PROVIDERS: DatabaseProvider[] = ["neon", "rds", "sqlite"]
+
 /** Normalized serverless deployment configuration. */
 export type ServerlessConfig = {
   allowPublicDatabase: boolean
@@ -17,9 +23,16 @@ export type ServerlessConfig = {
   manageCloudflare: boolean
   apiPathPrefix: string
   cloudProvider: ServerlessProvider
+  databaseProvider: DatabaseProvider
   databaseName: string
   databaseUsername: string
   location: string
+  neonBranchName: string
+  neonDatabaseName: string
+  neonOrgId?: string
+  neonProjectName: string
+  neonRegion: string
+  neonRoleName: string
   managedDatabase: boolean
   maxInstances: number
   memoryMb: number
@@ -49,6 +62,29 @@ export function parseServerlessProvider(value: string | undefined): ServerlessPr
 }
 
 /**
+ * Parses a database provider identifier.
+ *
+ * @param value - Raw database provider value.
+ * @param legacyManagedDatabase - Legacy boolean database setting.
+ * @returns A supported database provider.
+ */
+export function parseDatabaseProvider(
+  value: string | undefined,
+  legacyManagedDatabase?: boolean,
+): DatabaseProvider {
+  if (value === "neon" || value === "rds" || value === "sqlite") {
+    return value
+  }
+  if (value) {
+    throw new Error(`Unsupported databaseProvider "${value}". Use neon, rds, or sqlite.`)
+  }
+  if (legacyManagedDatabase !== undefined) {
+    return legacyManagedDatabase ? "neon" : "sqlite"
+  }
+  return "neon"
+}
+
+/**
  * Builds normalized serverless settings from Pulumi configuration.
  *
  * @param values - Raw serverless configuration values.
@@ -64,9 +100,16 @@ export function buildServerlessConfig(values: {
   manageCloudflare?: boolean
   apiPathPrefix?: string
   cloudProvider?: string
+  databaseProvider?: string
   databaseName?: string
   databaseUsername?: string
   location?: string
+  neonBranchName?: string
+  neonDatabaseName?: string
+  neonOrgId?: string
+  neonProjectName?: string
+  neonRegion?: string
+  neonRoleName?: string
   managedDatabase?: boolean
   maxInstances?: number
   memoryMb?: number
@@ -75,6 +118,10 @@ export function buildServerlessConfig(values: {
   timeoutSeconds?: number
 }): ServerlessConfig {
   const cloudProvider = parseServerlessProvider(values.cloudProvider)
+  const databaseProvider = parseDatabaseProvider(values.databaseProvider, values.managedDatabase)
+  if (databaseProvider === "rds" && cloudProvider !== "aws") {
+    throw new Error("databaseProvider=rds requires cloudProvider=aws")
+  }
   const defaults = {
     azure: { location: "westus2", memoryMb: 512 },
     aws: { location: "us-west-2", memoryMb: 1024 },
@@ -114,10 +161,17 @@ export function buildServerlessConfig(values: {
     manageCloudflare,
     apiPathPrefix: normalizePathPrefix(values.apiPathPrefix),
     cloudProvider,
+    databaseProvider,
     databaseName: values.databaseName?.trim() || "limetry",
     databaseUsername: values.databaseUsername?.trim() || "limetry",
     location: values.location?.trim() || defaults.location,
-    managedDatabase: values.managedDatabase ?? false,
+    neonBranchName: values.neonBranchName?.trim() || "main",
+    neonDatabaseName: values.neonDatabaseName?.trim() || values.databaseName?.trim() || "limetry",
+    neonOrgId: values.neonOrgId?.trim() || undefined,
+    neonProjectName: values.neonProjectName?.trim() || "limetry-serverless",
+    neonRegion: values.neonRegion?.trim() || "aws-us-east-1",
+    neonRoleName: values.neonRoleName?.trim() || values.databaseUsername?.trim() || "limetry",
+    managedDatabase: databaseProvider !== "sqlite",
     maxInstances,
     memoryMb,
     minInstances,
@@ -193,7 +247,7 @@ export function buildServerEnvironment(
     LIMETRY_API_PORT: "3810",
     NODE_ENV: "serverless",
     SQLITE_DATABASE_PATH: config.sqliteDatabasePath,
-    USE_POSTGRES_STORE: String(config.managedDatabase),
+    USE_POSTGRES_STORE: String(config.databaseProvider !== "sqlite"),
   }
 }
 

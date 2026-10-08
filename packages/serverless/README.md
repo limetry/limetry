@@ -5,27 +5,23 @@ Google Cloud, or Azure. SST owns the deployment state and orchestration. AWS
 uses SST's Lambda and API Gateway components; GCP and Azure use the Pulumi
 providers configured by SST.
 
-The default deployment is a low-cost SQLite deployment:
+The default deployment is a low-cost Neon Serverless Postgres deployment:
 
 - AWS Lambda with API Gateway HTTP API
 - Google Cloud Run
 - Azure Container Apps
-- SQLite at `/tmp/limetry.sqlite`
-- zero managed database resources
+- Neon Serverless Postgres with a pooled connection
+- a configurable Neon project, branch, role, and database
 
 SQLite is ephemeral and local to one compute instance. It is appropriate for
 evaluation and single-instance use, not for shared production policy or audit
-state. Set `LIMETRY_MANAGED_DATABASE=true` to provision the smallest supported
-managed PostgreSQL option:
+state. Set `LIMETRY_DATABASE_PROVIDER=sqlite` when ephemeral storage is
+intentional. Set `LIMETRY_DATABASE_PROVIDER=rds` on AWS to provision:
 
 - AWS Aurora Serverless v2
-- GCP Cloud SQL shared-core PostgreSQL
-- Azure PostgreSQL Flexible Server
-
-Managed databases incur ongoing charges. Azure's managed database mode also
-requires `LIMETRY_ALLOW_PUBLIC_DATABASE=true` because this stack does not
-create Azure VNet integration. Use private networking before storing sensitive
-production data.
+- Neon and AWS RDS incur ongoing charges. RDS is available only when
+`LIMETRY_CLOUD_PROVIDER=aws`. Neon is reachable from the serverless runtimes
+without placing them in a VPC, while RDS uses private AWS networking.
 
 ## Prerequisites
 
@@ -61,7 +57,7 @@ are still created by their selected Pulumi provider. The AWS identity used for
 all stages therefore needs permission to manage SST state, even when the target
 provider is GCP or Azure.
 
-## Deploy the default SQLite stack
+## Deploy the default Neon stack
 
 The provider defaults to AWS and the location defaults to `us-west-2`:
 
@@ -91,7 +87,7 @@ be used by CI, local shells, and different package managers:
 | --- | --- | --- |
 | `LIMETRY_CLOUD_PROVIDER` | `aws` | `aws`, `gcp`, or `azure` |
 | `LIMETRY_LOCATION` | provider-specific | Region or location |
-| `LIMETRY_MANAGED_DATABASE` | `false` | Provision managed PostgreSQL |
+| `LIMETRY_DATABASE_PROVIDER` | `neon` | `neon`, `rds`, or `sqlite` |
 | `LIMETRY_ALLOW_PUBLIC_DATABASE` | `false` | Required for Azure managed PostgreSQL |
 | `LIMETRY_API_IMAGE_REPOSITORY` | provider-created | Use an existing image |
 | `LIMETRY_API_IMAGE_TAG` | `latest` | Container image tag |
@@ -101,6 +97,13 @@ be used by CI, local shells, and different package managers:
 | `LIMETRY_API_CERTIFICATE_ID` | empty | Azure managed-environment certificate resource ID |
 | `LIMETRY_DATABASE_NAME` | `limetry` | PostgreSQL database name |
 | `LIMETRY_DATABASE_USERNAME` | `limetry` | PostgreSQL username |
+| `LIMETRY_NEON_API_KEY` | `NEON_API_KEY` | Neon API key used by Pulumi |
+| `LIMETRY_NEON_ORG_ID` | empty | Neon organization id |
+| `LIMETRY_NEON_PROJECT_NAME` | `limetry-serverless` | Neon project name |
+| `LIMETRY_NEON_REGION` | `aws-us-east-1` | Neon deployment region |
+| `LIMETRY_NEON_BRANCH_NAME` | `main` | Neon default branch name |
+| `LIMETRY_NEON_ROLE_NAME` | `limetry` | Neon default role name |
+| `LIMETRY_NEON_DATABASE_NAME` | `limetry` | Neon default database name |
 | `LIMETRY_MIN_INSTANCES` | `0` | Minimum serverless instances |
 | `LIMETRY_MAX_INSTANCES` | `1` | Maximum serverless instances |
 | `LIMETRY_MEMORY_MB` | provider-specific | Memory allocation |
@@ -112,21 +115,21 @@ Optional stable runtime secrets are supplied with `LIMETRY_BEARER_TOKEN`,
 `LIMETRY_DATABASE_PASSWORD`. If omitted, SST creates encrypted random values
 for the stack.
 
-For example, deploy GCP with SQLite:
+For example, deploy GCP with the default Neon database:
 
 ```sh
 export LIMETRY_CLOUD_PROVIDER=gcp
 export LIMETRY_LOCATION=us-central1
+export LIMETRY_DATABASE_PROVIDER=neon
+export LIMETRY_NEON_API_KEY=...
 npm run deploy -- --stage dev
 ```
 
-Deploy Azure with the managed database:
+Deploy AWS with Aurora/RDS:
 
 ```sh
-export LIMETRY_CLOUD_PROVIDER=azure
-export LIMETRY_LOCATION=westus2
-export LIMETRY_MANAGED_DATABASE=true
-export LIMETRY_ALLOW_PUBLIC_DATABASE=true
+export LIMETRY_CLOUD_PROVIDER=aws
+export LIMETRY_DATABASE_PROVIDER=rds
 npm run deploy -- --stage dev
 ```
 

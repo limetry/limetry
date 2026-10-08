@@ -3,7 +3,9 @@ config:
   limetry-core:createCluster: "false"
   limetry-core:createRegistry: "false"
   limetry-core:location: us-west-2
-  limetry-core:usePostgres: "false"
+  limetry-core:databaseProvider: neon
+  limetry-core:neonProjectName: limetry-core-dev
+  limetry-core:neonRegion: aws-us-east-1
   limetry-core:apiDomain: dev.cloud.limetry.org
   limetry-core:apiDomainZone: limetry.org
   limetry-core:manageCloudflare: "true"
