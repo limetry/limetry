@@ -15,7 +15,7 @@ import {
   resolveDevListenPort,
 } from "@limetry/preflight"
 import { APP_VERSION } from "@limetry/sdk"
-import express from "express"
+import express, { type Express } from "express"
 import { Redis } from "ioredis"
 import { Pool } from "pg"
 
@@ -149,7 +149,7 @@ function readSwaggerPage(publicDir: string, specPath: string): string {
  * @param options - Env plus optional store overrides for tests.
  * @returns Configured Express app (not listening).
  */
-export function createApp(options: CreateAppOptions) {
+export function createApp(options: CreateAppOptions): Express {
   const userService = options.userService ?? new InMemoryUserService()
   const policyRegistry = options.policyRegistry ?? new InMemoryPolicyRegistry()
   const auditStore = options.auditStore ?? new InMemoryAuditStore()
@@ -278,7 +278,11 @@ export function createApp(options: CreateAppOptions) {
  * @returns Express app and optional Postgres pool for retention purge.
  * @throws When preflight fails hard, Postgres migrate fails, or Redis ping fails.
  */
-export async function prepareApp(env: ServerEnv) {
+export async function prepareApp(env: ServerEnv): Promise<{
+  app: Express
+  postgresPool?: Pool
+  sqliteStore?: SqliteStore
+}> {
   await runOssPreflight(env)
   const options: CreateAppOptions = { env }
   let postgresPool: Pool | undefined
