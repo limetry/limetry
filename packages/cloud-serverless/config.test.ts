@@ -35,6 +35,17 @@ describe("serverless configuration", () => {
     })
   })
 
+  /** Verifies custom API hostnames are normalized and infer their DNS zone. */
+  it("normalizes custom API domains", () => {
+    expect(buildServerlessConfig({ apiDomain: "https://API.dev.example.com/" })).toMatchObject({
+      apiDomain: "api.dev.example.com",
+      apiDomainZone: "example.com",
+      manageCloudflare: true,
+    })
+    expect(() => buildServerlessConfig({ apiDomain: "https://example.com/path" }))
+      .toThrow("apiDomain")
+  })
+
   /** Verifies serverless sizing validation. */
   it("validates instance sizing", () => {
     expect(() => buildServerlessConfig({ minInstances: -1 })).toThrow("minInstances")

@@ -11,6 +11,10 @@ export type ServerlessConfig = {
   allowPublicDatabase: boolean
   apiImageRepository?: string
   apiImageTag: string
+  apiDomain?: string
+  cloudflareZoneId?: string
+  apiDomainZone: string
+  manageCloudflare: boolean
   apiPathPrefix: string
   cloudProvider: ServerlessProvider
   databaseName: string
@@ -54,6 +58,10 @@ export function buildServerlessConfig(values: {
   allowPublicDatabase?: boolean
   apiImageRepository?: string
   apiImageTag?: string
+  apiDomain?: string
+  cloudflareZoneId?: string
+  apiDomainZone?: string
+  manageCloudflare?: boolean
   apiPathPrefix?: string
   cloudProvider?: string
   databaseName?: string
@@ -90,10 +98,20 @@ export function buildServerlessConfig(values: {
     throw new Error("timeoutSeconds must be a positive integer")
   }
 
+  const apiDomain = normalizeApiDomain(values.apiDomain)
+  const manageCloudflare = values.manageCloudflare ?? Boolean(apiDomain)
+  if (apiDomain && !manageCloudflare) {
+    throw new Error("manageCloudflare must be true when apiDomain is configured")
+  }
+
   return {
     allowPublicDatabase: values.allowPublicDatabase ?? false,
     apiImageRepository: values.apiImageRepository?.trim() || undefined,
     apiImageTag: values.apiImageTag?.trim() || "latest",
+    apiDomain,
+    cloudflareZoneId: values.cloudflareZoneId?.trim() || undefined,
+    apiDomainZone: values.apiDomainZone?.trim() || inferDnsZone(values.apiDomain),
+    manageCloudflare,
     apiPathPrefix: normalizePathPrefix(values.apiPathPrefix),
     cloudProvider,
     databaseName: values.databaseName?.trim() || "limetry",
@@ -106,6 +124,50 @@ export function buildServerlessConfig(values: {
     sqliteDatabasePath: values.sqliteDatabasePath?.trim() || "/tmp/limetry.sqlite",
     timeoutSeconds,
   }
+}
+
+/**
+ * Normalizes a configured public API hostname.
+ *
+ * @param value - Hostname or HTTPS URL from Pulumi config.
+ * @returns Hostname without scheme or trailing slash.
+ */
+function normalizeApiDomain(value: string | undefined): string | undefined {
+  const trimmed = value?.trim() ?? ""
+  if (trimmed.length === 0) {
+    return undefined
+  }
+
+  if (trimmed.includes("/") && !/^https?:\/\//i.test(trimmed)) {
+    throw new Error("apiDomain must be a valid DNS hostname, not a URL path")
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    const parsed = new URL(trimmed)
+    if (parsed.pathname !== "/" || parsed.search || parsed.hash) {
+      throw new Error("apiDomain must be a valid DNS hostname, not a URL path")
+    }
+  }
+  const normalized = trimmed
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "")
+  if (!/^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(normalized)) {
+    throw new Error("apiDomain must be a valid DNS hostname, not a URL path or apex without a TLD")
+  }
+  return normalized.toLowerCase()
+}
+
+/**
+ * Infers the Cloudflare zone from a public hostname.
+ *
+ * @param value - Configured API hostname.
+ * @returns Inferred zone or the production default.
+ */
+function inferDnsZone(value: string | undefined): string {
+  const hostname = normalizeApiDomain(value)
+  if (!hostname) {
+    return "limetry.org"
+  }
+  return hostname.split(".").slice(-2).join(".")
 }
 
 /**

@@ -14,13 +14,17 @@ import * as pulumi from "@pulumi/pulumi"
 import * as random from "@pulumi/random"
 
 import {
+  assertCloudflareAuth,
+  createCloudflareApiRecord,
+  resolveCloudflareZoneId,
+} from "./cloudflare"
+import {
   API_PORT,
   buildApiDnsAnnotations,
   buildApiDocumentationUrls,
   buildApiUrl,
   buildCloudProviderConfig,
   buildSecretResourceName,
-  normalizeApiDomain,
   resolvePersistence,
 } from "./config"
 import { createCloudProvider } from "./providers"
@@ -45,6 +49,10 @@ const configuredImageRepository = config.get("registryRepository") ?? config.get
 
 /** Selects and provisions the configured cloud Kubernetes provider. */
 const cloudProviderConfig = buildCloudProviderConfig({
+  apiDomain: config.get("apiDomain"),
+  apiDomainZone: config.get("apiDomainZone"),
+  cloudflareZoneId: config.get("cloudflareZoneId"),
+  manageCloudflare: config.getBoolean("manageCloudflare"),
   cloudProvider: config.get("cloudProvider"),
   createCluster: config.getBoolean("createCluster"),
   createRegistry: config.getBoolean("createRegistry"),
@@ -63,12 +71,16 @@ const cloudProvider = createCloudProvider(name, cloudProviderConfig)
 /**
  * Configured public hostname for the API, without a URL scheme or trailing slash.
  */
-export const apiDomain = normalizeApiDomain(config.get("apiDomain"))
+export const apiDomain = cloudProviderConfig.apiDomain
 
 /**
  * DNS zone associated with the configured API hostname.
  */
-export const apiDomainZone = config.get("apiDomainZone") ?? "limetry.org"
+export const apiDomainZone = cloudProviderConfig.apiDomainZone
+
+if (cloudProviderConfig.apiDomain && cloudProviderConfig.manageCloudflare) {
+  assertCloudflareAuth()
+}
 
 /** Image reference shared by the build resource and API Deployment. */
 const imageTag = pulumi.interpolate`${cloudProvider.imageRepository}:${config.get("apiImageTag") ?? `pulumi-${pulumi.getStack()}`}`
@@ -208,7 +220,9 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${name}-api`, {
 const apiService = new k8s.core.v1.Service(`${name}-api`, {
   metadata: {
     namespace: namespace.metadata.name,
-    annotations: buildApiDnsAnnotations(apiDomain, apiDomainZone),
+    annotations: apiDomain && !cloudProviderConfig.manageCloudflare
+      ? buildApiDnsAnnotations(apiDomain, apiDomainZone)
+      : {},
   },
   spec: {
     selector: labels,
@@ -291,6 +305,16 @@ export const apiServiceAddress = apiService.status.apply((status) => {
   const ingress = status?.loadBalancer?.ingress?.[0]
   return ingress?.hostname ?? ingress?.ip
 })
+
+/** Cloudflare DNS-only record for the configured API hostname. */
+export const apiDnsRecordFqdn = apiDomain && cloudProviderConfig.manageCloudflare
+  ? createCloudflareApiRecord(
+    `${name}-api-dns`,
+    resolveCloudflareZoneId(apiDomainZone, cloudProviderConfig.cloudflareZoneId),
+    apiDomain,
+    apiServiceAddress,
+  )
+  : pulumi.output<string | undefined>(undefined)
 
 /**
  * Public API origin, using configured HTTPS DNS or the provider's HTTP

@@ -45,6 +45,17 @@ describe("cloud stack configuration", () => {
     })
   })
 
+  /** Verifies configured API domains enable Cloudflare DNS management. */
+  it("normalizes API domain configuration", () => {
+    expect(buildCloudProviderConfig({
+      apiDomain: "https://api.example.com/",
+    })).toMatchObject({
+      apiDomain: "api.example.com",
+      apiDomainZone: "example.com",
+      manageCloudflare: true,
+    })
+  })
+
   /** Verifies configured and provider-assigned API URLs. */
   it("builds configured and provider-assigned API URLs", () => {
     expect(buildApiUrl("api.example.test", undefined)).toBe("https://api.example.test")

@@ -4,6 +4,7 @@ import * as gcp from "@pulumi/gcp"
 import * as pulumi from "@pulumi/pulumi"
 
 import type { ServerlessProviderArgs, ServerlessProviderResources } from "./types"
+import type { ServerlessDnsRecord, ServerlessDnsRecordType } from "./types"
 
 /**
  * Creates a Google Cloud Run and optional Cloud SQL deployment.
@@ -118,11 +119,47 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
     role: "roles/run.invoker",
   })
 
+  const domainMapping = args.config.apiDomain
+    ? new gcp.cloudrun.DomainMapping(`${args.name}-domain`, {
+      location: args.config.location,
+      name: args.config.apiDomain,
+      metadata: { namespace: project },
+      spec: {
+        certificateMode: "AUTOMATIC",
+        routeName: service.name,
+      },
+    })
+    : undefined
+  if (domainMapping && args.createDnsRecords) {
+    args.createDnsRecords("domain", domainMapping.statuses.apply((statuses) =>
+      statuses.flatMap((status) => (status.resourceRecords ?? []).map((record): ServerlessDnsRecord => ({
+        content: record.rrdata,
+        name: record.name,
+        type: toDnsRecordType(record.type),
+      }))),
+    ))
+  }
+
   return {
     apiImageReference: image.ref,
-    apiUrl: service.uri,
+    apiUrl: args.config.apiDomain
+      ? pulumi.interpolate`https://${args.config.apiDomain}`
+      : service.uri,
     managedDatabaseConnection: database?.connectionString,
   }
+}
+
+/**
+ * Narrows a Cloud Run DNS record type to the supported Cloudflare types.
+ *
+ * @param value - Provider-reported DNS record type.
+ * @returns Supported Cloudflare record type.
+ */
+function toDnsRecordType(value: string | undefined): ServerlessDnsRecordType {
+  if (value === "A" || value === "AAAA" || value === "CNAME" || value === "TXT") {
+    return value
+  }
+  return "CNAME"
 }
 
 /**

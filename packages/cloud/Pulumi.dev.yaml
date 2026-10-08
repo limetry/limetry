@@ -5,6 +5,8 @@ config:
   limetry-core:location: us-west-2
   limetry-core:usePostgres: "false"
   limetry-core:apiDomain: dev.cloud.limetry.org
+  limetry-core:apiDomainZone: limetry.org
+  limetry-core:manageCloudflare: "true"
   # For an externally managed cluster, store its kubeconfig as a secret:
   # pulumi config set --secret limetry-core:kubeconfig "$(cat ~/.kube/config)"
   # To use GKE or AKS, change cloudProvider and location, then configure that

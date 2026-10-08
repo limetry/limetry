@@ -5,6 +5,7 @@ import type { RegistryArgs } from "@pulumi/docker-build/types/input"
 import * as pulumi from "@pulumi/pulumi"
 
 import type { ServerlessProviderArgs, ServerlessProviderResources } from "./types"
+import type { ServerlessDnsRecord } from "./types"
 
 /**
  * Creates an Azure Container Apps and optional PostgreSQL deployment.
@@ -70,6 +71,19 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     resourceGroupName: resourceGroup.name,
   })
 
+  const managedCertificate = args.config.apiDomain
+    ? new azureNative.app.ManagedCertificate(`${args.name}-certificate`, {
+      environmentName: environment.name,
+      location: args.config.location,
+      managedCertificateName: `${args.name}-certificate`,
+      properties: {
+        domainControlValidation: "CNAME",
+        subjectName: args.config.apiDomain,
+      },
+      resourceGroupName: resourceGroup.name,
+    })
+    : undefined
+
   /** Optional PostgreSQL Flexible Server connection details. */
   const database = args.config.managedDatabase
     ? createAzureDatabase(args, resourceGroup.name)
@@ -104,6 +118,13 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     configuration: {
       ...containerRegistryConfiguration,
       ingress: {
+        customDomains: managedCertificate && args.config.apiDomain
+          ? [{
+            bindingType: "SniEnabled",
+            certificateId: managedCertificate.id,
+            name: args.config.apiDomain,
+          }]
+          : undefined,
         external: true,
         targetPort: 3810,
         transport: "auto",
@@ -129,9 +150,19 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     },
   })
 
+  if (managedCertificate && args.config.apiDomain && args.createDnsRecords) {
+    args.createDnsRecords("domain", [{
+      content: containerApp.latestRevisionFqdn,
+      name: args.config.apiDomain,
+      type: "CNAME",
+    } satisfies ServerlessDnsRecord])
+  }
+
   return {
     apiImageReference: image.ref,
-    apiUrl: pulumi.interpolate`https://${containerApp.latestRevisionFqdn}`,
+    apiUrl: args.config.apiDomain
+      ? pulumi.interpolate`https://${args.config.apiDomain}`
+      : pulumi.interpolate`https://${containerApp.latestRevisionFqdn}`,
     managedDatabaseConnection: database?.connectionString,
   }
 }

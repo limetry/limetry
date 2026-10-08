@@ -145,6 +145,23 @@ Useful settings include:
 - `minInstances` and `maxInstances`: Cloud Run or Container Apps scaling.
 - `memoryMb` and `timeoutSeconds`: serverless compute sizing.
 
+## Custom API domains
+
+Set `apiDomain` to publish the API at a provider-native HTTPS hostname. The
+stack provisions native TLS/custom-domain resources for the selected provider
+and manages DNS-only Cloudflare records:
+
+```sh
+pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomainZone example.com
+pulumi config set manageCloudflare true
+pulumi config set --secret cloudflare:apiToken "replace-with-a-zone-dns-token"
+```
+
+Cloudflare proxying is intentionally disabled. Set `cloudflareZoneId` when
+the zone cannot be resolved by name. The API's provider endpoint remains
+available through the `apiUrl` stack output.
+
 ## Outputs and teardown
 
 ```sh

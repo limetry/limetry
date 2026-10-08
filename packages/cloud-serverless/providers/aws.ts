@@ -5,7 +5,11 @@ import { join } from "node:path"
 import * as aws from "@pulumi/aws"
 import * as pulumi from "@pulumi/pulumi"
 
-import type { ServerlessProviderArgs, ServerlessProviderResources } from "./types"
+import type {
+  ServerlessDnsRecord,
+  ServerlessProviderArgs,
+  ServerlessProviderResources,
+} from "./types"
 
 /**
  * Creates an AWS Lambda and API Gateway HTTP API deployment.
@@ -115,9 +119,57 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
     sourceArn: pulumi.interpolate`${api.executionArn}/*/*`,
   })
 
+  const certificate = args.config.apiDomain
+    ? new aws.acm.Certificate(`${args.name}-certificate`, {
+      domainName: args.config.apiDomain,
+      validationMethod: "DNS",
+    })
+    : undefined
+  const validationRecordNames = certificate && args.createDnsRecords
+    ? args.createDnsRecords("validation", certificate.domainValidationOptions.apply((options) =>
+      options.map<ServerlessDnsRecord>((option) => ({
+        content: option.resourceRecordValue,
+        name: option.resourceRecordName,
+        type: "CNAME",
+      })),
+    ))
+    : undefined
+  const certificateValidation = certificate && validationRecordNames
+    ? new aws.acm.CertificateValidation(`${args.name}-certificate-validation`, {
+      certificateArn: certificate.arn,
+      validationRecordFqdns: validationRecordNames,
+    })
+    : undefined
+  const customDomain = certificate && args.config.apiDomain
+    ? new aws.apigatewayv2.DomainName(`${args.name}-domain`, {
+      domainName: args.config.apiDomain,
+      domainNameConfiguration: {
+        certificateArn: certificateValidation?.certificateArn ?? certificate.arn,
+        endpointType: "REGIONAL",
+        securityPolicy: "TLS_1_2",
+      },
+    }, certificateValidation ? { dependsOn: [certificateValidation] } : undefined)
+    : undefined
+  const _mapping = customDomain
+    ? new aws.apigatewayv2.ApiMapping(`${args.name}-mapping`, {
+      apiId: api.id,
+      domainName: customDomain.id,
+      stage: "$default",
+    }, { dependsOn: [_stage] })
+    : undefined
+  if (customDomain && args.createDnsRecords && args.config.apiDomain) {
+    args.createDnsRecords("traffic", [{
+      content: customDomain.domainNameConfiguration.targetDomainName,
+      name: args.config.apiDomain,
+      type: "CNAME",
+    }])
+  }
+
   return {
     apiImageReference: "lambda-bundle",
-    apiUrl: api.apiEndpoint,
+    apiUrl: args.config.apiDomain
+      ? pulumi.interpolate`https://${args.config.apiDomain}`
+      : api.apiEndpoint,
     managedDatabaseConnection: database?.connectionString,
   }
 }

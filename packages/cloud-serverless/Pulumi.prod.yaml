@@ -1,5 +1,8 @@
 config:
   limetry-serverless:cloudProvider: aws
+  limetry-serverless:apiDomain: api.limetry.org
+  limetry-serverless:apiDomainZone: limetry.org
+  limetry-serverless:manageCloudflare: "true"
   limetry-serverless:location: us-west-2
   limetry-serverless:managedDatabase: "false"
   limetry-serverless:minInstances: "0"

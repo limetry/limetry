@@ -23,6 +23,10 @@ export type PersistenceMode = "postgres" | "sqlite"
 export type CloudProviderConfig = {
   clusterName: string
   cloudProvider: CloudProvider
+  apiDomain?: string
+  apiDomainZone: string
+  cloudflareZoneId?: string
+  manageCloudflare: boolean
   createCluster: boolean
   createRegistry: boolean
   location: string
@@ -56,6 +60,10 @@ export function parseCloudProvider(value: string | undefined): CloudProvider {
  * @returns Normalized provider settings.
  */
 export function buildCloudProviderConfig(values: {
+  apiDomain?: string
+  apiDomainZone?: string
+  cloudflareZoneId?: string
+  manageCloudflare?: boolean
   cloudProvider?: string
   createCluster?: boolean
   createRegistry?: boolean
@@ -84,7 +92,17 @@ export function buildCloudProviderConfig(values: {
     throw new Error("location must not be empty")
   }
 
+  const apiDomain = normalizeApiDomain(values.apiDomain)
+  const manageCloudflare = values.manageCloudflare ?? Boolean(apiDomain)
+  if (apiDomain && !manageCloudflare) {
+    throw new Error("manageCloudflare must be true when apiDomain is configured")
+  }
+
   return {
+    apiDomain,
+    apiDomainZone: inferDnsZone(values.apiDomainZone ?? values.apiDomain),
+    cloudflareZoneId: values.cloudflareZoneId?.trim() || undefined,
+    manageCloudflare,
     cloudProvider,
     createCluster: values.createCluster ?? false,
     createRegistry: values.createRegistry ?? false,
@@ -98,6 +116,20 @@ export function buildCloudProviderConfig(values: {
     resourceGroupName: values.resourceGroupName?.trim() || undefined,
     registryRepository: values.registryRepository?.trim() || undefined,
   }
+}
+
+/**
+ * Infers a Cloudflare zone from a hostname or zone value.
+ *
+ * @param value - API hostname or explicit zone.
+ * @returns Two-label DNS zone.
+ */
+function inferDnsZone(value: string | undefined): string {
+  const normalized = value?.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "")
+  if (!normalized) {
+    return "limetry.org"
+  }
+  return normalized.split(".").slice(-2).join(".").toLowerCase()
 }
 
 /**
@@ -116,7 +148,13 @@ export function normalizeApiDomain(value: string | undefined): string | undefine
     .replace(/^https?:\/\//, "")
     .replace(/\/+$/, "")
 
-  return normalized.length > 0 ? normalized : undefined
+  if (normalized.length === 0) {
+    return undefined
+  }
+  if (!/^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(normalized)) {
+    throw new Error("apiDomain must be a valid DNS hostname")
+  }
+  return normalized.toLowerCase()
 }
 
 /**
