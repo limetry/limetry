@@ -1,14 +1,16 @@
 config:
   limetry-serverless:cloudProvider: aws
-  limetry-serverless:apiDomain: api.dev.limetry.org
+  limetry-serverless:apiDomain: oss-api-dev.limetry.org
   limetry-serverless:apiDomainZone: limetry.org
   limetry-serverless:manageCloudflare: "true"
   limetry-serverless:location: us-west-2
-  limetry-serverless:managedDatabase: "false"
+  limetry-serverless:managedDatabase: "true"
   limetry-serverless:minInstances: "0"
   limetry-serverless:maxInstances: "1"
-  limetry-serverless:sqliteDatabasePath: /tmp/limetry.sqlite
+  # limetry-serverless:sqliteDatabasePath: /tmp/limetry.sqlite
   # For GCP or Azure, change cloudProvider and location before previewing.
   # Azure managed PostgreSQL additionally requires:
   # limetry-serverless:allowPublicDatabase: "true"
   aws:region: us-west-2
+  cloudflare:apiToken:
+    secure: AAABAHTYIeQdMmERcad/TK+1TDs7IC4zAzVvPFqHF5p+u7ULYtg2E81iKIKc7AxMd2RHUMGCFPHxhlBesQqyiDP/UyL//hi5
