@@ -66,11 +66,12 @@ export async function createAzureProvider(args: ProviderArgs): Promise<ProviderR
   })
 
   /** Optional PostgreSQL Flexible Server connection details. */
-  const database = args.config.databaseProvider === "neon"
+  const neonDatabase = args.config.databaseProvider === "neon"
     ? (await import("./neon.js")).createNeonDatabase(args)
-    : args.config.databaseProvider === "rds"
-      ? createDatabase(args, resourceGroup.name)
-      : undefined
+    : undefined
+  const database = neonDatabase ?? (args.config.databaseProvider === "rds"
+    ? createDatabase(args, resourceGroup.name)
+    : undefined)
 
   /** Container App environment variables for the selected persistence mode. */
   const serverEnvironment = database
@@ -153,6 +154,7 @@ export async function createAzureProvider(args: ProviderArgs): Promise<ProviderR
       : $util.interpolate`https://${containerApp.latestRevisionFqdn}`,
     dnsRecords,
     managedDatabaseConnection: database?.connectionString,
+    managedDatabaseHost: neonDatabase?.host,
     provider: "azure",
   }
 }

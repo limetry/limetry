@@ -11,6 +11,7 @@ import type { ProviderArgs } from "./types.js"
  */
 export function createNeonDatabase(args: ProviderArgs): {
   connectionString: pulumi.Output<string>
+  host: pulumi.Output<string>
 } {
   const provider = new neon.Provider(`${args.name}-neon-provider`, {
     apiKey: args.secrets.neonApiKey,
@@ -33,5 +34,6 @@ export function createNeonDatabase(args: ProviderArgs): {
 
   return {
     connectionString: pulumi.secret(project.connectionUriPooler),
+    host: project.databaseHostPooler,
   }
 }

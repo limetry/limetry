@@ -34,6 +34,7 @@ export type ProviderResources = {
   apiUrl: pulumi.Output<string>
   dnsRecords?: pulumi.Input<DnsRecord[]>
   managedDatabaseConnection?: pulumi.Output<string>
+  managedDatabaseHost?: pulumi.Output<string>
   provider: ServerlessProvider
 }
 

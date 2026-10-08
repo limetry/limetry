@@ -41,6 +41,34 @@ export type ServerEnvironment = Record<string, pulumi.Input<string>>
 export type ServerlessEnvironment = Record<string, string | undefined>
 
 /**
+ * Returns the default public API hostname for an SST stage.
+ *
+ * @param stage - SST stage name.
+ * @returns The stage-specific API hostname.
+ */
+export function defaultApiDomain(stage = "dev"): string {
+  const normalizedStage = normalizeStage(stage)
+  const hostnameStage = normalizedStage === "production" || normalizedStage === "prod"
+    ? ""
+    : `.${normalizedStage}`
+
+  return `serverless-cloud${hostnameStage}.limetry.org`
+}
+
+/**
+ * Returns the default Neon database name for an SST stage.
+ *
+ * @param stage - SST stage name.
+ * @returns The stage-specific Neon database name.
+ */
+export function defaultNeonDatabaseName(stage = "dev"): string {
+  const normalizedStage = normalizeStage(stage)
+  const databaseStage = normalizedStage === "production" ? "prod" : normalizedStage
+
+  return `limetry-serverless-cloud-${databaseStage}`
+}
+
+/**
  * Parses a provider name.
  *
  * @param value - Raw provider value.
@@ -85,7 +113,10 @@ export function parseDatabaseProvider(
  * @param values - SST deployment environment values.
  * @returns Validated serverless settings.
  */
-export function buildServerlessConfig(values: ServerlessEnvironment): ServerlessConfig {
+export function buildServerlessConfig(
+  values: ServerlessEnvironment,
+  stage = "dev",
+): ServerlessConfig {
   const cloudProvider = parseServerlessProvider(values.LIMETRY_CLOUD_PROVIDER)
   const legacyManagedDatabase = values.LIMETRY_MANAGED_DATABASE === undefined
     ? undefined
@@ -117,7 +148,7 @@ export function buildServerlessConfig(values: ServerlessEnvironment): Serverless
   return {
     allowPublicDatabase: parseBoolean(values.LIMETRY_ALLOW_PUBLIC_DATABASE, false),
     apiCertificateId: values.LIMETRY_API_CERTIFICATE_ID?.trim() || undefined,
-    apiDomain: normalizeDomain(values.LIMETRY_API_DOMAIN),
+    apiDomain: normalizeDomain(values.LIMETRY_API_DOMAIN) ?? defaultApiDomain(stage),
     apiDomainZone: values.LIMETRY_API_DOMAIN_ZONE?.trim() || undefined,
     apiImageRepository: values.LIMETRY_API_IMAGE_REPOSITORY?.trim() || undefined,
     apiImageTag: values.LIMETRY_API_IMAGE_TAG?.trim() || "latest",
@@ -130,7 +161,7 @@ export function buildServerlessConfig(values: ServerlessEnvironment): Serverless
     neonBranchName: values.LIMETRY_NEON_BRANCH_NAME?.trim() || "main",
     neonDatabaseName: values.LIMETRY_NEON_DATABASE_NAME?.trim()
       || values.LIMETRY_DATABASE_NAME?.trim()
-      || "limetry",
+      || defaultNeonDatabaseName(stage),
     neonOrgId: values.LIMETRY_NEON_ORG_ID?.trim() || undefined,
     neonProjectName: values.LIMETRY_NEON_PROJECT_NAME?.trim() || "limetry-serverless",
     neonRegion: values.LIMETRY_NEON_REGION?.trim() || "aws-us-east-1",
@@ -239,4 +270,14 @@ function normalizePathPrefix(value: string | undefined): string {
 function normalizeDomain(value: string | undefined): string | undefined {
   const normalized = value?.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "")
   return normalized || undefined
+}
+
+/**
+ * Normalizes a stage name for use in a hostname or database identifier.
+ *
+ * @param value - Raw stage name.
+ * @returns A safe stage identifier.
+ */
+function normalizeStage(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-") || "dev"
 }

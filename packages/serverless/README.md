@@ -102,9 +102,9 @@ be used by CI, local shells, and different package managers:
 | `LIMETRY_API_IMAGE_REPOSITORY` | provider-created | Use an existing image |
 | `LIMETRY_API_IMAGE_TAG` | `latest` | Container image tag |
 | `LIMETRY_API_PATH_PREFIX` | empty | Reverse-proxy path prefix |
-| `LIMETRY_API_DOMAIN` | generated URL | Custom API hostname |
-| `LIMETRY_API_DOMAIN_ZONE` | provider lookup | AWS Route 53 hosted-zone ID |
-| `LIMETRY_API_CERTIFICATE_ID` | empty | Azure managed-environment certificate resource ID |
+| `LIMETRY_API_DOMAIN` | stage default | Custom API hostname |
+| `LIMETRY_API_DOMAIN_ZONE` | empty | Optional AWS Route 53 hosted-zone ID |
+| `LIMETRY_API_CERTIFICATE_ID` | empty | Validated certificate ARN for AWS or resource ID for Azure |
 | `LIMETRY_DATABASE_NAME` | `limetry` | PostgreSQL database name |
 | `LIMETRY_DATABASE_USERNAME` | `limetry` | PostgreSQL username |
 | `LIMETRY_NEON_API_KEY` | `NEON_API_KEY` | Neon API key used by Pulumi |
@@ -113,7 +113,7 @@ be used by CI, local shells, and different package managers:
 | `LIMETRY_NEON_REGION` | `aws-us-east-1` | Neon deployment region |
 | `LIMETRY_NEON_BRANCH_NAME` | `main` | Neon default branch name |
 | `LIMETRY_NEON_ROLE_NAME` | `limetry` | Neon default role name |
-| `LIMETRY_NEON_DATABASE_NAME` | `limetry` | Neon default database name |
+| `LIMETRY_NEON_DATABASE_NAME` | stage default | Neon database name |
 | `LIMETRY_MIN_INSTANCES` | `0` | Minimum serverless instances |
 | `LIMETRY_MAX_INSTANCES` | `1` | Maximum serverless instances |
 | `LIMETRY_MEMORY_MB` | provider-specific | Memory allocation |
@@ -150,9 +150,15 @@ tagged image already exists and does not push a replacement.
 
 ## DNS and API outputs
 
-Set `LIMETRY_API_DOMAIN` to request a custom hostname. On AWS, SST creates the
-API Gateway custom domain and Route 53 records. Set `LIMETRY_API_DOMAIN_ZONE`
-when more than one Route 53 zone matches the hostname.
+The API hostname defaults to `serverless-cloud.dev.limetry.org` for `dev` and
+`serverless-cloud.limetry.org` for `prod` or `production`. Set
+`LIMETRY_API_DOMAIN` to override it.
+
+On AWS, the generated API URL remains available without DNS credentials. To
+activate the default custom hostname, provide a validated regional ACM ARN in
+`LIMETRY_API_CERTIFICATE_ID` and create the DNS CNAME at your DNS provider.
+Alternatively, set `LIMETRY_API_DOMAIN_ZONE` to an AWS Route 53 hosted-zone ID
+and SST will create and validate the certificate and DNS records there.
 
 GCP creates a Cloud Run domain mapping and exposes its required DNS records in
 the `dnsRecords` SST output. Azure exposes the required CNAME and `asuid` TXT
@@ -168,9 +174,17 @@ The stack exports:
 - `openApiJsonUrl`
 - `openApiYamlUrl`
 - `apiImageReference`
+- `apiDomain`
 - `cloudProvider`
 - `databaseMode`
+- `databaseUrl` (secret when a managed database is selected)
+- `databaseHost` (when Neon is selected)
+- `neonDatabaseName` (when Neon is selected)
 - `databaseConnection`
+
+`databaseUrl` is kept secret because it contains the Neon credentials. Retrieve
+the decrypted value only when needed with `sst state export --decrypt` for the
+same stage, or use the Neon console. Never commit the decrypted state.
 - `dnsRecords`
 
 The documentation endpoints are `/v1/docs`, `/v1/openapi.json`, and
