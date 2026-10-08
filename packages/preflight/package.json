@@ -1,6 +1,6 @@
 {
   "name": "@limetry/preflight",
-  "version": "1.2.64-dev.cloud-agnostic-deploymen.5",
+  "version": "1.2.64-dev.cloud-agnostic-deploymen.6",
   "description": "Startup preflight checks with secret masking, connectivity probes, and formatted listen URLs",
   "license": "MIT",
   "type": "module",
