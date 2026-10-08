@@ -13,8 +13,8 @@ describe("buildServerlessConfig", () => {
 
     expect(config.cloudProvider).toBe("aws")
     expect(config.location).toBe("us-west-2")
-    expect(config.databaseProvider).toBe("neon")
-    expect(config.managedDatabase).toBe(true)
+    expect(config.databaseProvider).toBe("sqlite")
+    expect(config.managedDatabase).toBe(false)
     expect(config.sqliteDatabasePath).toBe("/tmp/limetry.sqlite")
   })
 
@@ -59,8 +59,8 @@ describe("parseServerlessProvider", () => {
 })
 
 describe("parseDatabaseProvider", () => {
-  it("defaults to Neon and supports legacy SQLite selection", () => {
-    expect(parseDatabaseProvider(undefined)).toBe("neon")
+  it("defaults to SQLite and supports legacy managed database selection", () => {
+    expect(parseDatabaseProvider(undefined)).toBe("sqlite")
     expect(parseDatabaseProvider(undefined, false)).toBe("sqlite")
     expect(parseDatabaseProvider("rds")).toBe("rds")
   })

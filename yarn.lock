@@ -3558,34 +3558,34 @@ __metadata:
 
 "@pulumi/neon@file:sdks/neon::locator=%40limetry%2Fcloud%40workspace%3Apackages%2Fcloud":
   version: 0.18.0
-  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=762a64&locator=%40limetry%2Fcloud%40workspace%3Apackages%2Fcloud"
+  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=37746c&locator=%40limetry%2Fcloud%40workspace%3Apackages%2Fcloud"
   dependencies:
     "@pulumi/pulumi": "npm:^3.238.0"
     "@types/node": "npm:^20"
     typescript: "npm:^4.7.0"
-  checksum: 10c0/26655d985fd5310413a3333da6bee6df58bd0de215e3c55c916e8c62fd9ccf602fecd6786d433702523f26becd060052596c3317021d93f7461e448bda7afe44
+  checksum: 10c0/56fece2f012fa5f1cdd7d9c0922126cc6796cd6ccf958436f6f912fcec4b5827137e6b851629e73bac30b4d46cba669a7f6169a7fae11930eae34891f1da8c5d
   languageName: node
   linkType: hard
 
 "@pulumi/neon@file:sdks/neon::locator=%40limetry%2Fserverless%40workspace%3Apackages%2Fserverless":
   version: 0.18.0
-  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=762a64&locator=%40limetry%2Fserverless%40workspace%3Apackages%2Fserverless"
+  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=e44c9b&locator=%40limetry%2Fserverless%40workspace%3Apackages%2Fserverless"
   dependencies:
     "@pulumi/pulumi": "npm:^3.238.0"
     "@types/node": "npm:^20"
     typescript: "npm:^4.7.0"
-  checksum: 10c0/26655d985fd5310413a3333da6bee6df58bd0de215e3c55c916e8c62fd9ccf602fecd6786d433702523f26becd060052596c3317021d93f7461e448bda7afe44
+  checksum: 10c0/f53f07907862f9ed59280fd7a83419002b7e6287f52eb8fa53800a27249a0f5afb062a157dd3c5db0d3137ea5b0b93e2c7d4a82e60c7bb41935c5f6f3f618540
   languageName: node
   linkType: hard
 
 "@pulumi/neon@file:sdks/neon::locator=limetry-cloud-serverless%40workspace%3Apackages%2Fcloud-serverless":
   version: 0.18.0
-  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=762a64&locator=limetry-cloud-serverless%40workspace%3Apackages%2Fcloud-serverless"
+  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=37746c&locator=limetry-cloud-serverless%40workspace%3Apackages%2Fcloud-serverless"
   dependencies:
     "@pulumi/pulumi": "npm:^3.238.0"
     "@types/node": "npm:^20"
     typescript: "npm:^4.7.0"
-  checksum: 10c0/26655d985fd5310413a3333da6bee6df58bd0de215e3c55c916e8c62fd9ccf602fecd6786d433702523f26becd060052596c3317021d93f7461e448bda7afe44
+  checksum: 10c0/56fece2f012fa5f1cdd7d9c0922126cc6796cd6ccf958436f6f912fcec4b5827137e6b851629e73bac30b4d46cba669a7f6169a7fae11930eae34891f1da8c5d
   languageName: node
   linkType: hard
 

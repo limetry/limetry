@@ -1,4 +1,3 @@
-import { createNeonDatabase } from "./neon"
 import type { ProviderArgs, ProviderResources } from "./types"
 
 /**
@@ -7,7 +6,7 @@ import type { ProviderArgs, ProviderResources } from "./types"
  * @param args - Shared deployment inputs.
  * @returns Azure resources and their public URL.
  */
-export function createAzureProvider(args: ProviderArgs): ProviderResources {
+export async function createAzureProvider(args: ProviderArgs): Promise<ProviderResources> {
   /** Resource group containing the serverless resources. */
   const resourceGroup = new azurenative.resources.ResourceGroup(`${args.name}-resource-group`, {
     location: args.config.location,
@@ -68,7 +67,7 @@ export function createAzureProvider(args: ProviderArgs): ProviderResources {
 
   /** Optional PostgreSQL Flexible Server connection details. */
   const database = args.config.databaseProvider === "neon"
-    ? createNeonDatabase(args)
+    ? (await import("./neon.js")).createNeonDatabase(args)
     : args.config.databaseProvider === "rds"
       ? createDatabase(args, resourceGroup.name)
       : undefined

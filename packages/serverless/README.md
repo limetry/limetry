@@ -5,13 +5,16 @@ Google Cloud, or Azure. SST owns the deployment state and orchestration. AWS
 uses SST's Lambda and API Gateway components; GCP and Azure use the Pulumi
 providers configured by SST.
 
-The default deployment is a low-cost Neon Serverless Postgres deployment:
+The default deployment is a low-cost SQLite evaluation deployment:
 
 - AWS Lambda with API Gateway HTTP API
 - Google Cloud Run
 - Azure Container Apps
-- Neon Serverless Postgres with a pooled connection
-- a configurable Neon project, branch, role, and database
+- SQLite stored in the compute instance's ephemeral filesystem
+
+SQLite is the safe default because it requires no external credentials and
+keeps the first deployment inexpensive. For shared production policy and audit
+state, select a managed database explicitly.
 
 SQLite is ephemeral and local to one compute instance. It is appropriate for
 evaluation and single-instance use, not for shared production policy or audit
@@ -57,7 +60,7 @@ are still created by their selected Pulumi provider. The AWS identity used for
 all stages therefore needs permission to manage SST state, even when the target
 provider is GCP or Azure.
 
-## Deploy the default Neon stack
+## Deploy the default SQLite stack
 
 The provider defaults to AWS and the location defaults to `us-west-2`:
 
@@ -70,8 +73,15 @@ The same script works when invoked through Yarn, pnpm, or another npm-compatible
 runner:
 
 ```sh
-npx sst deploy --stage dev
+npm run deploy -- --stage dev
+# or: yarn deploy --stage dev
+# or: pnpm deploy -- --stage dev
 ```
+
+The package deploy script builds the Lambda bundle, installs SST providers, and
+applies the generated-platform protobuf compatibility fix before deploying.
+Use the package script instead of calling `sst deploy` directly on a fresh
+checkout.
 
 The deployment creates encrypted random values for the bearer token, JWT
 secret, and decision HMAC secret when the corresponding `LIMETRY_*` variables
@@ -87,7 +97,7 @@ be used by CI, local shells, and different package managers:
 | --- | --- | --- |
 | `LIMETRY_CLOUD_PROVIDER` | `aws` | `aws`, `gcp`, or `azure` |
 | `LIMETRY_LOCATION` | provider-specific | Region or location |
-| `LIMETRY_DATABASE_PROVIDER` | `neon` | `neon`, `rds`, or `sqlite` |
+| `LIMETRY_DATABASE_PROVIDER` | `sqlite` | `neon`, `rds`, or `sqlite` |
 | `LIMETRY_ALLOW_PUBLIC_DATABASE` | `false` | Required for Azure managed PostgreSQL |
 | `LIMETRY_API_IMAGE_REPOSITORY` | provider-created | Use an existing image |
 | `LIMETRY_API_IMAGE_TAG` | `latest` | Container image tag |
@@ -115,7 +125,7 @@ Optional stable runtime secrets are supplied with `LIMETRY_BEARER_TOKEN`,
 `LIMETRY_DATABASE_PASSWORD`. If omitted, SST creates encrypted random values
 for the stack.
 
-For example, deploy GCP with the default Neon database:
+For example, deploy GCP with Neon Serverless Postgres:
 
 ```sh
 export LIMETRY_CLOUD_PROVIDER=gcp

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:lambda": "node ../server/scripts/build-lambda-bundle.mjs",
-    "deploy": "yarn build:lambda && sst deploy",
+    "deploy": "node ../server/scripts/build-lambda-bundle.mjs && sst install && node scripts/prepare-sst-platform.mjs && sst deploy",
     "dev": "sst dev",
     "lint": "eslint config.ts sst.config.ts providers config.test.ts",
     "test": "vitest run",

@@ -1,7 +1,4 @@
 import type { ServerlessProvider } from "../config"
-import { createAwsProvider } from "./aws"
-import { createAzureProvider } from "./azure"
-import { createGcpProvider } from "./gcp"
 import type { ProviderFactory, ProviderResources } from "./types"
 
 /**
@@ -10,14 +7,14 @@ import type { ProviderFactory, ProviderResources } from "./types"
  * @param provider - Selected serverless provider.
  * @returns Provider resource factory.
  */
-export function getProviderFactory(provider: ServerlessProvider): ProviderFactory {
+export async function getProviderFactory(provider: ServerlessProvider): Promise<ProviderFactory> {
   switch (provider) {
     case "aws":
-      return createAwsProvider
+      return (await import("./aws.js")).createAwsProvider
     case "azure":
-      return createAzureProvider
+      return (await import("./azure.js")).createAzureProvider
     case "gcp":
-      return createGcpProvider
+      return (await import("./gcp.js")).createGcpProvider
   }
 }
 
@@ -28,9 +25,9 @@ export function getProviderFactory(provider: ServerlessProvider): ProviderFactor
  * @param args - Shared provider inputs.
  * @returns Provider resources.
  */
-export function createProvider(
+export async function createProvider(
   factory: ProviderFactory,
   args: Parameters<ProviderFactory>[0],
-): ProviderResources {
-  return factory(args)
+): Promise<ProviderResources> {
+  return await factory(args)
 }

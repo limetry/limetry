@@ -1,4 +1,3 @@
-import { createNeonDatabase } from "./neon"
 import type { ProviderArgs, ProviderResources } from "./types"
 
 /**
@@ -7,9 +6,11 @@ import type { ProviderArgs, ProviderResources } from "./types"
  * @param args - Shared deployment inputs.
  * @returns AWS resources and their public URL.
  */
-export function createAwsProvider(args: ProviderArgs): ProviderResources {
+export async function createAwsProvider(args: ProviderArgs): Promise<ProviderResources> {
   const rdsDatabase = args.config.databaseProvider === "rds" ? createDatabase(args) : undefined
-  const neonDatabase = args.config.databaseProvider === "neon" ? createNeonDatabase(args) : undefined
+  const neonDatabase = args.config.databaseProvider === "neon"
+    ? (await import("./neon.js")).createNeonDatabase(args)
+    : undefined
   const database = rdsDatabase ?? neonDatabase
   const environment = database
     ? {

@@ -1,4 +1,3 @@
-import { createNeonDatabase } from "./neon"
 import type { DnsRecord, ProviderArgs, ProviderResources } from "./types"
 
 /**
@@ -7,7 +6,7 @@ import type { DnsRecord, ProviderArgs, ProviderResources } from "./types"
  * @param args - Shared deployment inputs.
  * @returns GCP resources and their public URL.
  */
-export function createGcpProvider(args: ProviderArgs): ProviderResources {
+export async function createGcpProvider(args: ProviderArgs): Promise<ProviderResources> {
   /** GCP project selected by the provider credentials. */
   const clientConfig = gcp.organizations.getClientConfigOutput()
 
@@ -68,7 +67,7 @@ export function createGcpProvider(args: ProviderArgs): ProviderResources {
     ? createDatabase(args, project, serviceAccount)
     : undefined
   const neonDatabase = args.config.databaseProvider === "neon"
-    ? createNeonDatabase(args)
+    ? (await import("./neon.js")).createNeonDatabase(args)
     : undefined
   const database = cloudSqlDatabase ?? neonDatabase
 

@@ -76,7 +76,7 @@ export function parseDatabaseProvider(
   if (legacyManagedDatabase !== undefined) {
     return legacyManagedDatabase ? "neon" : "sqlite"
   }
-  return "neon"
+  return "sqlite"
 }
 
 /**

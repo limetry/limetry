@@ -6,13 +6,13 @@ import { createProvider, getProviderFactory } from "./index"
 import type { ProviderArgs } from "./types"
 
 describe("getProviderFactory", () => {
-  it("returns a factory for each supported provider", () => {
-    expect(getProviderFactory("aws")).toBeTypeOf("function")
-    expect(getProviderFactory("gcp")).toBeTypeOf("function")
-    expect(getProviderFactory("azure")).toBeTypeOf("function")
+  it("returns a factory for each supported provider", async () => {
+    expect(await getProviderFactory("aws")).toBeTypeOf("function")
+    expect(await getProviderFactory("gcp")).toBeTypeOf("function")
+    expect(await getProviderFactory("azure")).toBeTypeOf("function")
   })
 
-  it("creates resources with the selected factory", () => {
+  it("creates resources with the selected factory", async () => {
     const args: ProviderArgs = {
       config: buildServerlessConfig({}),
       environment: {},
@@ -25,7 +25,7 @@ describe("getProviderFactory", () => {
         jwtSecret: "jwt",
       },
     }
-    const resources = createProvider(() => ({
+    const resources = await createProvider(async () => ({
       apiImageReference: "image",
       apiUrl: output("https://api.example.com"),
       provider: "aws",

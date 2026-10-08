@@ -38,4 +38,4 @@ export type ProviderResources = {
 }
 
 /** Factory for a provider-specific deployment. */
-export type ProviderFactory = (args: ProviderArgs) => ProviderResources
+export type ProviderFactory = (args: ProviderArgs) => Promise<ProviderResources>

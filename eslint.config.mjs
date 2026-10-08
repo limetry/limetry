@@ -33,6 +33,7 @@ export default tseslint.config(
       "**/next-env.d.ts",
       "**/out/**",
       "**/sdks/**",
+      "**/sst-env.d.ts",
       "archive/**",
       "docs/api/**",
       "target/**",
