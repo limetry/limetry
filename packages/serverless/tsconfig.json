@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true
+  },
+  "files": [
+    ".sst/platform/config.d.ts"
+  ],
+  "include": [
+    "config.ts",
+    "providers/**/*.ts",
+    "sst.config.ts"
+  ]
+}
