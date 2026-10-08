@@ -15,7 +15,7 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: https://api.limetry.com
+  - url: https://api.limetry.org
     description: Hosted Limetry API
   - url: http://localhost:3810
     description: Local dev (default 3810)

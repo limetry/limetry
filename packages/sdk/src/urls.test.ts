@@ -12,7 +12,7 @@ import {
 describe("resolveLimetryBaseUrl", () => {
   it("uses the OSS production API when env is unset", () => {
     expect(resolveLimetryBaseUrl({})).toBe(LIMETRY_OSS_ORIGINS.api)
-    expect(DEFAULT_LIMETRY_BASE_URL).toBe("https://api.limetry.com")
+    expect(DEFAULT_LIMETRY_BASE_URL).toBe("https://api.limetry.org")
   })
 
   it("prefers LIMETRY_BASE_URL and strips trailing slashes", () => {

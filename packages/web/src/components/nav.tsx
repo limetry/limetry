@@ -70,6 +70,14 @@ function isDesktopNavActive(pathname: string, item: NavItem): boolean {
  * @returns Anchor link.
  */
 function DrawerNavLink({ href, onClick, children, className }: DrawerLinkProps): React.JSX.Element {
+  if (/^https?:\/\//i.test(href)) {
+    return (
+      <a href={href} onClick={onClick} className={className}>
+        {children}
+      </a>
+    )
+  }
+
   return (
     <Link href={href} onClick={onClick} className={className}>
       {children}
@@ -137,22 +145,38 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
               {navItems.map((link) => {
                 const active = isDesktopNavActive(pathname, link)
                 return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={dismissSearch}
-                    aria-current={active ? "page" : undefined}
-                    className={`whitespace-nowrap text-sm font-medium transition-colors hover:text-foreground ${
-                      active
-                        ? "font-semibold text-emerald-600 dark:text-emerald-400"
-                        : "text-muted-foreground"
-                    }`}
-                    {...(isExternalHref(link.href)
-                      ? { target: "_blank", rel: "noopener noreferrer" }
-                      : {})}
-                  >
-                    {link.label}
-                  </Link>
+                  /^https?:\/\//i.test(link.href) ? (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={dismissSearch}
+                      aria-current={active ? "page" : undefined}
+                      className={`whitespace-nowrap text-sm font-medium transition-colors hover:text-foreground ${
+                        active
+                          ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                          : "text-muted-foreground"
+                      }`}
+                      {...(isExternalHref(link.href)
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={dismissSearch}
+                      aria-current={active ? "page" : undefined}
+                      className={`whitespace-nowrap text-sm font-medium transition-colors hover:text-foreground ${
+                        active
+                          ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  )
                 )
               })}
             </nav>
