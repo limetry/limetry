@@ -1,6 +1,6 @@
 {
   "name": "@limetry/web",
-  "version": "1.2.64-dev.cloud-agnostic-deploymen.3",
+  "version": "1.2.64-dev.cloud-agnostic-deploymen.4",
   "private": true,
   "packageManager": "yarn@4.13.0",
   "type": "module",
