@@ -1,6 +1,6 @@
 {
   "name": "@limetry/sdk",
-  "version": "1.2.65-dev.cloud-agnostic-nav.1",
+  "version": "1.2.65-dev.cloud-agnostic-nav.2",
   "description": "TypeScript SDK for Limetry agent action governance and telemetry",
   "license": "MIT",
   "type": "module",
