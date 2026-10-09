@@ -1,6 +1,6 @@
 {
   "name": "@limetry/web",
-  "version": "1.2.65-dev.cloud-agnostic-nav.2",
+  "version": "1.2.65-dev.cloud-agnostic-nav.3",
   "private": true,
   "packageManager": "yarn@4.13.0",
   "type": "module",

@@ -1,1 +1,1 @@
-export const APP_VERSION = "1.2.65-dev.cloud-agnostic-nav.2"
+export const APP_VERSION = "1.2.65-dev.cloud-agnostic-nav.3"

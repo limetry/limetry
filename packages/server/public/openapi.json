@@ -3,7 +3,7 @@
   "info": {
     "title": "Limetry — Evaluate API",
     "description": "Self-hosted Limetry evaluation server: register action policies, evaluate\naction intents, record outcomes, and read the privacy-safe audit trail.\n\nAuthentication: bearer API key (or local JWT in development). Mint keys with\nthe Limetry CLI (`limetry setup`) against this server.\n",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "contact": {
       "url": "https://limetry.org"
     },
