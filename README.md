@@ -108,6 +108,16 @@ yarn build:cli
 
 Start a locally built server with `yarn dev:server`.
 
+## Deploy the serverless API
+
+The optional `packages/cloud-serverless` stack deploys the API to AWS, Google
+Cloud, or Azure. Custom API domains use the selected cloud's DNS service:
+Route 53, Cloud DNS, or Azure DNS. No Cloudflare credentials are required.
+
+See [`packages/cloud-serverless/README.md`](packages/cloud-serverless/README.md)
+for provider-specific credentials, hosted-zone configuration, and deployment
+commands.
+
 ## Quickstart
 
 ```bash

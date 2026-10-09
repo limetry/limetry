@@ -4,11 +4,6 @@ import * as pulumi from "@pulumi/pulumi"
 import * as random from "@pulumi/random"
 
 import {
-  assertCloudflareAuth,
-  createCloudflareDnsRecords,
-  resolveCloudflareZoneId,
-} from "./cloudflare"
-import {
   buildServerEnvironment,
   buildServerlessConfig,
 } from "./config"
@@ -28,8 +23,8 @@ const serverlessConfig = buildServerlessConfig({
   apiImageTag: config.get("apiImageTag"),
   apiDomain: config.get("apiDomain"),
   apiDomainZone: config.get("apiDomainZone"),
-  cloudflareZoneId: config.get("cloudflareZoneId"),
-  manageCloudflare: config.getBoolean("manageCloudflare"),
+  manageDns: config.getBoolean("manageDns"),
+  dnsResourceGroupName: config.get("dnsResourceGroupName"),
   apiPathPrefix: config.get("apiPathPrefix"),
   cloudProvider: config.get("cloudProvider"),
   databaseName: config.get("databaseName"),
@@ -106,13 +101,6 @@ const providerArgs: ServerlessProviderArgs = {
   environment,
   name,
   repoRoot,
-  createDnsRecords: serverlessConfig.manageCloudflare && serverlessConfig.apiDomain
-    ? (resourcePrefix, records) => createCloudflareDnsRecords(
-      `${name}-${resourcePrefix}`,
-      resolveCloudflareZoneId(serverlessConfig.apiDomainZone, config.get("cloudflareZoneId")),
-      records,
-    )
-    : undefined,
   secrets: {
     bearerToken,
     databasePassword,
@@ -121,10 +109,6 @@ const providerArgs: ServerlessProviderArgs = {
     jwtSecret,
     neonApiKey,
   },
-}
-
-if (serverlessConfig.apiDomain && serverlessConfig.manageCloudflare) {
-  assertCloudflareAuth()
 }
 
 /** Provider-specific serverless resources. */

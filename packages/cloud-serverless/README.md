@@ -146,19 +146,25 @@ Useful settings include:
 ## Custom API domains
 
 Set `apiDomain` to publish the API at a provider-native HTTPS hostname. The
-stack provisions native TLS/custom-domain resources for the selected provider
-and manages DNS-only Cloudflare records:
+stack provisions native TLS/custom-domain resources and DNS records through the
+selected cloud provider:
 
 ```sh
 pulumi config set apiDomain api.dev.example.com
 pulumi config set apiDomainZone example.com
-pulumi config set manageCloudflare true
-pulumi config set --secret cloudflare:apiToken "replace-with-a-zone-dns-token"
+pulumi config set manageDns true
 ```
 
-Cloudflare proxying is intentionally disabled. Set `cloudflareZoneId` when
-the zone cannot be resolved by name. The API's provider endpoint remains
-available through the `apiUrl` stack output.
+AWS uses Route 53, Google Cloud uses Cloud DNS, and Azure uses Azure DNS. The
+configured cloud identity must have permission to read the hosted zone and
+create records. For Azure, set `dnsResourceGroupName` when the DNS zone is in a
+different resource group:
+
+```sh
+pulumi config set dnsResourceGroupName dns-resource-group
+```
+
+The API's provider endpoint remains available through the `apiUrl` stack output.
 
 ## Outputs and teardown
 

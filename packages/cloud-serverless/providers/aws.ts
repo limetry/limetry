@@ -130,14 +130,19 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       validationMethod: "DNS",
     })
     : undefined
-  const validationRecordNames = certificate && args.createDnsRecords
-    ? args.createDnsRecords("validation", certificate.domainValidationOptions.apply((options) =>
-      options.map<ServerlessDnsRecord>((option) => ({
+  const dnsZone = args.config.apiDomain && args.config.manageDns
+    ? aws.route53.getZoneOutput({ name: `${args.config.apiDomainZone}.`, privateZone: false })
+    : undefined
+  const validationRecordNames = certificate && dnsZone
+    ? createRoute53Records(
+      `${args.name}-validation`,
+      dnsZone.zoneId,
+      certificate.domainValidationOptions.apply((options) => options.map<ServerlessDnsRecord>((option) => ({
         content: option.resourceRecordValue,
         name: option.resourceRecordName,
         type: "CNAME",
-      })),
-    ))
+      }))),
+    )
     : undefined
   const certificateValidation = certificate && validationRecordNames
     ? new aws.acm.CertificateValidation(`${args.name}-certificate-validation`, {
@@ -162,8 +167,8 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       stage: "$default",
     }, { dependsOn: [_stage] })
     : undefined
-  if (customDomain && args.createDnsRecords && args.config.apiDomain) {
-    args.createDnsRecords("traffic", [{
+  if (customDomain && dnsZone && args.config.apiDomain) {
+    createRoute53Records(`${args.name}-traffic`, dnsZone.zoneId, [{
       content: customDomain.domainNameConfiguration.targetDomainName,
       name: args.config.apiDomain,
       type: "CNAME",
@@ -177,6 +182,40 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       : api.apiEndpoint,
     managedDatabaseConnection: rdsDatabase?.connectionString ?? neonDatabase?.connectionString,
   }
+}
+
+/**
+ * Creates Route 53 records for ACM validation or API traffic.
+ *
+ * @param name - Resource prefix.
+ * @param zoneId - Route 53 hosted zone id.
+ * @param records - Records emitted by the AWS custom-domain resources.
+ * @returns FQDNs of the created records.
+ */
+function createRoute53Records(
+  name: string,
+  zoneId: pulumi.Input<string>,
+  records: pulumi.Input<ServerlessDnsRecord[]>,
+): pulumi.Output<string[]> {
+  return pulumi.all([zoneId, records]).apply(([resolvedZoneId, resolvedRecords]) => {
+    const seen = new Set<string>()
+    return resolvedRecords.flatMap((record, index) => {
+      const recordName = record.name.toString().replace(/\.$/, "")
+      const key = `${record.type}:${recordName}`
+      if (seen.has(key)) {
+        return []
+      }
+      seen.add(key)
+      new aws.route53.Record(`${name}-${index}`, {
+        name: recordName,
+        records: [record.content],
+        ttl: record.ttl ?? 300,
+        type: record.type,
+        zoneId: resolvedZoneId,
+      })
+      return [recordName]
+    })
+  })
 }
 
 /**

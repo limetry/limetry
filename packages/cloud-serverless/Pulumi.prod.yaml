@@ -2,7 +2,7 @@ config:
   limetry-serverless:cloudProvider: aws
   limetry-serverless:apiDomain: oss-api-prod.limetry.org
   limetry-serverless:apiDomainZone: limetry.org
-  limetry-serverless:manageCloudflare: "true"
+  limetry-serverless:manageDns: "true"
   limetry-serverless:location: us-west-2
   limetry-serverless:databaseProvider: neon
   limetry-serverless:neonProjectName: limetry-serverless-prod
@@ -13,7 +13,5 @@ config:
   # Neon is the default durable database. Set databaseProvider=sqlite only
   # for an intentional single-instance ephemeral deployment.
 
-  cloudflare:apiToken:
-    secure: AAABAONbqpmG7lmgOfz5bG0m9BfIqN9wmg2GNR7Ph2ab4ZAlUqZY8hq7JVazqDPHvFljALyiF06d0+SxnlsOfWusHqORxPvx
   limetry-serverless:neonApiKey:
     secure: AAABAElagmVVjWQajkzqgkES/VGMIkNT82vRxX9hMkcA71XBw4JjZKzxT6ZcO9gHYUb/9gXO7m8Kjmv/esp6M2mrq66RTzU0BzyvyeXn+hi7WvoHv64b3RaZr2XNwx+Fd0acPbQ=

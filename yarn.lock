@@ -11433,7 +11433,6 @@ __metadata:
     "@pulumi/aws": "npm:^7.49.0"
     "@pulumi/azure": "npm:^6.40.0"
     "@pulumi/azure-native": "npm:^3.28.0"
-    "@pulumi/cloudflare": "npm:^6.20.0"
     "@pulumi/docker-build": "npm:^0.0.22"
     "@pulumi/gcp": "npm:^10.1.0"
     "@pulumi/neon": "file:sdks/neon"

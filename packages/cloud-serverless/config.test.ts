@@ -43,8 +43,19 @@ describe("serverless configuration", () => {
     expect(buildServerlessConfig({ apiDomain: "https://API.dev.example.com/" })).toMatchObject({
       apiDomain: "api.dev.example.com",
       apiDomainZone: "example.com",
-      manageCloudflare: true,
+      manageDns: true,
     })
+    expect(buildServerlessConfig({
+      apiDomain: "api.dev.example.com",
+      dnsResourceGroupName: "dns",
+    })).toMatchObject({
+      manageDns: true,
+      dnsResourceGroupName: "dns",
+    })
+    expect(() => buildServerlessConfig({
+      apiDomain: "api.dev.example.com",
+      manageDns: false,
+    })).toThrow("manageDns")
     expect(() => buildServerlessConfig({ apiDomain: "https://example.com/path" }))
       .toThrow("apiDomain")
   })

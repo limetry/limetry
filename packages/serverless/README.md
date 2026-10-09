@@ -108,7 +108,7 @@ be used by CI, local shells, and different package managers:
 | `LIMETRY_API_IMAGE_TAG` | `latest` | Container image tag |
 | `LIMETRY_API_PATH_PREFIX` | empty | Reverse-proxy path prefix |
 | `LIMETRY_API_DOMAIN` | stage default | Custom API hostname |
-| `LIMETRY_API_DOMAIN_ZONE` | empty | Optional AWS Route 53 hosted-zone ID |
+| `LIMETRY_API_DOMAIN_ZONE` | empty | Provider-native DNS zone name or ID |
 | `LIMETRY_API_CERTIFICATE_ID` | empty | Validated certificate ARN for AWS or resource ID for Azure |
 | `LIMETRY_DATABASE_NAME` | `limetry` | PostgreSQL database name |
 | `LIMETRY_DATABASE_USERNAME` | `limetry` | PostgreSQL username |
@@ -159,18 +159,17 @@ The API hostname defaults to `serverless-cloud.dev.limetry.org` for `dev` and
 `serverless-cloud.limetry.org` for `prod` or `production`. Set
 `LIMETRY_API_DOMAIN` to override it.
 
-On AWS, the generated API URL remains available without DNS credentials. To
-activate the default custom hostname, provide a validated regional ACM ARN in
-`LIMETRY_API_CERTIFICATE_ID` and create the DNS CNAME at your DNS provider.
-Alternatively, set `LIMETRY_API_DOMAIN_ZONE` to an AWS Route 53 hosted-zone ID
-and SST will create and validate the certificate and DNS records there.
+Each provider uses its built-in DNS service for custom domains: AWS Route 53,
+Google Cloud DNS, or Azure DNS. Set `LIMETRY_API_DOMAIN_ZONE` to the hosted-zone
+name or ID expected by the selected provider. The deployment identity must be
+able to read the zone and manage its records.
 
-GCP creates a Cloud Run domain mapping and exposes its required DNS records in
-the `dnsRecords` SST output. Azure exposes the required CNAME and `asuid` TXT
-records in the same output. Add those records at the DNS provider. Azure uses
-HTTP until `LIMETRY_API_CERTIFICATE_ID` references a certificate in the managed
-environment; set that variable before deployment for HTTPS. The stack never
-proxies DNS traffic through a CDN.
+GCP Cloud Run and Azure Container Apps expose the required validation records in
+the `dnsRecords` SST output when the configured identity cannot manage the
+provider DNS zone automatically. Apply those records in the same provider's
+DNS service. Azure uses HTTP until `LIMETRY_API_CERTIFICATE_ID` references a
+certificate in the managed environment; set that variable before deployment
+for HTTPS. The stack never proxies DNS traffic through a CDN.
 
 The stack exports:
 

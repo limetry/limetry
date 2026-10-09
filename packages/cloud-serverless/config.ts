@@ -18,9 +18,9 @@ export type ServerlessConfig = {
   apiImageRepository?: string
   apiImageTag: string
   apiDomain?: string
-  cloudflareZoneId?: string
   apiDomainZone: string
-  manageCloudflare: boolean
+  manageDns: boolean
+  dnsResourceGroupName?: string
   apiPathPrefix: string
   cloudProvider: ServerlessProvider
   databaseProvider: DatabaseProvider
@@ -95,9 +95,9 @@ export function buildServerlessConfig(values: {
   apiImageRepository?: string
   apiImageTag?: string
   apiDomain?: string
-  cloudflareZoneId?: string
   apiDomainZone?: string
-  manageCloudflare?: boolean
+  manageDns?: boolean
+  dnsResourceGroupName?: string
   apiPathPrefix?: string
   cloudProvider?: string
   databaseProvider?: string
@@ -146,9 +146,9 @@ export function buildServerlessConfig(values: {
   }
 
   const apiDomain = normalizeApiDomain(values.apiDomain)
-  const manageCloudflare = values.manageCloudflare ?? Boolean(apiDomain)
-  if (apiDomain && !manageCloudflare) {
-    throw new Error("manageCloudflare must be true when apiDomain is configured")
+  const manageDns = values.manageDns ?? Boolean(apiDomain)
+  if (apiDomain && !manageDns) {
+    throw new Error("manageDns must be true when apiDomain is configured")
   }
 
   return {
@@ -156,9 +156,9 @@ export function buildServerlessConfig(values: {
     apiImageRepository: values.apiImageRepository?.trim() || undefined,
     apiImageTag: values.apiImageTag?.trim() || "latest",
     apiDomain,
-    cloudflareZoneId: values.cloudflareZoneId?.trim() || undefined,
     apiDomainZone: values.apiDomainZone?.trim() || inferDnsZone(values.apiDomain),
-    manageCloudflare,
+    manageDns,
+    dnsResourceGroupName: values.dnsResourceGroupName?.trim() || undefined,
     apiPathPrefix: normalizePathPrefix(values.apiPathPrefix),
     cloudProvider,
     databaseProvider,
@@ -211,7 +211,7 @@ function normalizeApiDomain(value: string | undefined): string | undefined {
 }
 
 /**
- * Infers the Cloudflare zone from a public hostname.
+ * Infers the DNS zone from a public hostname.
  *
  * @param value - Configured API hostname.
  * @returns Inferred zone or the production default.

@@ -15,10 +15,6 @@ export type ServerlessDnsRecord = {
 
 /** Inputs shared by every serverless provider adapter. */
 export type ServerlessProviderArgs = {
-  createDnsRecords?: (
-    resourcePrefix: string,
-    records: pulumi.Input<ServerlessDnsRecord[]>,
-  ) => pulumi.Output<string[]>
   environment: ServerEnvironment
   name: string
   repoRoot: string

@@ -153,8 +153,13 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     },
   })
 
-  if (managedCertificate && args.config.apiDomain && args.createDnsRecords) {
-    args.createDnsRecords("domain", [{
+  if (managedCertificate && args.config.apiDomain && args.config.manageDns) {
+    const dnsResourceGroupName = args.config.dnsResourceGroupName ?? `${args.name}-resource-group`
+    const zone = azure.dns.getZoneOutput({
+      name: args.config.apiDomainZone,
+      resourceGroupName: dnsResourceGroupName,
+    })
+    createAzureDnsRecords(args.name, zone.name, dnsResourceGroupName, args.config.apiDomainZone, [{
       content: containerApp.latestRevisionFqdn,
       name: args.config.apiDomain,
       type: "CNAME",
@@ -168,6 +173,47 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
       : pulumi.interpolate`https://${containerApp.latestRevisionFqdn}`,
     managedDatabaseConnection: database?.connectionString,
   }
+}
+
+/**
+ * Creates records in an Azure DNS zone.
+ *
+ * @param name - Resource prefix.
+ * @param zoneName - Azure DNS zone name.
+ * @param resourceGroupName - Resource group containing the DNS zone.
+ * @param records - Records emitted by Container Apps.
+ * @returns Managed record names.
+ */
+function createAzureDnsRecords(
+  name: string,
+  zoneName: pulumi.Input<string>,
+  resourceGroupName: string,
+  configuredZoneName: string,
+  records: pulumi.Input<ServerlessDnsRecord[]>,
+): pulumi.Output<string[]> {
+  return pulumi.all([zoneName, records]).apply(([resolvedZoneName, resolvedRecords]) => {
+    const seen = new Set<string>()
+    return resolvedRecords.flatMap((record, index) => {
+      const fqdn = record.name.toString().replace(/\.$/, "")
+      const zoneSuffix = `.${configuredZoneName.replace(/\.$/, "")}`
+      const recordName = fqdn === configuredZoneName ? "@" : fqdn.endsWith(zoneSuffix)
+        ? fqdn.slice(0, -zoneSuffix.length)
+        : fqdn
+      const key = `${record.type}:${recordName}`
+      if (seen.has(key)) {
+        return []
+      }
+      seen.add(key)
+      new azure.dns.CNameRecord(`${name}-dns-${index}`, {
+        record: record.content.toString(),
+        name: recordName,
+        resourceGroupName,
+        ttl: record.ttl ?? 300,
+        zoneName: resolvedZoneName,
+      })
+      return [fqdn]
+    })
+  })
 }
 
 /**

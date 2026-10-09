@@ -135,14 +135,23 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
       },
     })
     : undefined
-  if (domainMapping && args.createDnsRecords) {
-    args.createDnsRecords("domain", domainMapping.statuses.apply((statuses) =>
-      statuses.flatMap((status) => (status.resourceRecords ?? []).map((record): ServerlessDnsRecord => ({
-        content: record.rrdata,
-        name: record.name,
-        type: toDnsRecordType(record.type),
-      }))),
-    ))
+  if (domainMapping && args.config.manageDns) {
+    const zone = gcp.dns.getManagedZoneOutput({
+      name: args.config.apiDomainZone,
+      project,
+    })
+    createGoogleDnsRecords(
+      args.name,
+      zone.name,
+      project,
+      domainMapping.statuses.apply((statuses) =>
+        statuses.flatMap((status) => (status.resourceRecords ?? []).map((record): ServerlessDnsRecord => ({
+          content: record.rrdata,
+          name: record.name,
+          type: toDnsRecordType(record.type),
+        }))),
+      ),
+    )
   }
 
   return {
@@ -155,10 +164,47 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
 }
 
 /**
- * Narrows a Cloud Run DNS record type to the supported Cloudflare types.
+ * Creates records in the configured Google Cloud DNS managed zone.
+ *
+ * @param name - Resource prefix.
+ * @param zoneName - Google Cloud DNS managed zone name.
+ * @param project - Google Cloud project.
+ * @param records - Records emitted by Cloud Run.
+ * @returns Managed record names.
+ */
+function createGoogleDnsRecords(
+  name: string,
+  zoneName: pulumi.Input<string>,
+  project: pulumi.Input<string>,
+  records: pulumi.Input<ServerlessDnsRecord[]>,
+): pulumi.Output<string[]> {
+  return pulumi.all([zoneName, project, records]).apply(([resolvedZoneName, resolvedProject, resolvedRecords]) => {
+    const seen = new Set<string>()
+    return resolvedRecords.flatMap((record, index) => {
+      const recordName = record.name.toString().endsWith(".") ? record.name.toString() : `${record.name}.`
+      const key = `${record.type}:${recordName}`
+      if (seen.has(key)) {
+        return []
+      }
+      seen.add(key)
+      new gcp.dns.RecordSet(`${name}-dns-${index}`, {
+        managedZone: resolvedZoneName,
+        name: recordName,
+        project: resolvedProject,
+        rrdatas: [record.content.toString()],
+        ttl: record.ttl ?? 300,
+        type: record.type,
+      })
+      return [recordName]
+    })
+  })
+}
+
+/**
+ * Narrows a Cloud Run DNS record type to the supported Google Cloud DNS types.
  *
  * @param value - Provider-reported DNS record type.
- * @returns Supported Cloudflare record type.
+ * @returns Supported Google Cloud DNS record type.
  */
 function toDnsRecordType(value: string | undefined): ServerlessDnsRecordType {
   if (value === "A" || value === "AAAA" || value === "CNAME" || value === "TXT") {
