@@ -19,6 +19,8 @@ export type ServerlessConfig = {
   apiImageTag: string
   apiDomain?: string
   apiDomainZone: string
+  /** AWS Route 53 hosted zone id (`Z…`) when lookup by `apiDomainZone` is not used. */
+  apiHostedZoneId?: string
   manageDns: boolean
   dnsResourceGroupName?: string
   apiPathPrefix: string
@@ -96,6 +98,7 @@ export function buildServerlessConfig(values: {
   apiImageTag?: string
   apiDomain?: string
   apiDomainZone?: string
+  apiHostedZoneId?: string
   manageDns?: boolean
   dnsResourceGroupName?: string
   apiPathPrefix?: string
@@ -147,9 +150,6 @@ export function buildServerlessConfig(values: {
 
   const apiDomain = normalizeApiDomain(values.apiDomain)
   const manageDns = values.manageDns ?? Boolean(apiDomain)
-  if (apiDomain && !manageDns) {
-    throw new Error("manageDns must be true when apiDomain is configured")
-  }
 
   return {
     allowPublicDatabase: values.allowPublicDatabase ?? false,
@@ -157,6 +157,7 @@ export function buildServerlessConfig(values: {
     apiImageTag: values.apiImageTag?.trim() || "latest",
     apiDomain,
     apiDomainZone: values.apiDomainZone?.trim() || inferDnsZone(values.apiDomain),
+    apiHostedZoneId: normalizeAwsHostedZoneId(values.apiHostedZoneId),
     manageDns,
     dnsResourceGroupName: values.dnsResourceGroupName?.trim() || undefined,
     apiPathPrefix: normalizePathPrefix(values.apiPathPrefix),
@@ -216,6 +217,23 @@ function normalizeApiDomain(value: string | undefined): string | undefined {
  * @param value - Configured API hostname.
  * @returns Inferred zone or the production default.
  */
+/**
+ * Normalizes an AWS Route 53 hosted zone id.
+ *
+ * @param value - Raw zone id from Pulumi config.
+ * @returns Zone id or undefined when omitted.
+ */
+function normalizeAwsHostedZoneId(value: string | undefined): string | undefined {
+  const trimmed = value?.trim() ?? ""
+  if (trimmed.length === 0) {
+    return undefined
+  }
+  if (!/^Z[A-Z0-9]+$/i.test(trimmed)) {
+    throw new Error("apiHostedZoneId must be an AWS Route 53 hosted zone id (for example Z1234567890ABC)")
+  }
+  return trimmed.toUpperCase()
+}
+
 function inferDnsZone(value: string | undefined): string {
   const hostname = normalizeApiDomain(value)
   if (!hostname) {

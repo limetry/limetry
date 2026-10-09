@@ -23,6 +23,7 @@ const serverlessConfig = buildServerlessConfig({
   apiImageTag: config.get("apiImageTag"),
   apiDomain: config.get("apiDomain"),
   apiDomainZone: config.get("apiDomainZone"),
+  apiHostedZoneId: config.get("apiHostedZoneId"),
   manageDns: config.getBoolean("manageDns"),
   dnsResourceGroupName: config.get("dnsResourceGroupName"),
   apiPathPrefix: config.get("apiPathPrefix"),
@@ -137,3 +138,6 @@ export const databaseUrl = resolvedDatabaseUrl
 
 /** Backwards-compatible alias for the managed database connection output. */
 export const databaseConnection = resolvedDatabaseUrl
+
+/** DNS records to create when manageDns is false or for verification after deploy. */
+export const apiDnsRecords = provider.apiDnsRecords

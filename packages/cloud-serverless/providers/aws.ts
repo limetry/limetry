@@ -130,20 +130,19 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       validationMethod: "DNS",
     })
     : undefined
-  const dnsZone = args.config.apiDomain && args.config.manageDns
-    ? aws.route53.getZoneOutput({ name: `${args.config.apiDomainZone}.`, privateZone: false })
+  const validationRecords = certificate
+    ? certificate.domainValidationOptions.apply((options) => dedupeAcmValidationRecords(options))
     : undefined
-  const validationRecordNames = certificate && dnsZone
+  const dnsZoneId = args.config.apiDomain && args.config.manageDns
+    ? resolveRoute53HostedZoneId(args.config)
+    : undefined
+  const validationRecordNames = certificate && dnsZoneId && validationRecords
     ? createRoute53Records(
       `${args.name}-validation`,
-      dnsZone.zoneId,
-      certificate.domainValidationOptions.apply((options) => options.map<ServerlessDnsRecord>((option) => ({
-        content: option.resourceRecordValue,
-        name: option.resourceRecordName,
-        type: "CNAME",
-      }))),
+      dnsZoneId,
+      validationRecords,
     )
-    : undefined
+    : validationRecords?.apply((records) => records.map((record) => record.name.toString().replace(/\.$/, "")))
   const certificateValidation = certificate && validationRecordNames
     ? new aws.acm.CertificateValidation(`${args.name}-certificate-validation`, {
       certificateArn: certificate.arn,
@@ -167,21 +166,77 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       stage: "$default",
     }, { dependsOn: [_stage] })
     : undefined
-  if (customDomain && dnsZone && args.config.apiDomain) {
-    createRoute53Records(`${args.name}-traffic`, dnsZone.zoneId, [{
-      content: customDomain.domainNameConfiguration.targetDomainName,
-      name: args.config.apiDomain,
-      type: "CNAME",
-    }])
+  const trafficRecord = customDomain && args.config.apiDomain
+    ? pulumi.all([customDomain.domainNameConfiguration.targetDomainName]).apply(([targetDomainName]) => [{
+      content: targetDomainName,
+      name: args.config.apiDomain ?? "",
+      type: "CNAME" as const,
+    } satisfies ServerlessDnsRecord])
+    : undefined
+  if (customDomain && dnsZoneId && trafficRecord) {
+    createRoute53Records(`${args.name}-traffic`, dnsZoneId, trafficRecord)
   }
 
+  const apiDnsRecords = pulumi.all([
+    validationRecords ?? pulumi.output([]),
+    trafficRecord ?? pulumi.output([]),
+  ]).apply(([validation, traffic]) => [...validation, ...traffic])
+
   return {
+    apiDnsRecords,
     apiImageReference: "lambda-bundle",
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`
       : api.apiEndpoint,
     managedDatabaseConnection: rdsDatabase?.connectionString ?? neonDatabase?.connectionString,
   }
+}
+
+/**
+ * Resolves the Route 53 hosted zone id for managed DNS.
+ *
+ * @param config - Normalized serverless configuration.
+ * @returns Hosted zone id output.
+ */
+function resolveRoute53HostedZoneId(
+  config: ServerlessProviderArgs["config"],
+): pulumi.Output<string> {
+  if (config.apiHostedZoneId) {
+    return pulumi.output(config.apiHostedZoneId)
+  }
+  return aws.route53.getZoneOutput({
+    name: `${config.apiDomainZone}.`,
+    privateZone: false,
+  }).zoneId
+}
+
+/**
+ * Deduplicates ACM DNS validation options by record name.
+ *
+ * @param options - Certificate validation options from ACM.
+ * @returns Unique validation records for Route 53 or manual DNS.
+ */
+function dedupeAcmValidationRecords(
+  options: {
+    resourceRecordName: string
+    resourceRecordType: string
+    resourceRecordValue: string
+  }[],
+): ServerlessDnsRecord[] {
+  const seen = new Set<string>()
+  const records: ServerlessDnsRecord[] = []
+  for (const option of options) {
+    if (seen.has(option.resourceRecordName)) {
+      continue
+    }
+    seen.add(option.resourceRecordName)
+    records.push({
+      content: option.resourceRecordValue,
+      name: option.resourceRecordName,
+      type: option.resourceRecordType === "CNAME" ? "CNAME" : "TXT",
+    })
+  }
+  return records
 }
 
 /**

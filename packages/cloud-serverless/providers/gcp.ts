@@ -135,32 +135,57 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
       },
     })
     : undefined
-  if (domainMapping && args.config.manageDns) {
-    const zone = gcp.dns.getManagedZoneOutput({
-      name: args.config.apiDomainZone,
-      project,
-    })
+  const domainDnsRecords = domainMapping
+    ? domainMapping.statuses.apply((statuses) =>
+      statuses.flatMap((status) => (status.resourceRecords ?? []).map((record): ServerlessDnsRecord => ({
+        content: record.rrdata,
+        name: record.name,
+        type: toDnsRecordType(record.type),
+      }))),
+    )
+    : undefined
+  if (domainMapping && args.config.manageDns && domainDnsRecords) {
+    const managedZoneName = resolveGcpManagedZoneName(args.config.apiDomainZone, project)
     createGoogleDnsRecords(
       args.name,
-      zone.name,
+      managedZoneName,
       project,
-      domainMapping.statuses.apply((statuses) =>
-        statuses.flatMap((status) => (status.resourceRecords ?? []).map((record): ServerlessDnsRecord => ({
-          content: record.rrdata,
-          name: record.name,
-          type: toDnsRecordType(record.type),
-        }))),
-      ),
+      domainDnsRecords,
     )
   }
 
   return {
+    apiDnsRecords: domainDnsRecords,
     apiImageReference: image.ref,
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`
       : service.uri,
     managedDatabaseConnection: cloudSqlDatabase?.connectionString ?? neonDatabase?.connectionString,
   }
+}
+
+/**
+ * Resolves a Cloud DNS managed zone resource name from a DNS zone apex.
+ *
+ * @param dnsZoneName - Public DNS zone apex (for example example.com).
+ * @param project - GCP project id.
+ * @returns Managed zone resource name.
+ */
+function resolveGcpManagedZoneName(
+  dnsZoneName: string,
+  project: pulumi.Input<string>,
+): pulumi.Output<string> {
+  const apex = dnsZoneName.endsWith(".") ? dnsZoneName : `${dnsZoneName}.`
+  return gcp.dns.getManagedZonesOutput({ project }).managedZones.apply((zones) => {
+    const match = zones.find((zone) => zone.dnsName === apex)
+    if (!match?.name) {
+      throw new Error(
+        `No Cloud DNS managed zone with dnsName "${apex}" was found in the project. `
+        + "Create the zone in Google Cloud DNS or set manageDns false and apply apiDnsRecords manually.",
+      )
+    }
+    return match.name
+  })
 }
 
 /**

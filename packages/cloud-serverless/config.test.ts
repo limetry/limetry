@@ -52,10 +52,13 @@ describe("serverless configuration", () => {
       manageDns: true,
       dnsResourceGroupName: "dns",
     })
-    expect(() => buildServerlessConfig({
+    expect(buildServerlessConfig({
       apiDomain: "api.dev.example.com",
       manageDns: false,
-    })).toThrow("manageDns")
+    }).manageDns).toBe(false)
+    expect(buildServerlessConfig({
+      apiHostedZoneId: "Z1234567890ABC",
+    }).apiHostedZoneId).toBe("Z1234567890ABC")
     expect(() => buildServerlessConfig({ apiDomain: "https://example.com/path" }))
       .toThrow("apiDomain")
   })

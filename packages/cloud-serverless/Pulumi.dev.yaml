@@ -2,7 +2,11 @@ config:
   limetry-serverless:cloudProvider: aws
   limetry-serverless:apiDomain: oss-api-dev.limetry.org
   limetry-serverless:apiDomainZone: limetry.org
-  limetry-serverless:manageDns: "true"
+  # limetry.org is not in Route 53 on this account; create ACM + API records at
+  # your DNS provider from `pulumi stack output apiDnsRecords` (DNS-only, no proxy).
+  limetry-serverless:manageDns: "false"
+  # When limetry.org lives in Route 53: manageDns true and optionally:
+  # limetry-serverless:apiHostedZoneId: Z1234567890ABC
   limetry-serverless:location: us-west-2
   # Keep the checked-in development stack credential-free. Neon remains the
   # code-level default; set databaseProvider=neon and provide neonApiKey or

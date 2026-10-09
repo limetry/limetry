@@ -166,7 +166,16 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     } satisfies ServerlessDnsRecord])
   }
 
+  const apiDnsRecords = managedCertificate && args.config.apiDomain
+    ? pulumi.all([containerApp.latestRevisionFqdn]).apply(([targetFqdn]) => [{
+      content: targetFqdn,
+      name: args.config.apiDomain ?? "",
+      type: "CNAME" as const,
+    } satisfies ServerlessDnsRecord])
+    : undefined
+
   return {
+    apiDnsRecords,
     apiImageReference: image.ref,
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`

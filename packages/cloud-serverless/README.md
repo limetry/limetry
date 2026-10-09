@@ -155,16 +155,64 @@ pulumi config set apiDomainZone example.com
 pulumi config set manageDns true
 ```
 
-AWS uses Route 53, Google Cloud uses Cloud DNS, and Azure uses Azure DNS. The
-configured cloud identity must have permission to read the hosted zone and
-create records. For Azure, set `dnsResourceGroupName` when the DNS zone is in a
-different resource group:
+AWS uses Route 53, Google Cloud uses Cloud DNS, and Azure uses Azure DNS when
+`manageDns` is `true`. The deploy identity must be able to read the zone and
+create records.
+
+### AWS (Route 53)
+
+1. Create a **public hosted zone** for your apex (for example `limetry.org`) in
+   the same AWS account you deploy with, or import an existing zone.
+2. Either delegate the domain's nameservers to Route 53, or keep DNS elsewhere
+   and set `manageDns` to `false` (see below).
+3. Optional: `pulumi config set apiHostedZoneId Z1234567890ABC` when lookup by
+   `apiDomainZone` is not enough.
+
+```sh
+export AWS_PROFILE=disrupt
+aws route53 list-hosted-zones-by-name --dns-name limetry.org
+```
+
+If the list is empty, Pulumi cannot manage records until a zone exists or you
+use manual DNS.
+
+### GCP (Cloud DNS)
+
+1. Create a **managed zone** whose `dnsName` matches `apiDomainZone`
+   (for example `example.com.`).
+2. Delegate NS at your registrar (or parent DNS) to the zone's Cloud DNS
+   nameservers.
+3. Grant the deploy identity `dns.admin` (or narrower record-edit permissions)
+   on that zone.
+
+### Azure (Azure DNS)
+
+1. Create a **DNS zone** for `apiDomainZone` in a resource group.
+2. Delegate NS from the parent domain to Azure DNS.
+3. Set `dnsResourceGroupName` when the zone is not in the stack's resource
+   group:
 
 ```sh
 pulumi config set dnsResourceGroupName dns-resource-group
 ```
 
-The API's provider endpoint remains available through the `apiUrl` stack output.
+### DNS outside the cloud (for example existing registrar DNS)
+
+Set `manageDns` to `false`, deploy, then create **DNS-only** records from the
+stack output (no CDN proxy):
+
+```sh
+pulumi config set manageDns false
+pulumi up
+pulumi stack output apiDnsRecords
+```
+
+Add the ACM validation CNAME(s) first; wait for the certificate to issue, then
+add the API traffic CNAME. Re-run `pulumi up` if the stack was waiting on
+validation.
+
+The API's default execute URL remains available through `apiUrl` even when
+custom-domain validation is in progress.
 
 ## Outputs and teardown
 
