@@ -567,19 +567,39 @@
         <section>
           <h2>Try evaluate</h2>
           <p class="section-lead">
-            With the server running and <code>LIMETRY_BEARER_TOKEN</code> set, upsert a policy then evaluate a denied action:
+            Use <code>@limetry/cli</code> against this API. Credentials are saved to
+            <code>~/.limetry/config.json</code> (not shell exports). Invalid JSON bodies
+            return <code>{"error":"invalid_json"}</code> — never HTML error pages.
           </p>
-          <pre>curl -s __API_ORIGIN__/health
+          <pre># 0. Install the CLI (once)
+npm install -g @limetry/cli
 
-curl -s -X PUT __API_ORIGIN__/v1/policies/$POLICY_ID \
-  -H "Authorization: Bearer $LIMETRY_BEARER_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"policy":{ ... ActionPolicy ... }}'
+# 1. Connect — choose Self-hosted / OSS, base URL __API_ORIGIN__
+#    Bearer token: your server LIMETRY_BEARER_TOKEN (deploy secret or local .env)
+limetry setup
 
-curl -s -X POST __API_ORIGIN__/v1/policy/evaluate \
-  -H "Authorization: Bearer $LIMETRY_BEARER_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"policy_id":"'"$POLICY_ID"'","intent":{ ... ActionIntent ... }}'</pre>
+# 2. Health check
+curl -s __API_ORIGIN__/health
+
+# 3. Apply a slim policy (allow GET, deny POST to prod)
+limetry policy apply --agent-id demo \
+  --allow http_get --deny http_post \
+  --block-resource 'https://prod.example.com/*'
+
+# 4. Evaluate a denied POST (use policy_id from step 3 output)
+cat &lt;&lt;'EOF' | limetry eval
+{
+  "intent_id": "550e8400-e29b-41d4-a716-446655440001",
+  "policy_id": "PASTE_POLICY_ID_FROM_APPLY",
+  "agent_id": "demo",
+  "action_type": "http_post",
+  "resource": "https://prod.example.com/deploy",
+  "issued_at": "2026-01-01T00:00:00.000Z"
+}
+EOF
+
+# 5. Optional: tail privacy-safe audit
+limetry audit tail --limit 5</pre>
         </section>
       </main>
     </div>

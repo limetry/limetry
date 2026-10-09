@@ -26,6 +26,7 @@ import {
   resolveLandingWebOrigin,
 } from "./landing-links.js"
 import { createBearerAuthMiddleware, requireScopes } from "./middleware/bearer-auth.js"
+import { jsonApiErrorHandler, jsonApiNotFoundHandler } from "./middleware/json-errors.js"
 import { createRequestContextMiddleware, logger, metrics } from "./observability.js"
 import { runOssPreflight } from "./preflight.js"
 import { createActionRoutes } from "./routes/actions.js"
@@ -282,6 +283,9 @@ export function createApp(options: CreateAppOptions): Express {
     approvalStore,
     userService,
   })
+
+  app.use(jsonApiNotFoundHandler)
+  app.use(jsonApiErrorHandler)
 
   return app
 }

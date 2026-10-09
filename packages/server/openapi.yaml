@@ -30,6 +30,17 @@ components:
       scheme: bearer
       bearerFormat: API key
   schemas:
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          examples: [invalid_json, not_found, unauthorized]
+        message:
+          type: string
+          description: Human-readable detail when available
     ActionIntent:
       type: object
       required: [intent_id, agent_id, action_type, resource, issued_at]
@@ -121,10 +132,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EvaluateResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "401":
           description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "403":
           description: Insufficient scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /v1/actions/record:
     post:
@@ -141,8 +166,18 @@ paths:
       responses:
         "200":
           description: Outcome recorded
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "401":
           description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /v1/audit:
     get:
@@ -165,6 +200,10 @@ paths:
                 additionalProperties: true
         "401":
           description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /v1/policies/{id}:
     put:
@@ -187,5 +226,15 @@ paths:
       responses:
         "200":
           description: Policy stored
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "401":
           description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
