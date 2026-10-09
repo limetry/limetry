@@ -52,12 +52,11 @@ export function resolveCloudflareZoneId(
  */
 export function assertCloudflareAuth(): void {
   const config = new pulumi.Config("cloudflare")
-  if (config.get("apiToken") || process.env.CLOUDFLARE_API_TOKEN) {
+  if (config.get("apiToken")) {
     return
   }
   throw new Error(
-    "Cloudflare DNS is enabled. Set CLOUDFLARE_API_TOKEN or "
-    + "`pulumi config set --secret cloudflare:apiToken <token>`",
+    "Cloudflare DNS is enabled. Set `pulumi config set --secret cloudflare:apiToken <token>`.",
   )
 }
 

@@ -1,26 +1,23 @@
 config:
+  # packages/cloud-serverless — see README.md
+  # Compute: cloudProvider (aws|gcp|azure), location; aws:region when aws.
+  # DNS: apiDomain, apiDomainZone, manageDns, dnsProvider (native|cloudflare).
+  #   native: Route 53 / Cloud DNS / Azure DNS (zone must be authoritative).
+  #   cloudflare: pulumi config set --secret cloudflare:apiToken
+  #   manual: manageDns false, then stack output apiDnsRecords.
+  # Database: databaseProvider (neon|sqlite|rds). Secrets: neonApiKey or databaseUrl.
+  # Scale: minInstances, maxInstances. Azure Postgres: allowPublicDatabase.
   limetry-serverless:cloudProvider: aws
   limetry-serverless:apiDomain: test.limetry.dev
   limetry-serverless:apiDomainZone: limetry.dev
-  # DNS: dnsProvider native (default) uses Route 53 / Cloud DNS / Azure DNS for the
-  # selected cloud. limetry.dev is delegated to Route 53 in the deploy AWS account.
   limetry-serverless:manageDns: "true"
   limetry-serverless:dnsProvider: native
-  # Optional: limetry-serverless:apiHostedZoneId: Z1234567890ABC
-  # Optional Cloudflare instead of native DNS (DNS-only records, proxied: false):
-  # limetry-serverless:dnsProvider: cloudflare
-  # cloudflare:apiToken: (pulumi config set --secret cloudflare:apiToken …)
-  # Manual DNS: manageDns false, then apply `pulumi stack output apiDnsRecords`.
   limetry-serverless:location: us-west-2
-  # Compute: AWS Lambda + API Gateway (change cloudProvider for GCP/Azure).
-  # Database: neon (default durable), sqlite (ephemeral), or rds (AWS only).
   limetry-serverless:databaseProvider: neon
   limetry-serverless:neonProjectName: limetry-serverless-dev
   limetry-serverless:neonRegion: aws-us-east-1
   limetry-serverless:minInstances: "0"
   limetry-serverless:maxInstances: "1"
-  # Azure managed PostgreSQL additionally requires:
-  # limetry-serverless:allowPublicDatabase: "true"
   aws:region: us-west-2
   limetry-serverless:neonApiKey:
     secure: AAABAMWFZ4bU1k+fGU011uRzhCopVkQkkq4Xogbqg/eXLju06JaJ4ZsVk2Vnrq18S7dGgBLATNffyYH9UVOO6tB2iGdnmjVbvCbR/NlAHTtAk+W77dSXHrBEKwtqjGtvPd2ZL/4=

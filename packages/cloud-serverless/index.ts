@@ -93,9 +93,9 @@ const databasePassword = serverlessConfig.databaseProvider === "rds"
 const configuredDatabaseUrl = serverlessConfig.databaseProvider === "neon"
   ? config.getSecret("databaseUrl")
   : undefined
-const neonApiKeyValue = process.env.LIMETRY_NEON_API_KEY ?? process.env.NEON_API_KEY
-const neonApiKey = config.getSecret("neonApiKey")
-  ?? (neonApiKeyValue ? pulumi.secret(neonApiKeyValue) : undefined)
+const neonApiKey = serverlessConfig.databaseProvider === "neon"
+  ? config.getSecret("neonApiKey")
+  : undefined
 
 /** Environment variables shared by all serverless provider adapters. */
 const environment = buildServerEnvironment(serverlessConfig, {

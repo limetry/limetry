@@ -1,4 +1,12 @@
 config:
+  # packages/cloud-serverless — see README.md
+  # Compute: cloudProvider (aws|gcp|azure), location; aws:region when aws.
+  # DNS: apiDomain, apiDomainZone, manageDns, dnsProvider (native|cloudflare).
+  #   native: Route 53 / Cloud DNS / Azure DNS (zone must be authoritative).
+  #   cloudflare: pulumi config set --secret cloudflare:apiToken
+  #   manual: manageDns false, then stack output apiDnsRecords.
+  # Database: databaseProvider (neon|sqlite|rds). Secrets: neonApiKey or databaseUrl.
+  # Scale: minInstances, maxInstances. Azure Postgres: allowPublicDatabase.
   limetry-serverless:cloudProvider: aws
   limetry-serverless:apiDomain: api.limetry.dev
   limetry-serverless:apiDomainZone: limetry.dev
@@ -10,9 +18,6 @@ config:
   limetry-serverless:neonRegion: aws-us-east-1
   limetry-serverless:minInstances: "0"
   limetry-serverless:maxInstances: "1"
-  # Compute: aws | gcp | azure — see README for auth and region keys.
-  # DNS: dnsProvider native (Route 53 / Cloud DNS / Azure DNS) or cloudflare.
-  # Database: neon (default), sqlite (single-instance), rds (AWS + VPC only).
-
+  aws:region: us-west-2
   limetry-serverless:neonApiKey:
     secure: AAABAElagmVVjWQajkzqgkES/VGMIkNT82vRxX9hMkcA71XBw4JjZKzxT6ZcO9gHYUb/9gXO7m8Kjmv/esp6M2mrq66RTzU0BzyvyeXn+hi7WvoHv64b3RaZr2XNwx+Fd0acPbQ=
