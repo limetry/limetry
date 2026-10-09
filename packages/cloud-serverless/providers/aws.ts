@@ -280,10 +280,11 @@ function createRoute53Records(
 }
 
 /**
- * Builds the Lambda bundle when it is not already present.
+ * Rebuilds the Lambda bundle before every Pulumi evaluation.
  *
  * Pulumi evaluates the program before registering the Lambda resource, so a
  * direct `pulumi up` must prepare the archive before `FileArchive` hashes it.
+ * Rebuilding every time also prevents Pulumi from reusing a stale landing page.
  *
  * @param repoRoot - Repository root containing the server bundle script.
  * @returns Existing or newly generated Lambda bundle directory.
@@ -291,13 +292,11 @@ function createRoute53Records(
 function ensureLambdaBundle(repoRoot: string): string {
   const bundlePath = join(repoRoot, "packages/server/lambda-bundle")
   const bundleEntryPoint = join(bundlePath, "lambda.js")
-  if (!existsSync(bundleEntryPoint)) {
-    execFileSync(
-      process.execPath,
-      [join(repoRoot, "packages/server/scripts/build-lambda-bundle.mjs")],
-      { cwd: repoRoot, stdio: "inherit" },
-    )
-  }
+  execFileSync(
+    process.execPath,
+    [join(repoRoot, "packages/server/scripts/build-lambda-bundle.mjs")],
+    { cwd: repoRoot, stdio: "inherit" },
+  )
   if (!existsSync(bundleEntryPoint)) {
     throw new Error(`Lambda bundle was not created at ${bundleEntryPoint}`)
   }
