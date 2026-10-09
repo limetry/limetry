@@ -5,6 +5,10 @@ Google Cloud, or Azure. SST owns the deployment state and orchestration. AWS
 uses SST's Lambda and API Gateway components; GCP and Azure use the Pulumi
 providers configured by SST.
 
+For Pulumi-first deployments (including optional Cloudflare DNS management),
+use [`packages/cloud-serverless`](../cloud-serverless/README.md) instead. Both
+paths run the same `@limetry/server` bundle.
+
 The default deployment is a low-cost SQLite evaluation deployment:
 
 - AWS Lambda with API Gateway HTTP API
@@ -153,23 +157,43 @@ creates Azure Container Registry. Docker must be running for those deployments.
 When `LIMETRY_API_IMAGE_REPOSITORY` is supplied, the stack assumes that the
 tagged image already exists and does not push a replacement.
 
-## DNS and API outputs
+## Provider requirements (compute, database, DNS)
+
+### Compute (`LIMETRY_CLOUD_PROVIDER`)
+
+| Provider | Runtime | Auth | Notes |
+| --- | --- | --- | --- |
+| `aws` | Lambda + API Gateway | `AWS_PROFILE` / keys | Default; SST state also lives in AWS |
+| `gcp` | Cloud Run | `gcloud auth application-default login` | Docker required for image push unless `LIMETRY_API_IMAGE_REPOSITORY` is preset |
+| `azure` | Container Apps | `az login` | Docker required unless image repository is preset |
+
+### Database (`LIMETRY_DATABASE_PROVIDER`)
+
+| Mode | When to use | Requirements |
+| --- | --- | --- |
+| `sqlite` | SST default; demos | No external DB; ephemeral per instance |
+| `neon` | Shared durable Postgres | `LIMETRY_NEON_API_KEY` or `NEON_API_KEY` |
+| `rds` | AWS private Postgres | `LIMETRY_CLOUD_PROVIDER=aws`; Lambda in VPC; ongoing cost |
+
+Azure managed PostgreSQL in the Pulumi stack needs `allowPublicDatabase=true`
+when not using VNet integration. The SST path documents the same constraint via
+`LIMETRY_ALLOW_PUBLIC_DATABASE`.
+
+### DNS (custom hostname)
 
 The API hostname defaults to `serverless-cloud.dev.limetry.org` for `dev` and
-`serverless-cloud.limetry.org` for `prod` or `production`. Set
-`LIMETRY_API_DOMAIN` to override it.
+`serverless-cloud.limetry.org` for `prod`. Set `LIMETRY_API_DOMAIN` and
+`LIMETRY_API_DOMAIN_ZONE` to override.
 
-Each provider uses its built-in DNS service for custom domains: AWS Route 53,
-Google Cloud DNS, or Azure DNS. Set `LIMETRY_API_DOMAIN_ZONE` to the hosted-zone
-name or ID expected by the selected provider. The deployment identity must be
-able to read the zone and manage its records.
+On AWS, SST uses **Route 53** when `LIMETRY_API_DOMAIN_ZONE` is a hosted-zone
+id. GCP and Azure expose required records in the `dnsRecords` output when the
+deploy identity cannot write Cloud DNS or Azure DNS automatically. Records must
+be **DNS-only** (no CDN proxy) so TLS terminates on the cloud load balancer.
 
-GCP Cloud Run and Azure Container Apps expose the required validation records in
-the `dnsRecords` SST output when the configured identity cannot manage the
-provider DNS zone automatically. Apply those records in the same provider's
-DNS service. Azure uses HTTP until `LIMETRY_API_CERTIFICATE_ID` references a
-certificate in the managed environment; set that variable before deployment
-for HTTPS. The stack never proxies DNS traffic through a CDN.
+Optional Cloudflare-managed DNS (`dnsProvider: cloudflare`) is supported on the
+**Pulumi** stack in `packages/cloud-serverless`, not in this SST package yet.
+
+Azure may need `LIMETRY_API_CERTIFICATE_ID` before HTTPS on a custom domain.
 
 The stack exports:
 
@@ -189,6 +213,7 @@ The stack exports:
 `databaseUrl` is kept secret because it contains the Neon credentials. Retrieve
 the decrypted value only when needed with `sst state export --decrypt` for the
 same stage, or use the Neon console. Never commit the decrypted state.
+
 - `dnsRecords`
 
 The documentation endpoints are `/v1/docs`, `/v1/openapi.json`, and

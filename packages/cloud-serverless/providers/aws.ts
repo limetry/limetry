@@ -133,16 +133,20 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
   const validationRecords = certificate
     ? certificate.domainValidationOptions.apply((options) => dedupeAcmValidationRecords(options))
     : undefined
-  const dnsZoneId = args.config.apiDomain && args.config.manageDns
+  const manageNativeDns = args.config.manageDns && args.config.dnsProvider === "native"
+  const manageCloudflareDns = args.config.manageDns && args.config.dnsProvider === "cloudflare"
+  const dnsZoneId = args.config.apiDomain && manageNativeDns
     ? resolveRoute53HostedZoneId(args.config)
     : undefined
-  const validationRecordNames = certificate && dnsZoneId && validationRecords
-    ? createRoute53Records(
-      `${args.name}-validation`,
-      dnsZoneId,
-      validationRecords,
-    )
-    : validationRecords?.apply((records) => records.map((record) => record.name.toString().replace(/\.$/, "")))
+  const validationRecordNames = certificate && validationRecords && manageCloudflareDns && args.createDnsRecords
+    ? args.createDnsRecords("validation", validationRecords)
+    : certificate && dnsZoneId && validationRecords
+      ? createRoute53Records(
+        `${args.name}-validation`,
+        dnsZoneId,
+        validationRecords,
+      )
+      : validationRecords?.apply((records) => records.map((record) => record.name.toString().replace(/\.$/, "")))
   const certificateValidation = certificate && validationRecordNames
     ? new aws.acm.CertificateValidation(`${args.name}-certificate-validation`, {
       certificateArn: certificate.arn,
@@ -173,7 +177,9 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       type: "CNAME" as const,
     } satisfies ServerlessDnsRecord])
     : undefined
-  if (customDomain && dnsZoneId && trafficRecord) {
+  if (customDomain && manageCloudflareDns && args.createDnsRecords && trafficRecord) {
+    args.createDnsRecords("traffic", trafficRecord)
+  } else if (customDomain && dnsZoneId && trafficRecord) {
     createRoute53Records(`${args.name}-traffic`, dnsZoneId, trafficRecord)
   }
 

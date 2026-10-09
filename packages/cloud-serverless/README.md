@@ -10,6 +10,17 @@ compute providers:
 Select exactly one provider with `cloudProvider`. The checked-in development
 configuration defaults to AWS in `us-west-2`.
 
+## Provider matrix
+
+| Layer | Options | Pulumi keys / notes |
+| --- | --- | --- |
+| Compute | `aws`, `gcp`, `azure` | `cloudProvider`, `location` |
+| Database | `neon`, `sqlite`, `rds` | `databaseProvider`; `rds` requires `aws`; Neon needs `neonApiKey` or `databaseUrl` |
+| DNS | native, cloudflare, manual | `manageDns`, `dnsProvider`; native = Route 53 / Cloud DNS / Azure DNS |
+
+See [Custom API domains and DNS](#custom-api-domains-and-dns) for per-cloud DNS
+setup. For SST-based deploys, see [`packages/serverless`](../serverless/README.md).
+
 ## Persistence defaults
 
 The default is Neon Serverless Postgres:
@@ -143,63 +154,66 @@ Useful settings include:
 - `minInstances` and `maxInstances`: Cloud Run or Container Apps scaling.
 - `memoryMb` and `timeoutSeconds`: serverless compute sizing.
 
-## Custom API domains
+## Custom API domains and DNS
 
-Set `apiDomain` to publish the API at a provider-native HTTPS hostname. The
-stack provisions native TLS/custom-domain resources and DNS records through the
-selected cloud provider:
+Set `apiDomain` and `apiDomainZone` (apex zone, for example `limetry.dev`) to
+publish HTTPS on your hostname. TLS and routing are created by the **compute**
+provider; **DNS** is configured separately.
 
 ```sh
-pulumi config set apiDomain api.dev.example.com
-pulumi config set apiDomainZone example.com
+pulumi config set apiDomain test.limetry.dev
+pulumi config set apiDomainZone limetry.dev
 pulumi config set manageDns true
+pulumi config set dnsProvider native
 ```
 
-AWS uses Route 53, Google Cloud uses Cloud DNS, and Azure uses Azure DNS when
-`manageDns` is `true`. The deploy identity must be able to read the zone and
-create records.
+### DNS modes (`manageDns` + `dnsProvider`)
 
-### AWS (Route 53)
+| Setting | Behavior |
+| --- | --- |
+| `manageDns: true`, `dnsProvider: native` (default) | Creates records in the selected cloud's DNS service |
+| `manageDns: true`, `dnsProvider: cloudflare` | Creates **DNS-only** Cloudflare records (`proxied: false`) for any compute cloud |
+| `manageDns: false` | No automatic records; use `pulumi stack output apiDnsRecords` at your registrar |
 
-1. Create a **public hosted zone** for your apex (for example `limetry.org`) in
-   the same AWS account you deploy with, or import an existing zone.
-2. Either delegate the domain's nameservers to Route 53, or keep DNS elsewhere
-   and set `manageDns` to `false` (see below).
-3. Optional: `pulumi config set apiHostedZoneId Z1234567890ABC` when lookup by
-   `apiDomainZone` is not enough.
+Legacy `manageCloudflare: true` is equivalent to `dnsProvider: cloudflare`.
+
+### Native DNS by compute provider
+
+**AWS — Route 53**
+
+1. Public hosted zone for `apiDomainZone` in the deploy AWS account.
+2. Domain NS delegated to Route 53 (as for `limetry.dev`).
+3. Optional `apiHostedZoneId` when name lookup is ambiguous.
 
 ```sh
 export AWS_PROFILE=disrupt
-aws route53 list-hosted-zones-by-name --dns-name limetry.org
+aws route53 list-hosted-zones-by-name --dns-name limetry.dev
 ```
 
-If the list is empty, Pulumi cannot manage records until a zone exists or you
-use manual DNS.
+**GCP — Cloud DNS**
 
-### GCP (Cloud DNS)
+1. Managed zone whose `dnsName` is `apiDomainZone.` (trailing dot in the API).
+2. NS delegated from the parent domain.
+3. Deploy identity can edit record sets in that zone.
 
-1. Create a **managed zone** whose `dnsName` matches `apiDomainZone`
-   (for example `example.com.`).
-2. Delegate NS at your registrar (or parent DNS) to the zone's Cloud DNS
-   nameservers.
-3. Grant the deploy identity `dns.admin` (or narrower record-edit permissions)
-   on that zone.
+**Azure — Azure DNS**
 
-### Azure (Azure DNS)
+1. DNS zone named `apiDomainZone` in a resource group.
+2. NS delegated from the parent domain.
+3. `dnsResourceGroupName` when the zone is outside the stack resource group.
 
-1. Create a **DNS zone** for `apiDomainZone` in a resource group.
-2. Delegate NS from the parent domain to Azure DNS.
-3. Set `dnsResourceGroupName` when the zone is not in the stack's resource
-   group:
+### Cloudflare DNS (optional, any compute provider)
 
 ```sh
-pulumi config set dnsResourceGroupName dns-resource-group
+pulumi config set dnsProvider cloudflare
+pulumi config set --secret cloudflare:apiToken "<zone DNS edit token>"
+# optional: pulumi config set cloudflareZoneId "<zone id>"
 ```
 
-### DNS outside the cloud (for example existing registrar DNS)
+Cloudflare must already host the zone. Records are never orange-clouded so ACM
+and API Gateway / Cloud Run / Container Apps terminate TLS on the cloud edge.
 
-Set `manageDns` to `false`, deploy, then create **DNS-only** records from the
-stack output (no CDN proxy):
+### Manual DNS
 
 ```sh
 pulumi config set manageDns false
@@ -207,12 +221,11 @@ pulumi up
 pulumi stack output apiDnsRecords
 ```
 
-Add the ACM validation CNAME(s) first; wait for the certificate to issue, then
-add the API traffic CNAME. Re-run `pulumi up` if the stack was waiting on
-validation.
+Create validation records first, wait for the certificate to issue, then add the
+traffic CNAME. Re-run `pulumi up` if validation was pending.
 
-The API's default execute URL remains available through `apiUrl` even when
-custom-domain validation is in progress.
+Stack outputs include `dnsProvider` (`native`, `cloudflare`, or `manual`) and
+`apiDnsRecords` for verification.
 
 ## Outputs and teardown
 

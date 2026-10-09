@@ -4,6 +4,7 @@ import {
   buildServerEnvironment,
   buildServerlessConfig,
   parseDatabaseProvider,
+  parseDnsProvider,
   parseServerlessProvider,
 } from "./config"
 
@@ -86,6 +87,18 @@ describe("serverless configuration", () => {
       USE_POSTGRES_STORE: "false",
     })
     expect(buildServerEnvironment(managedConfig, secrets).USE_POSTGRES_STORE).toBe("true")
+  })
+
+  /** Verifies DNS provider defaults and Cloudflare selection. */
+  it("selects DNS providers by configuration", () => {
+    expect(parseDnsProvider(undefined, undefined, false)).toBe("native")
+    expect(parseDnsProvider(undefined, undefined, true)).toBe("native")
+    expect(parseDnsProvider("cloudflare", undefined, true)).toBe("cloudflare")
+    expect(parseDnsProvider(undefined, true, true)).toBe("cloudflare")
+    expect(buildServerlessConfig({
+      apiDomain: "api.example.com",
+      dnsProvider: "cloudflare",
+    }).dnsProvider).toBe("cloudflare")
   })
 
   /** Verifies database provider defaults and AWS-only RDS validation. */

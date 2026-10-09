@@ -1,23 +1,24 @@
 config:
   limetry-serverless:cloudProvider: aws
-  limetry-serverless:apiDomain: oss-api-dev.limetry.org
-  limetry-serverless:apiDomainZone: limetry.org
-  # limetry.org is not in Route 53 on this account; create ACM + API records at
-  # your DNS provider from `pulumi stack output apiDnsRecords` (DNS-only, no proxy).
-  limetry-serverless:manageDns: "false"
-  # When limetry.org lives in Route 53: manageDns true and optionally:
-  # limetry-serverless:apiHostedZoneId: Z1234567890ABC
+  limetry-serverless:apiDomain: test.limetry.dev
+  limetry-serverless:apiDomainZone: limetry.dev
+  # DNS: dnsProvider native (default) uses Route 53 / Cloud DNS / Azure DNS for the
+  # selected cloud. limetry.dev is delegated to Route 53 in the deploy AWS account.
+  limetry-serverless:manageDns: "true"
+  limetry-serverless:dnsProvider: native
+  # Optional: limetry-serverless:apiHostedZoneId: Z1234567890ABC
+  # Optional Cloudflare instead of native DNS (DNS-only records, proxied: false):
+  # limetry-serverless:dnsProvider: cloudflare
+  # cloudflare:apiToken: (pulumi config set --secret cloudflare:apiToken …)
+  # Manual DNS: manageDns false, then apply `pulumi stack output apiDnsRecords`.
   limetry-serverless:location: us-west-2
-  # Keep the checked-in development stack credential-free. Neon remains the
-  # code-level default; set databaseProvider=neon and provide neonApiKey or
-  # databaseUrl for a durable shared database.
+  # Compute: AWS Lambda + API Gateway (change cloudProvider for GCP/Azure).
+  # Database: neon (default durable), sqlite (ephemeral), or rds (AWS only).
   limetry-serverless:databaseProvider: neon
   limetry-serverless:neonProjectName: limetry-serverless-dev
   limetry-serverless:neonRegion: aws-us-east-1
   limetry-serverless:minInstances: "0"
   limetry-serverless:maxInstances: "1"
-  # limetry-serverless:sqliteDatabasePath: /tmp/limetry.sqlite
-  # For GCP or Azure, change cloudProvider and location before previewing.
   # Azure managed PostgreSQL additionally requires:
   # limetry-serverless:allowPublicDatabase: "true"
   aws:region: us-west-2

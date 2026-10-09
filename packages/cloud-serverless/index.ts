@@ -4,6 +4,11 @@ import * as pulumi from "@pulumi/pulumi"
 import * as random from "@pulumi/random"
 
 import {
+  assertCloudflareAuth,
+  createCloudflareDnsRecords,
+  resolveCloudflareZoneId,
+} from "./cloudflare"
+import {
   buildServerEnvironment,
   buildServerlessConfig,
 } from "./config"
@@ -24,7 +29,10 @@ const serverlessConfig = buildServerlessConfig({
   apiDomain: config.get("apiDomain"),
   apiDomainZone: config.get("apiDomainZone"),
   apiHostedZoneId: config.get("apiHostedZoneId"),
+  cloudflareZoneId: config.get("cloudflareZoneId"),
+  dnsProvider: config.get("dnsProvider"),
   manageDns: config.getBoolean("manageDns"),
+  manageCloudflare: config.getBoolean("manageCloudflare"),
   dnsResourceGroupName: config.get("dnsResourceGroupName"),
   apiPathPrefix: config.get("apiPathPrefix"),
   cloudProvider: config.get("cloudProvider"),
@@ -97,8 +105,26 @@ const environment = buildServerEnvironment(serverlessConfig, {
 })
 
 /** Inputs passed to the selected serverless provider adapter. */
+const usesCloudflareDns = serverlessConfig.manageDns
+  && serverlessConfig.dnsProvider === "cloudflare"
+  && Boolean(serverlessConfig.apiDomain)
+
+if (usesCloudflareDns) {
+  assertCloudflareAuth()
+}
+
 const providerArgs: ServerlessProviderArgs = {
   config: serverlessConfig,
+  createDnsRecords: usesCloudflareDns
+    ? (resourcePrefix, records) => createCloudflareDnsRecords(
+      `${name}-${resourcePrefix}`,
+      resolveCloudflareZoneId(
+        serverlessConfig.apiDomainZone,
+        serverlessConfig.cloudflareZoneId,
+      ),
+      records,
+    )
+    : undefined,
   environment,
   name,
   repoRoot,
@@ -126,6 +152,11 @@ export const apiImageReference = provider.apiImageReference
 
 /** Selected compute provider. */
 export const cloudProvider = serverlessConfig.cloudProvider
+
+/** DNS backend used for the custom API hostname. */
+export const dnsProvider = serverlessConfig.manageDns
+  ? serverlessConfig.dnsProvider
+  : "manual"
 
 /** Whether the deployment uses a managed PostgreSQL database. */
 export const databaseMode = serverlessConfig.databaseProvider

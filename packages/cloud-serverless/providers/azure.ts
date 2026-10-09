@@ -153,26 +153,27 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     },
   })
 
-  if (managedCertificate && args.config.apiDomain && args.config.manageDns) {
-    const dnsResourceGroupName = args.config.dnsResourceGroupName ?? `${args.name}-resource-group`
-    const zone = azure.dns.getZoneOutput({
-      name: args.config.apiDomainZone,
-      resourceGroupName: dnsResourceGroupName,
-    })
-    createAzureDnsRecords(args.name, zone.name, dnsResourceGroupName, args.config.apiDomainZone, [{
-      content: containerApp.latestRevisionFqdn,
-      name: args.config.apiDomain,
-      type: "CNAME",
-    } satisfies ServerlessDnsRecord])
-  }
-
-  const apiDnsRecords = managedCertificate && args.config.apiDomain
+  const manageNativeDns = args.config.manageDns && args.config.dnsProvider === "native"
+  const manageCloudflareDns = args.config.manageDns && args.config.dnsProvider === "cloudflare"
+  const trafficRecords = managedCertificate && args.config.apiDomain
     ? pulumi.all([containerApp.latestRevisionFqdn]).apply(([targetFqdn]) => [{
       content: targetFqdn,
       name: args.config.apiDomain ?? "",
       type: "CNAME" as const,
     } satisfies ServerlessDnsRecord])
     : undefined
+  if (managedCertificate && args.config.apiDomain && manageCloudflareDns && trafficRecords && args.createDnsRecords) {
+    args.createDnsRecords("domain", trafficRecords)
+  } else if (managedCertificate && args.config.apiDomain && manageNativeDns && trafficRecords) {
+    const dnsResourceGroupName = args.config.dnsResourceGroupName ?? `${args.name}-resource-group`
+    const zone = azure.dns.getZoneOutput({
+      name: args.config.apiDomainZone,
+      resourceGroupName: dnsResourceGroupName,
+    })
+    createAzureDnsRecords(args.name, zone.name, dnsResourceGroupName, args.config.apiDomainZone, trafficRecords)
+  }
+
+  const apiDnsRecords = trafficRecords
 
   return {
     apiDnsRecords,

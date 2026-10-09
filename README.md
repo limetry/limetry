@@ -110,13 +110,33 @@ Start a locally built server with `yarn dev:server`.
 
 ## Deploy the serverless API
 
-The optional `packages/cloud-serverless` stack deploys the API to AWS, Google
-Cloud, or Azure. Custom API domains use the selected cloud's DNS service:
-Route 53, Cloud DNS, or Azure DNS. No Cloudflare credentials are required.
+Two deployment paths share the same API bundle and environment model:
 
-See [`packages/cloud-serverless/README.md`](packages/cloud-serverless/README.md)
-for provider-specific credentials, hosted-zone configuration, and deployment
-commands.
+| Path | Package | Orchestration |
+| --- | --- | --- |
+| Pulumi | [`packages/cloud-serverless`](packages/cloud-serverless/README.md) | `pulumi up` per stack |
+| SST | [`packages/serverless`](packages/serverless/README.md) | `npm run deploy` (SST state on AWS) |
+
+Pick one **compute** provider: `aws`, `gcp`, or `azure`. Pick one **database**
+mode: `neon` (shared durable default on Pulumi), `sqlite` (ephemeral), or `rds`
+(AWS only, private VPC). Pick **DNS** when using a custom hostname:
+
+- **`dnsProvider: native`** (default) — Route 53 on AWS, Cloud DNS on GCP,
+  Azure DNS on Azure. The zone must exist in that cloud and be authoritative
+  (nameservers delegated).
+- **`dnsProvider: cloudflare`** — optional; creates **DNS-only** records
+  (`proxied: false`) in Cloudflare for any compute provider.
+- **`manageDns: false`** — no automatic records; apply `apiDnsRecords` from
+  stack output at your registrar.
+
+Install dependencies, build the server bundle, authenticate the target cloud,
+then follow the README for the path you chose. Example (Pulumi, AWS):
+
+```bash
+export AWS_PROFILE=disrupt
+yarn workspace @limetry/server build:lambda
+cd packages/cloud-serverless && pulumi up
+```
 
 ## Quickstart
 

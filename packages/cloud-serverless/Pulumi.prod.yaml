@@ -1,17 +1,18 @@
 config:
   limetry-serverless:cloudProvider: aws
-  limetry-serverless:apiDomain: oss-api-prod.limetry.org
-  limetry-serverless:apiDomainZone: limetry.org
+  limetry-serverless:apiDomain: api.limetry.dev
+  limetry-serverless:apiDomainZone: limetry.dev
   limetry-serverless:manageDns: "true"
+  limetry-serverless:dnsProvider: native
   limetry-serverless:location: us-west-2
   limetry-serverless:databaseProvider: neon
   limetry-serverless:neonProjectName: limetry-serverless-prod
   limetry-serverless:neonRegion: aws-us-east-1
   limetry-serverless:minInstances: "0"
   limetry-serverless:maxInstances: "1"
-  # limetry-serverless:sqliteDatabasePath: /tmp/limetry.sqlite
-  # Neon is the default durable database. Set databaseProvider=sqlite only
-  # for an intentional single-instance ephemeral deployment.
+  # Compute: aws | gcp | azure — see README for auth and region keys.
+  # DNS: dnsProvider native (Route 53 / Cloud DNS / Azure DNS) or cloudflare.
+  # Database: neon (default), sqlite (single-instance), rds (AWS + VPC only).
 
   limetry-serverless:neonApiKey:
     secure: AAABAElagmVVjWQajkzqgkES/VGMIkNT82vRxX9hMkcA71XBw4JjZKzxT6ZcO9gHYUb/9gXO7m8Kjmv/esp6M2mrq66RTzU0BzyvyeXn+hi7WvoHv64b3RaZr2XNwx+Fd0acPbQ=

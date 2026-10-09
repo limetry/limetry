@@ -144,7 +144,11 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
       }))),
     )
     : undefined
-  if (domainMapping && args.config.manageDns && domainDnsRecords) {
+  const manageNativeDns = args.config.manageDns && args.config.dnsProvider === "native"
+  const manageCloudflareDns = args.config.manageDns && args.config.dnsProvider === "cloudflare"
+  if (domainMapping && manageCloudflareDns && domainDnsRecords && args.createDnsRecords) {
+    args.createDnsRecords("domain", domainDnsRecords)
+  } else if (domainMapping && manageNativeDns && domainDnsRecords) {
     const managedZoneName = resolveGcpManagedZoneName(args.config.apiDomainZone, project)
     createGoogleDnsRecords(
       args.name,
