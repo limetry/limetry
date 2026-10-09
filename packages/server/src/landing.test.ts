@@ -1,9 +1,11 @@
+import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { APP_VERSION } from "@limetry/sdk"
 import request from "supertest"
 import { describe, expect, it } from "vitest"
+import { parse } from "yaml"
 
 import { createApp, resolvePublicDir } from "./create-app.js"
 import type { ServerEnv } from "./env.js"
@@ -38,13 +40,18 @@ describe("landing page", () => {
     try {
       const app = createApp({ env: baseEnv, publicDir })
 
-      const response = await request(app).get("/")
+      const response = await request(app)
+        .get("/")
+        .set("Host", "oss-api-dev.limetry.org")
+        .set("X-Forwarded-Proto", "https")
 
       expect(response.status).toBe(200)
       expect(response.headers["content-type"]).toMatch(/html/)
       expect(response.text).toContain("Limetry Central")
       expect(response.text).toContain("/v1/policy/evaluate")
       expect(response.text).toContain("Available paths")
+      expect(response.text).toContain("https://oss-api-dev.limetry.org/health")
+      expect(response.text).not.toContain("http://localhost:3810")
       expect(response.text).toContain(`v${APP_VERSION}`)
       expect(response.text).not.toContain("__APP_VERSION__")
       expect(response.text).not.toContain("__WEB_ORIGIN__")
@@ -63,6 +70,36 @@ describe("landing page", () => {
         process.env.NEXT_PUBLIC_WEB_URL = previousWebUrl
       }
     }
+  })
+
+  it("matches generated landing paths to the published OpenAPI document", () => {
+    const publicDir = join(fileURLToPath(new URL("..", import.meta.url)), "public")
+    const document = parse(readFileSync(join(publicDir, "openapi.yaml"), "utf8")) as {
+      paths?: Record<string, Record<string, unknown>>
+    }
+    const html = readFileSync(join(publicDir, "index.html"), "utf8")
+    const rows = [...html.matchAll(
+      /<span class="method">([A-Z]+)<\/span> <code>([^<]+)<\/code>/g,
+    )].map((match) => `${match[1]} ${match[2]}`)
+    const operations = Object.entries(document.paths ?? {}).flatMap(([path, item]) =>
+      Object.keys(item)
+        .filter((method) => ["get", "post", "put", "patch", "delete", "options", "head"].includes(method))
+        .map((method) => `${method.toUpperCase()} ${path}`),
+    ).sort((left, right) => {
+      const [, leftPath] = left.split(" ")
+      const [, rightPath] = right.split(" ")
+      return leftPath === rightPath
+        ? left.localeCompare(right)
+        : leftPath.localeCompare(rightPath)
+    })
+
+    expect(rows).toEqual([
+      "GET /",
+      "GET /openapi.yaml",
+      "GET /openapi.json",
+      "GET /openapi",
+      ...operations,
+    ])
   })
 
   it("still serves health JSON after mounting the landing page", async () => {

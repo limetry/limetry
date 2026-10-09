@@ -3,6 +3,7 @@
  * Bundles the Lambda handler into packages/server/lambda-bundle for Pulumi upload.
  * Requires: yarn build:sdk (for types) and esbuild.
  */
+import { execFileSync } from "node:child_process"
 import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -12,6 +13,11 @@ import * as esbuild from "esbuild"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const serverRoot = join(__dirname, "..")
 const outDir = join(serverRoot, "lambda-bundle")
+
+execFileSync(process.execPath, [join(serverRoot, "scripts/sync-openapi.mjs")], {
+  cwd: serverRoot,
+  stdio: "inherit",
+})
 
 rmSync(outDir, { recursive: true, force: true })
 mkdirSync(outDir, { recursive: true })

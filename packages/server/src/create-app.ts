@@ -128,6 +128,20 @@ export function resolvePublicDir(explicit?: string): string | null {
 }
 
 /**
+ * Resolves the public origin for request-scoped API examples.
+ *
+ * @param request - Incoming Express request.
+ * @returns Absolute request origin, or undefined when the host is unavailable.
+ */
+function resolveRequestOrigin(request: express.Request): string | undefined {
+  const host = request.get("host")
+  if (!host) {
+    return undefined
+  }
+  return `${request.protocol}://${host}`
+}
+
+/**
  * Reads the Swagger UI document and points it at the requested OpenAPI spec.
  *
  * @param publicDir - Directory containing the packaged documentation assets.
@@ -167,6 +181,7 @@ export function createApp(options: CreateAppOptions): Express {
   }
 
   const app = express()
+  app.set("trust proxy", true)
   app.use(express.json({ limit: "1mb" }))
   app.use(createRequestContextMiddleware())
   app.use((_request, _response, next) => {
@@ -176,12 +191,13 @@ export function createApp(options: CreateAppOptions): Express {
 
   const publicDir = resolvePublicDir(options.publicDir)
   if (publicDir) {
-    app.get("/", (_request, response) => {
+    app.get("/", (request, response) => {
       const html = renderLandingHtml(
         readFileSync(join(publicDir, "index.html"), "utf8"),
         {
           appVersion: APP_VERSION,
           appOrigin: resolveLandingAppOrigin(),
+          apiOrigin: resolveRequestOrigin(request),
           webOrigin: resolveLandingWebOrigin(),
         },
       )

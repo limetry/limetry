@@ -513,91 +513,53 @@
               </tr>
             </thead>
             <tbody>
+              <!-- generated:api-paths -->
               <tr>
                 <td><span class="method">GET</span> <code>/</code></td>
                 <td>none</td>
                 <td>This landing page</td>
               </tr>
               <tr>
+                <td><span class="method">GET</span> <code>/openapi.yaml</code></td>
+                <td>none</td>
+                <td>OpenAPI YAML document</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/openapi.json</code></td>
+                <td>none</td>
+                <td>OpenAPI JSON document</td>
+              </tr>
+              <tr>
+                <td><span class="method">GET</span> <code>/openapi</code></td>
+                <td>none</td>
+                <td>Swagger UI</td>
+              </tr>
+              <tr>
                 <td><span class="method">GET</span> <code>/health</code></td>
                 <td>none</td>
-                <td>Liveness JSON</td>
-              </tr>
-              <tr>
-                <td><span class="method">GET</span> <code>/metrics</code></td>
-                <td>bearer · <code>metrics:read</code></td>
-                <td>Process metrics snapshot</td>
-              </tr>
-              <tr>
-                <td><span class="method">POST</span> <code>/v1/policy/evaluate</code></td>
-                <td>bearer · <code>policy:evaluate</code></td>
-                <td>Evaluate ActionIntent</td>
+                <td>Health check</td>
               </tr>
               <tr>
                 <td><span class="method">POST</span> <code>/v1/actions/record</code></td>
-                <td>bearer · <code>actions:record</code></td>
-                <td>Record executed / skipped / blocked outcome</td>
+                <td>bearer · API key</td>
+                <td>Record action outcome</td>
               </tr>
               <tr>
                 <td><span class="method">GET</span> <code>/v1/audit</code></td>
-                <td>bearer · <code>audit:read</code></td>
-                <td>List audit / telemetry events</td>
+                <td>bearer · API key</td>
+                <td>List audit events</td>
               </tr>
               <tr>
-                <td><span class="method">GET</span> <code>/v1/policies</code></td>
-                <td>bearer · <code>policies:read</code></td>
-                <td>List registered policies</td>
+                <td><span class="method">PUT</span> <code>/v1/policies/{id}</code></td>
+                <td>bearer · API key</td>
+                <td>Upsert an action policy</td>
               </tr>
               <tr>
-                <td><span class="method">PUT</span> <code>/v1/policies/:policyId</code></td>
-                <td>bearer · <code>policies:write</code></td>
-                <td>Upsert ActionPolicy</td>
+                <td><span class="method">POST</span> <code>/v1/policy/evaluate</code></td>
+                <td>bearer · API key</td>
+                <td>Evaluate an action intent</td>
               </tr>
-              <tr>
-                <td><span class="method">GET</span> <code>/v1/approvals</code></td>
-                <td>bearer · <code>approvals:read</code></td>
-                <td>List pending / resolved approvals</td>
-              </tr>
-              <tr>
-                <td><span class="method">POST</span> <code>/v1/approvals/:approvalId/approve</code></td>
-                <td>bearer · <code>approvals:write</code></td>
-                <td>Approve a pending action after payload-hash match</td>
-              </tr>
-              <tr>
-                <td><span class="method">POST</span> <code>/v1/approvals/:approvalId/deny</code></td>
-                <td>bearer · <code>approvals:write</code></td>
-                <td>Deny a pending action</td>
-              </tr>
-              <tr>
-                <td><span class="method">POST</span> <code>/v1/auth/register</code></td>
-                <td>none</td>
-                <td>Create operator user + tenant</td>
-              </tr>
-              <tr>
-                <td><span class="method">POST</span> <code>/v1/auth/login</code></td>
-                <td>none</td>
-                <td>JWT login (requires tenantId)</td>
-              </tr>
-              <tr>
-                <td><span class="method">POST</span> <code>/v1/auth/logout</code></td>
-                <td>JWT</td>
-                <td>Revoke current JWT</td>
-              </tr>
-              <tr>
-                <td><span class="method">GET</span> <code>/v1/profile</code></td>
-                <td>JWT</td>
-                <td>Current operator profile</td>
-              </tr>
-              <tr>
-                <td><span class="method">POST</span> / <span class="method">GET</span> / <span class="method">DELETE</span> <code>/v1/tokens</code></td>
-                <td>JWT</td>
-                <td>Create, list, revoke API tokens</td>
-              </tr>
-              <tr>
-                <td><span class="method">CRUD</span> <code>/v1/rules</code></td>
-                <td>JWT or bearer · <code>rules:*</code></td>
-                <td>Governance rule management</td>
-              </tr>
+              <!-- /generated:api-paths -->
             </tbody>
           </table>
         </section>
@@ -607,14 +569,14 @@
           <p class="section-lead">
             With the server running and <code>LIMETRY_BEARER_TOKEN</code> set, upsert a policy then evaluate a denied action:
           </p>
-          <pre>curl -s http://localhost:3810/health
+          <pre>curl -s __API_ORIGIN__/health
 
-curl -s -X PUT http://localhost:3810/v1/policies/$POLICY_ID \
+curl -s -X PUT __API_ORIGIN__/v1/policies/$POLICY_ID \
   -H "Authorization: Bearer $LIMETRY_BEARER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"policy":{ ... ActionPolicy ... }}'
 
-curl -s -X POST http://localhost:3810/v1/policy/evaluate \
+curl -s -X POST __API_ORIGIN__/v1/policy/evaluate \
   -H "Authorization: Bearer $LIMETRY_BEARER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"policy_id":"'"$POLICY_ID"'","intent":{ ... ActionIntent ... }}'</pre>
