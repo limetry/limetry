@@ -735,9 +735,36 @@ export class SqliteGovernanceStateStore implements GovernanceStateStore {
     key: GovernanceStateKey,
     evaluator: (state: EvaluationState) => PolicyEvaluationResponse,
   ): Promise<PolicyEvaluationResponse> {
-    const result = evaluator(await this.getState(key))
-    if (result.state) await this.saveState(key, result.state)
-    return result
+    // BEGIN IMMEDIATE serializes the read/evaluate/write sequence with other
+    // processes using this database, preventing concurrent evaluations from
+    // overwriting each other's state.
+    this.db.exec("BEGIN IMMEDIATE")
+    try {
+      const row = asRow(
+        this.db
+          .prepare(
+            "SELECT state FROM limetry_governance_state WHERE tenant_id = ? AND agent_id = ? AND policy_id = ?",
+          )
+          .get(key.tenantId, key.agentId, key.policyId),
+      )
+      const state = row ? parseJson<EvaluationState>(String(row.state)) : structuredClone(EMPTY_STATE)
+      const result = evaluator(state)
+      if (result.state) {
+        this.db
+          .prepare(
+            `INSERT INTO limetry_governance_state (tenant_id, agent_id, policy_id, state)
+             VALUES (?, ?, ?, ?)
+             ON CONFLICT (tenant_id, agent_id, policy_id)
+             DO UPDATE SET state = excluded.state`,
+          )
+          .run(key.tenantId, key.agentId, key.policyId, serialize(result.state))
+      }
+      this.db.exec("COMMIT")
+      return result
+    } catch (error) {
+      this.db.exec("ROLLBACK")
+      throw error
+    }
   }
 }
 
