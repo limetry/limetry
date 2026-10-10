@@ -16,7 +16,7 @@ Pulumi does not execute a project-defined hook during `pulumi stack init`.
 Use the package wrapper to initialize a stack and apply safe defaults:
 
 ```sh
-cd packages/cloud-serverless
+cd packages/cloud
 yarn init:stack dev aws us-east-1
 # or: yarn init:stack dev gcp us-central1
 # or: yarn init:stack dev azure westus2
@@ -36,7 +36,6 @@ configuration.
 | DNS | native, cloudflare, manual | `manageDns`, `dnsProvider`; native = Route 53 / Cloud DNS / Azure DNS |
 
 See [Custom API domains and DNS](#custom-api-domains-and-dns) for per-cloud DNS
-setup. For SST-based deploys, see [`packages/serverless`](../serverless/README.md).
 
 ## Persistence defaults
 
@@ -89,9 +88,9 @@ Azure adapters build and push the API container from
 ## AWS
 
 ```sh
-aws sso login
+aws login
 aws sts get-caller-identity
-cd packages/cloud-serverless
+cd packages/cloud
 yarn init:stack dev aws us-east-1
 pulumi config set apiDomain api.dev.example.com
 pulumi config set apiDomainZone example.com
@@ -110,7 +109,7 @@ security-group access from Lambda.
 ```sh
 gcloud auth application-default login
 gcloud config set project YOUR_PROJECT_ID
-cd packages/cloud-serverless
+cd packages/cloud
 pulumi stack init gcp-dev
 pulumi config set cloudProvider gcp
 pulumi config set location us-central1
@@ -125,7 +124,7 @@ service accounts, IAM, and Neon API access when the default database is used.
 
 ```sh
 az login
-cd packages/cloud-serverless
+cd packages/cloud
 pulumi stack init azure-dev
 pulumi config set cloudProvider azure
 pulumi config set location westus2
@@ -197,7 +196,7 @@ Legacy `manageCloudflare: true` is equivalent to `dnsProvider: cloudflare`.
 3. Optional `apiHostedZoneId` when name lookup is ambiguous.
 
 ```sh
-aws sso login
+aws login
 aws route53 list-hosted-zones-by-name --dns-name example.com
 ```
 

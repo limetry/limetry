@@ -114,8 +114,7 @@ Two deployment paths share the same API bundle and environment model:
 
 | Path | Package | Orchestration |
 | --- | --- | --- |
-| Pulumi | [`packages/cloud-serverless`](packages/cloud-serverless/README.md) | `pulumi up` per stack |
-| SST | [`packages/serverless`](packages/serverless/README.md) | `npm run deploy` (SST state on AWS) |
+| Pulumi | [`packages/cloud`](packages/cloud/README.md) | `pulumi up` per stack |
 
 Pick one **compute** provider: `aws`, `gcp`, or `azure`. Pick one **database**
 mode: `neon` (shared durable default on Pulumi), `sqlite` (ephemeral), or `rds`
@@ -134,8 +133,8 @@ the path you chose. Pulumi deployment commands build required Lambda, web, and
 container artifacts automatically. Example (Pulumi, AWS):
 
 ```bash
-aws sso login
-cd packages/cloud-serverless && pulumi up
+aws login
+cd packages/cloud && pulumi up
 ```
 
 ## Quickstart
