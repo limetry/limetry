@@ -32,6 +32,7 @@ const serverlessConfig = buildServerlessConfig({
   cloudflareZoneId: config.get("cloudflareZoneId"),
   dnsProvider: config.get("dnsProvider"),
   manageDns: config.getBoolean("manageDns"),
+  manualDnsValidated: config.getBoolean("manualDnsValidated"),
   manageCloudflare: config.getBoolean("manageCloudflare"),
   dnsResourceGroupName: config.get("dnsResourceGroupName"),
   apiPathPrefix: config.get("apiPathPrefix"),

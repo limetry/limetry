@@ -135,6 +135,7 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
     : undefined
   const manageNativeDns = args.config.manageDns && args.config.dnsProvider === "native"
   const manageCloudflareDns = args.config.manageDns && args.config.dnsProvider === "cloudflare"
+  const manualDns = Boolean(args.config.apiDomain) && !args.config.manageDns
   const dnsZoneId = args.config.apiDomain && manageNativeDns
     ? resolveRoute53HostedZoneId(args.config)
     : undefined
@@ -148,12 +149,14 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       )
       : validationRecords?.apply((records) => records.map((record) => record.name.toString().replace(/\.$/, "")))
   const certificateValidation = certificate && validationRecordNames
+    && (!manualDns || args.config.manualDnsValidated)
     ? new aws.acm.CertificateValidation(`${args.name}-certificate-validation`, {
       certificateArn: certificate.arn,
       validationRecordFqdns: validationRecordNames,
     })
     : undefined
   const customDomain = certificate && args.config.apiDomain
+    && (!manualDns || args.config.manualDnsValidated)
     ? new aws.apigatewayv2.DomainName(`${args.name}-domain`, {
       domainName: args.config.apiDomain,
       domainNameConfiguration: {
@@ -183,10 +186,12 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
     createRoute53Records(`${args.name}-traffic`, dnsZoneId, trafficRecord)
   }
 
-  const apiDnsRecords = pulumi.all([
-    validationRecords ?? pulumi.output([]),
-    trafficRecord ?? pulumi.output([]),
-  ]).apply(([validation, traffic]) => [...validation, ...traffic])
+  const apiDnsRecords = manualDns && !args.config.manualDnsValidated
+    ? validationRecords
+    : pulumi.all([
+      validationRecords ?? pulumi.output([]),
+      trafficRecord ?? pulumi.output([]),
+    ]).apply(([validation, traffic]) => [...validation, ...traffic])
 
   return {
     apiDnsRecords,

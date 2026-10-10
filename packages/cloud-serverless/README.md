@@ -184,7 +184,7 @@ pulumi config set dnsProvider native
 | --- | --- |
 | `manageDns: true`, `dnsProvider: native` (default) | Creates records in the selected cloud's DNS service |
 | `manageDns: true`, `dnsProvider: cloudflare` | Creates **DNS-only** Cloudflare records (`proxied: false`) for any compute cloud |
-| `manageDns: false` | No automatic records; use `pulumi stack output apiDnsRecords` at your registrar |
+| `manageDns: false` | Exports validation records first; set `manualDnsValidated=true` after adding them, then deploy again for the traffic record |
 
 Legacy `manageCloudflare: true` is equivalent to `dnsProvider: cloudflare`.
 
@@ -232,8 +232,9 @@ pulumi up
 pulumi stack output apiDnsRecords
 ```
 
-Create validation records first, wait for the certificate to issue, then add the
-traffic CNAME. Re-run `pulumi up` if validation was pending.
+Create the exported validation records first and wait for the certificate to
+issue. Then set `manualDnsValidated=true` and run `pulumi up` again to create
+the custom domain and export the traffic CNAME.
 
 Stack outputs include `dnsProvider` (`native`, `cloudflare`, or `manual`) and
 `apiDnsRecords` for verification.

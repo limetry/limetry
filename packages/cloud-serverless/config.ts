@@ -29,6 +29,7 @@ export type ServerlessConfig = {
   apiHostedZoneId?: string
   cloudflareZoneId?: string
   manageDns: boolean
+  manualDnsValidated: boolean
   dnsProvider: DnsProvider
   dnsResourceGroupName?: string
   apiPathPrefix: string
@@ -110,6 +111,7 @@ export function buildServerlessConfig(values: {
   cloudflareZoneId?: string
   dnsProvider?: string
   manageDns?: boolean
+  manualDnsValidated?: boolean
   manageCloudflare?: boolean
   dnsResourceGroupName?: string
   apiPathPrefix?: string
@@ -176,6 +178,7 @@ export function buildServerlessConfig(values: {
     apiHostedZoneId: normalizeAwsHostedZoneId(values.apiHostedZoneId),
     cloudflareZoneId: values.cloudflareZoneId?.trim() || undefined,
     manageDns,
+    manualDnsValidated: values.manualDnsValidated ?? false,
     dnsProvider,
     dnsResourceGroupName: values.dnsResourceGroupName?.trim() || undefined,
     apiPathPrefix: normalizePathPrefix(values.apiPathPrefix),

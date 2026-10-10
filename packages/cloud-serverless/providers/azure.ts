@@ -156,11 +156,21 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
   const manageNativeDns = args.config.manageDns && args.config.dnsProvider === "native"
   const manageCloudflareDns = args.config.manageDns && args.config.dnsProvider === "cloudflare"
   const trafficRecords = managedCertificate && args.config.apiDomain
-    ? pulumi.all([containerApp.latestRevisionFqdn]).apply(([targetFqdn]) => [{
-      content: targetFqdn,
-      name: args.config.apiDomain ?? "",
-      type: "CNAME" as const,
-    } satisfies ServerlessDnsRecord])
+    ? pulumi.all([
+      containerApp.customDomainVerificationId,
+      containerApp.latestRevisionFqdn,
+    ]).apply(([verificationId, targetFqdn]) => [
+      {
+        content: targetFqdn,
+        name: args.config.apiDomain ?? "",
+        type: "CNAME" as const,
+      },
+      {
+        content: verificationId,
+        name: `asuid.${args.config.apiDomain ?? ""}`,
+        type: "TXT" as const,
+      },
+    ] satisfies ServerlessDnsRecord[])
     : undefined
   if (managedCertificate && args.config.apiDomain && manageCloudflareDns && trafficRecords && args.createDnsRecords) {
     args.createDnsRecords("domain", trafficRecords)
@@ -214,13 +224,23 @@ function createAzureDnsRecords(
         return []
       }
       seen.add(key)
-      new azure.dns.CNameRecord(`${name}-dns-${index}`, {
-        record: record.content.toString(),
-        name: recordName,
-        resourceGroupName,
-        ttl: record.ttl ?? 300,
-        zoneName: resolvedZoneName,
-      })
+      if (record.type === "TXT") {
+        new azure.dns.TxtRecord(`${name}-dns-${index}`, {
+          name: recordName,
+          records: [{ value: record.content.toString() }],
+          resourceGroupName,
+          ttl: record.ttl ?? 300,
+          zoneName: resolvedZoneName,
+        })
+      } else {
+        new azure.dns.CNameRecord(`${name}-dns-${index}`, {
+          record: record.content.toString(),
+          name: recordName,
+          resourceGroupName,
+          ttl: record.ttl ?? 300,
+          zoneName: resolvedZoneName,
+        })
+      }
       return [fqdn]
     })
   })

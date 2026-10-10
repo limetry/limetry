@@ -56,7 +56,15 @@ describe("serverless configuration", () => {
     expect(buildServerlessConfig({
       apiDomain: "api.dev.example.com",
       manageDns: false,
-    }).manageDns).toBe(false)
+    })).toMatchObject({
+      manageDns: false,
+      manualDnsValidated: false,
+    })
+    expect(buildServerlessConfig({
+      apiDomain: "api.dev.example.com",
+      manageDns: false,
+      manualDnsValidated: true,
+    }).manualDnsValidated).toBe(true)
     expect(buildServerlessConfig({
       apiHostedZoneId: "Z1234567890ABC",
     }).apiHostedZoneId).toBe("Z1234567890ABC")

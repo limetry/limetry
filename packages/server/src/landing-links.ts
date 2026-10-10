@@ -41,6 +41,23 @@ function trimOrigin(value: string): string {
 }
 
 /**
+ * Escapes values before substituting them into the landing page HTML.
+ *
+ * @param value - Text or URL value inserted into HTML.
+ * @returns HTML-safe value.
+ */
+function escapeHtml(value: string): string {
+  const replacements: Record<string, string> = {
+    "&": "&amp;",
+    "'": "&#39;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+  }
+  return value.replace(/[&<>"']/g, (character) => replacements[character] ?? character)
+}
+
+/**
  * True when the process is a deployed Vercel / Lambda / production runtime.
  *
  * @param source - Process env bag.
@@ -161,10 +178,10 @@ export function renderLandingHtml(
   const appOrigin = trimOrigin(input.appOrigin ?? resolveLandingAppOrigin(source))
   const apiOrigin = trimOrigin(input.apiOrigin ?? resolveLandingApiOrigin(source))
   const rendered = stripHiddenLaunchBlocks(html, source)
-    .replaceAll("__APP_VERSION__", input.appVersion)
-    .replaceAll("__API_ORIGIN__", apiOrigin)
-    .replaceAll("__WEB_ORIGIN__", origin)
-    .replaceAll("__APP_ORIGIN__", appOrigin)
+    .replaceAll("__APP_VERSION__", escapeHtml(input.appVersion))
+    .replaceAll("__API_ORIGIN__", escapeHtml(apiOrigin))
+    .replaceAll("__WEB_ORIGIN__", escapeHtml(origin))
+    .replaceAll("__APP_ORIGIN__", escapeHtml(appOrigin))
     .replaceAll("__YEAR__", String(new Date().getFullYear()))
   return rendered
 }

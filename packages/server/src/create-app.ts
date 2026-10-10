@@ -135,11 +135,20 @@ export function resolvePublicDir(explicit?: string): string | null {
  * @returns Absolute request origin, or undefined when the host is unavailable.
  */
 function resolveRequestOrigin(request: express.Request): string | undefined {
+  const protocol = request.protocol
   const host = request.get("host")
-  if (!host) {
+  if (!host || (protocol !== "http" && protocol !== "https")) {
     return undefined
   }
-  return `${request.protocol}://${host}`
+  try {
+    const origin = new URL(`${protocol}://${host}`)
+    if (origin.pathname !== "/" || origin.search || origin.hash || origin.username || origin.password) {
+      return undefined
+    }
+    return origin.origin
+  } catch {
+    return undefined
+  }
 }
 
 /**
@@ -182,7 +191,12 @@ export function createApp(options: CreateAppOptions): Express {
   }
 
   const app = express()
-  app.set("trust proxy", true)
+  app.set(
+    "trust proxy",
+    (address: string) => address === "127.0.0.1"
+      || address === "::1"
+      || address === "::ffff:127.0.0.1",
+  )
   app.use(express.json({ limit: "1mb" }))
   app.use(createRequestContextMiddleware())
   app.use((_request, _response, next) => {
