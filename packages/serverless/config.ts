@@ -63,7 +63,7 @@ export function defaultApiDomain(stage = "dev"): string {
  */
 export function defaultNeonDatabaseName(stage = "dev"): string {
   const normalizedStage = normalizeStage(stage)
-  const databaseStage = normalizedStage === "production" ? "prod" : normalizedStage
+  const databaseStage = normalizedStage === "production" || normalizedStage === "prod" ? "prod" : normalizedStage
 
   return `limetry-serverless-cloud-${databaseStage}`
 }

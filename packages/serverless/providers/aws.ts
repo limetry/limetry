@@ -58,6 +58,7 @@ export async function createAwsProvider(args: ProviderArgs): Promise<ProviderRes
   api.route("$default", lambda.arn)
 
   return {
+    apiDomain: domain?.name,
     apiImageReference: lambda.name,
     apiUrl: api.url,
     managedDatabaseConnection: rdsDatabase?.connectionString ?? neonDatabase?.connectionString,

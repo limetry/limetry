@@ -141,6 +141,7 @@ export async function createGcpProvider(args: ProviderArgs): Promise<ProviderRes
     : undefined
 
   return {
+    apiDomain: args.config.apiDomain,
     apiImageReference: imageReference,
     apiUrl: args.config.apiDomain
       ? $util.interpolate`https://${args.config.apiDomain}`

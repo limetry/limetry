@@ -30,6 +30,7 @@ export type ProviderArgs = {
 
 /** Shared outputs returned by each provider implementation. */
 export type ProviderResources = {
+  apiDomain?: string
   apiImageReference: pulumi.Input<string>
   apiUrl: pulumi.Output<string>
   dnsRecords?: pulumi.Input<DnsRecord[]>

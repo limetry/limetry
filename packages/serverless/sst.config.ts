@@ -2,8 +2,8 @@ export default $config({
   app(input) {
     return {
       name: "limetry-serverless",
-      removal: input?.stage === "production" ? "retain" : "remove",
-      protect: ["production"].includes(input?.stage),
+      removal: input?.stage === "production" || input?.stage === "prod" ? "retain" : "remove",
+      protect: ["production", "prod"].includes(input?.stage ?? ""),
       home: "aws",
       providers: {
         aws: "7.20.0",
@@ -102,7 +102,7 @@ export default $config({
     return {
       apiImageReference: provider.apiImageReference,
       apiUrl,
-      apiDomain: config.apiDomain,
+      ...(provider.apiDomain ? { apiDomain: provider.apiDomain } : {}),
       cloudProvider: config.cloudProvider,
       databaseMode: config.databaseProvider,
       ...(config.databaseProvider === "neon"

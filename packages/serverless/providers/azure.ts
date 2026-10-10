@@ -148,6 +148,7 @@ export async function createAzureProvider(args: ProviderArgs): Promise<ProviderR
     : undefined
 
   return {
+    apiDomain: args.config.apiDomain,
     apiImageReference: imageReference,
     apiUrl: args.config.apiDomain
       ? $util.interpolate`${args.config.apiCertificateId ? "https" : "http"}://${args.config.apiDomain}`

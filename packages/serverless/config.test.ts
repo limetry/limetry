@@ -18,7 +18,7 @@ describe("buildServerlessConfig", () => {
     expect(config.databaseProvider).toBe("sqlite")
     expect(config.managedDatabase).toBe(false)
     expect(config.sqliteDatabasePath).toBe("/tmp/limetry.sqlite")
-    expect(config.apiDomain).toBe("serverless-cloud.dev.limetry.org")
+    expect(config.apiDomain).toBeUndefined()
     expect(config.neonDatabaseName).toBe("limetry-serverless-cloud-dev")
   })
 
