@@ -25,7 +25,7 @@ config:
   limetry-oss:manageCloudflare: "true"
   limetry-oss:manageRoute53: "false"
   limetry-oss:notificationEmail: hello@limetry.org
-  limetry-oss:portalHostname: dev.app.limetry.com
+  limetry-oss:portalHostname: app.dev.limetry.com
   limetry-oss:replayWindowMs: "300000"
   limetry-oss:serverArtifactPath: ../server/lambda-bundle
   limetry-oss:syncWebAssets: "true"
