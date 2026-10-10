@@ -56,7 +56,7 @@ export function assertCloudflareAuth(): void {
     return
   }
   throw new Error(
-    "Cloudflare DNS is enabled. Set `pulumi config set --secret cloudflare:apiToken <token>`.",
+    "Cloudflare DNS is enabled. Set the `cloudflare:apiToken` Pulumi secret.",
   )
 }
 

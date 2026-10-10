@@ -147,11 +147,11 @@ never leak into deployed stacks.
 Provide stable values explicitly when rotating or restoring a deployment:
 
 ```sh
-pulumi config set --secret bearerToken "replace-with-a-long-token"
-pulumi config set --secret jwtSecret "replace-with-a-long-secret"
-pulumi config set --secret decisionHmacSecret "replace-with-a-long-secret"
-pulumi config set --secret databasePassword "replace-with-a-long-password"
-pulumi config set --secret neonApiKey "replace-with-a-neon-api-key"
+pulumi config set --secret bearerToken "$(openssl rand -hex 32)"
+pulumi config set --secret jwtSecret "$(openssl rand -hex 32)"
+pulumi config set --secret decisionHmacSecret "$(openssl rand -hex 32)"
+pulumi config set --secret databasePassword "$(openssl rand -hex 32)"
+pulumi config set --secret neonApiKey YOUR_NEON_API_KEY
 pulumi config set --secret databaseUrl "postgresql://USER:PASSWORD@HOST/neondb?sslmode=verify-full"
 ```
 
@@ -217,7 +217,7 @@ aws route53 list-hosted-zones-by-name --dns-name example.com
 
 ```sh
 pulumi config set dnsProvider cloudflare
-pulumi config set --secret cloudflare:apiToken "<zone DNS edit token>"
+pulumi config set --secret cloudflare:apiToken YOUR_ZONE_DNS_EDIT_TOKEN
 # optional: pulumi config set cloudflareZoneId "<zone id>"
 ```
 
