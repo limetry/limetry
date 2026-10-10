@@ -4,15 +4,14 @@ import {
   DEFAULT_LIMETRY_BASE_URL,
   DEFAULT_LIMETRY_CLOUD_BASE_URL,
   LIMETRY_CLOUD_ORIGINS,
-  LIMETRY_OSS_ORIGINS,
   resolveLimetryBaseUrl,
   resolveLimetryCloudBaseUrl,
 } from "./urls.js"
 
 describe("resolveLimetryBaseUrl", () => {
-  it("uses the OSS production API when env is unset", () => {
-    expect(resolveLimetryBaseUrl({})).toBe(LIMETRY_OSS_ORIGINS.api)
-    expect(DEFAULT_LIMETRY_BASE_URL).toBe("https://api.limetry.org")
+  it("uses the Cloud production API when env is unset", () => {
+    expect(resolveLimetryBaseUrl({})).toBe(LIMETRY_CLOUD_ORIGINS.api)
+    expect(DEFAULT_LIMETRY_BASE_URL).toBe("https://api.limetry.com")
   })
 
   it("prefers LIMETRY_BASE_URL and strips trailing slashes", () => {
@@ -28,8 +27,8 @@ describe("resolveLimetryBaseUrl", () => {
   })
 
   it("ignores blank env values", () => {
-    expect(resolveLimetryBaseUrl({ LIMETRY_BASE_URL: "   " })).toBe(LIMETRY_OSS_ORIGINS.api)
-    expect(resolveLimetryBaseUrl({}, "  ")).toBe(LIMETRY_OSS_ORIGINS.api)
+    expect(resolveLimetryBaseUrl({ LIMETRY_BASE_URL: "   " })).toBe(LIMETRY_CLOUD_ORIGINS.api)
+    expect(resolveLimetryBaseUrl({}, "  ")).toBe(LIMETRY_CLOUD_ORIGINS.api)
   })
 })
 

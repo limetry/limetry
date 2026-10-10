@@ -27,7 +27,7 @@ export const LIMETRY_CLOUD_ORIGINS = {
 /**
  * Default Limetry evaluate API for OSS npm packages and adapters.
  */
-export const DEFAULT_LIMETRY_BASE_URL = LIMETRY_OSS_ORIGINS.api
+export const DEFAULT_LIMETRY_BASE_URL = LIMETRY_CLOUD_ORIGINS.api
 
 /**
  * Default Limetry Cloud BFF for organization workspaces (`app.limetry.com` agents).
