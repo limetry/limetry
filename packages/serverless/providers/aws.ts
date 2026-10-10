@@ -19,6 +19,18 @@ export async function createAwsProvider(args: ProviderArgs): Promise<ProviderRes
       USE_POSTGRES_STORE: "true",
     }
     : args.environment
+  const domain = args.config.apiDomain && args.config.apiCertificateId
+    ? {
+      cert: args.config.apiCertificateId,
+      dns: false as const,
+      name: args.config.apiDomain,
+    }
+    : args.config.apiDomain && args.config.apiDomainZone
+      ? {
+        dns: sst.aws.dns({ zone: args.config.apiDomainZone }),
+        name: args.config.apiDomain,
+      }
+      : undefined
   const functionArgs = {
     bundle: `${args.repoRoot}/packages/server/lambda-bundle`,
     environment,
@@ -41,14 +53,7 @@ export async function createAwsProvider(args: ProviderArgs): Promise<ProviderRes
   const api = new sst.aws.ApiGatewayV2(`${args.name}-gateway`, {
     accessLog: { retention: "1 month" },
     cors: true,
-    domain: args.config.apiDomain
-      ? {
-        dns: args.config.apiDomainZone
-          ? sst.aws.dns({ zone: args.config.apiDomainZone })
-          : sst.aws.dns(),
-        name: args.config.apiDomain,
-      }
-      : undefined,
+    domain,
   })
   api.route("$default", lambda.arn)
 
@@ -56,6 +61,7 @@ export async function createAwsProvider(args: ProviderArgs): Promise<ProviderRes
     apiImageReference: lambda.name,
     apiUrl: api.url,
     managedDatabaseConnection: rdsDatabase?.connectionString ?? neonDatabase?.connectionString,
+    managedDatabaseHost: neonDatabase?.host,
     provider: "aws",
   }
 }

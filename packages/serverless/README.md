@@ -5,6 +5,10 @@ Google Cloud, or Azure. SST owns the deployment state and orchestration. AWS
 uses SST's Lambda and API Gateway components; GCP and Azure use the Pulumi
 providers configured by SST.
 
+For Pulumi-first deployments (including optional Cloudflare DNS management),
+use [`packages/cloud-serverless`](../cloud-serverless/README.md) instead. Both
+paths run the same `@limetry/server` bundle.
+
 The default deployment is a low-cost SQLite evaluation deployment:
 
 - AWS Lambda with API Gateway HTTP API
@@ -39,11 +43,17 @@ npx sst version
 The package manager only installs and runs tooling; the deployment configuration
 does not require Corepack or a specific package manager.
 
+For local SST deployments, put your non-secret settings in
+`packages/serverless/.env`. SST loads that file when commands run from this
+package directory. Keep `LIMETRY_NEON_API_KEY` in that ignored file or provide
+it through your secret manager; it is required when
+`LIMETRY_DATABASE_PROVIDER=neon`.
+
 Authenticate the selected cloud before deploying:
 
 ```sh
 # AWS
-export AWS_PROFILE=disrupt
+aws sso login
 aws sts get-caller-identity
 
 # GCP
@@ -65,7 +75,7 @@ provider is GCP or Azure.
 The provider defaults to AWS and the location defaults to `us-west-2`:
 
 ```sh
-export AWS_PROFILE=disrupt
+aws sso login
 npm run deploy
 ```
 
@@ -102,9 +112,9 @@ be used by CI, local shells, and different package managers:
 | `LIMETRY_API_IMAGE_REPOSITORY` | provider-created | Use an existing image |
 | `LIMETRY_API_IMAGE_TAG` | `latest` | Container image tag |
 | `LIMETRY_API_PATH_PREFIX` | empty | Reverse-proxy path prefix |
-| `LIMETRY_API_DOMAIN` | generated URL | Custom API hostname |
-| `LIMETRY_API_DOMAIN_ZONE` | provider lookup | AWS Route 53 hosted-zone ID |
-| `LIMETRY_API_CERTIFICATE_ID` | empty | Azure managed-environment certificate resource ID |
+| `LIMETRY_API_DOMAIN` | stage default | Custom API hostname |
+| `LIMETRY_API_DOMAIN_ZONE` | empty | Provider-native DNS zone name or ID |
+| `LIMETRY_API_CERTIFICATE_ID` | empty | Validated certificate ARN for AWS or resource ID for Azure |
 | `LIMETRY_DATABASE_NAME` | `limetry` | PostgreSQL database name |
 | `LIMETRY_DATABASE_USERNAME` | `limetry` | PostgreSQL username |
 | `LIMETRY_NEON_API_KEY` | `NEON_API_KEY` | Neon API key used by Pulumi |
@@ -113,7 +123,7 @@ be used by CI, local shells, and different package managers:
 | `LIMETRY_NEON_REGION` | `aws-us-east-1` | Neon deployment region |
 | `LIMETRY_NEON_BRANCH_NAME` | `main` | Neon default branch name |
 | `LIMETRY_NEON_ROLE_NAME` | `limetry` | Neon default role name |
-| `LIMETRY_NEON_DATABASE_NAME` | `limetry` | Neon default database name |
+| `LIMETRY_NEON_DATABASE_NAME` | stage default | Neon database name |
 | `LIMETRY_MIN_INSTANCES` | `0` | Minimum serverless instances |
 | `LIMETRY_MAX_INSTANCES` | `1` | Maximum serverless instances |
 | `LIMETRY_MEMORY_MB` | provider-specific | Memory allocation |
@@ -148,18 +158,42 @@ creates Azure Container Registry. Docker must be running for those deployments.
 When `LIMETRY_API_IMAGE_REPOSITORY` is supplied, the stack assumes that the
 tagged image already exists and does not push a replacement.
 
-## DNS and API outputs
+## Provider requirements (compute, database, DNS)
 
-Set `LIMETRY_API_DOMAIN` to request a custom hostname. On AWS, SST creates the
-API Gateway custom domain and Route 53 records. Set `LIMETRY_API_DOMAIN_ZONE`
-when more than one Route 53 zone matches the hostname.
+### Compute (`LIMETRY_CLOUD_PROVIDER`)
 
-GCP creates a Cloud Run domain mapping and exposes its required DNS records in
-the `dnsRecords` SST output. Azure exposes the required CNAME and `asuid` TXT
-records in the same output. Add those records at the DNS provider. Azure uses
-HTTP until `LIMETRY_API_CERTIFICATE_ID` references a certificate in the managed
-environment; set that variable before deployment for HTTPS. The stack never
-proxies DNS traffic through a CDN.
+| Provider | Runtime | Auth | Notes |
+| --- | --- | --- | --- |
+| `aws` | Lambda + API Gateway | `AWS_PROFILE` / keys | Default; SST state also lives in AWS |
+| `gcp` | Cloud Run | `gcloud auth application-default login` | Docker required for image push unless `LIMETRY_API_IMAGE_REPOSITORY` is preset |
+| `azure` | Container Apps | `az login` | Docker required unless image repository is preset |
+
+### Database (`LIMETRY_DATABASE_PROVIDER`)
+
+| Mode | When to use | Requirements |
+| --- | --- | --- |
+| `sqlite` | SST default; demos | No external DB; ephemeral per instance |
+| `neon` | Shared durable Postgres | `LIMETRY_NEON_API_KEY` or `NEON_API_KEY` |
+| `rds` | AWS private Postgres | `LIMETRY_CLOUD_PROVIDER=aws`; Lambda in VPC; ongoing cost |
+
+Azure managed PostgreSQL in the Pulumi stack needs `allowPublicDatabase=true`
+when not using VNet integration. The SST path documents the same constraint via
+`LIMETRY_ALLOW_PUBLIC_DATABASE`.
+
+### DNS (custom hostname)
+
+The API hostname defaults to a stage-specific example hostname. Set
+`LIMETRY_API_DOMAIN` and `LIMETRY_API_DOMAIN_ZONE` to use your own domain.
+
+On AWS, SST uses **Route 53** when `LIMETRY_API_DOMAIN_ZONE` is a hosted-zone
+id. GCP and Azure expose required records in the `dnsRecords` output when the
+deploy identity cannot write Cloud DNS or Azure DNS automatically. Records must
+be **DNS-only** (no CDN proxy) so TLS terminates on the cloud load balancer.
+
+Optional Cloudflare-managed DNS (`dnsProvider: cloudflare`) is supported on the
+**Pulumi** stack in `packages/cloud-serverless`, not in this SST package yet.
+
+Azure may need `LIMETRY_API_CERTIFICATE_ID` before HTTPS on a custom domain.
 
 The stack exports:
 
@@ -168,9 +202,18 @@ The stack exports:
 - `openApiJsonUrl`
 - `openApiYamlUrl`
 - `apiImageReference`
+- `apiDomain`
 - `cloudProvider`
 - `databaseMode`
+- `databaseUrl` (secret when a managed database is selected)
+- `databaseHost` (when Neon is selected)
+- `neonDatabaseName` (when Neon is selected)
 - `databaseConnection`
+
+`databaseUrl` is kept secret because it contains the Neon credentials. Retrieve
+the decrypted value only when needed with `sst state export --decrypt` for the
+same stage, or use the Neon console. Never commit the decrypted state.
+
 - `dnsRecords`
 
 The documentation endpoints are `/v1/docs`, `/v1/openapi.json`, and

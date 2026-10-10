@@ -38,9 +38,9 @@ stable password resources and are passed to the API through a Kubernetes Secret.
 Explicit values can be supplied as encrypted Pulumi config:
 
 ```sh
-pulumi config set --secret bearerToken "replace-with-a-long-token"
-pulumi config set --secret jwtSecret "replace-with-a-long-secret"
-pulumi config set --secret decisionHmacSecret "replace-with-a-long-secret"
+pulumi config set --secret bearerToken "$(openssl rand -hex 32)"
+pulumi config set --secret jwtSecret "$(openssl rand -hex 32)"
+pulumi config set --secret decisionHmacSecret "$(openssl rand -hex 32)"
 ```
 
 Neon is provisioned outside the selected Kubernetes provider and uses a pooled
@@ -54,9 +54,9 @@ Neon is the default. Configure its project and region, and provide either
 
 ```sh
 pulumi config set databaseProvider neon
-pulumi config set neonProjectName limetry-core-dev
+pulumi config set neonProjectName example-project
 pulumi config set neonRegion aws-us-east-1
-pulumi config set --secret neonApiKey "replace-with-a-neon-api-key"
+pulumi config set --secret neonApiKey YOUR_NEON_API_KEY
 pulumi config set replicas 2
 ```
 
@@ -78,7 +78,7 @@ The provider SDK must be authenticated before previewing or deploying:
 ### AWS
 
 ```sh
-export AWS_PROFILE=disrupt
+aws sso login
 pulumi config set cloudProvider aws
 pulumi config set location us-west-2
 ```
@@ -142,10 +142,10 @@ registry, configure Docker credentials in the deployment environment.
 
 The API Service defaults to `LoadBalancer`. If `apiDomain` is configured, the
 stack adds ExternalDNS annotations and uses `https://<apiDomain>` in its URL
-outputs. `apiDomainZone` defaults to `limetry.org`:
+outputs. Set `apiDomainZone` to the authoritative DNS zone for your domain:
 
 ```sh
-pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomain api.example.com
 pulumi config set apiDomainZone example.com
 pulumi up
 ```

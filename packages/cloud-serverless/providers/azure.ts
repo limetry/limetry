@@ -153,21 +153,97 @@ export function createAzureProvider(args: ServerlessProviderArgs): ServerlessPro
     },
   })
 
-  if (managedCertificate && args.config.apiDomain && args.createDnsRecords) {
-    args.createDnsRecords("domain", [{
-      content: containerApp.latestRevisionFqdn,
-      name: args.config.apiDomain,
-      type: "CNAME",
-    } satisfies ServerlessDnsRecord])
+  const manageNativeDns = args.config.manageDns && args.config.dnsProvider === "native"
+  const manageCloudflareDns = args.config.manageDns && args.config.dnsProvider === "cloudflare"
+  const trafficRecords = managedCertificate && args.config.apiDomain
+    ? pulumi.all([
+      containerApp.customDomainVerificationId,
+      containerApp.latestRevisionFqdn,
+    ]).apply(([verificationId, targetFqdn]) => [
+      {
+        content: targetFqdn,
+        name: args.config.apiDomain ?? "",
+        type: "CNAME" as const,
+      },
+      {
+        content: verificationId,
+        name: `asuid.${args.config.apiDomain ?? ""}`,
+        type: "TXT" as const,
+      },
+    ] satisfies ServerlessDnsRecord[])
+    : undefined
+  if (managedCertificate && args.config.apiDomain && manageCloudflareDns && trafficRecords && args.createDnsRecords) {
+    args.createDnsRecords("domain", trafficRecords)
+  } else if (managedCertificate && args.config.apiDomain && manageNativeDns && trafficRecords) {
+    const dnsResourceGroupName = args.config.dnsResourceGroupName ?? `${args.name}-resource-group`
+    const zone = azure.dns.getZoneOutput({
+      name: args.config.apiDomainZone,
+      resourceGroupName: dnsResourceGroupName,
+    })
+    createAzureDnsRecords(args.name, zone.name, dnsResourceGroupName, args.config.apiDomainZone, trafficRecords)
   }
 
+  const apiDnsRecords = trafficRecords
+
   return {
+    apiDnsRecords,
     apiImageReference: image.ref,
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`
       : pulumi.interpolate`https://${containerApp.latestRevisionFqdn}`,
     managedDatabaseConnection: database?.connectionString,
   }
+}
+
+/**
+ * Creates records in an Azure DNS zone.
+ *
+ * @param name - Resource prefix.
+ * @param zoneName - Azure DNS zone name.
+ * @param resourceGroupName - Resource group containing the DNS zone.
+ * @param records - Records emitted by Container Apps.
+ * @returns Managed record names.
+ */
+function createAzureDnsRecords(
+  name: string,
+  zoneName: pulumi.Input<string>,
+  resourceGroupName: string,
+  configuredZoneName: string,
+  records: pulumi.Input<ServerlessDnsRecord[]>,
+): pulumi.Output<string[]> {
+  return pulumi.all([zoneName, records]).apply(([resolvedZoneName, resolvedRecords]) => {
+    const seen = new Set<string>()
+    return resolvedRecords.flatMap((record, index) => {
+      const fqdn = record.name.toString().replace(/\.$/, "")
+      const zoneSuffix = `.${configuredZoneName.replace(/\.$/, "")}`
+      const recordName = fqdn === configuredZoneName ? "@" : fqdn.endsWith(zoneSuffix)
+        ? fqdn.slice(0, -zoneSuffix.length)
+        : fqdn
+      const key = `${record.type}:${recordName}`
+      if (seen.has(key)) {
+        return []
+      }
+      seen.add(key)
+      if (record.type === "TXT") {
+        new azure.dns.TxtRecord(`${name}-dns-${index}`, {
+          name: recordName,
+          records: [{ value: record.content.toString() }],
+          resourceGroupName,
+          ttl: record.ttl ?? 300,
+          zoneName: resolvedZoneName,
+        })
+      } else {
+        new azure.dns.CNameRecord(`${name}-dns-${index}`, {
+          record: record.content.toString(),
+          name: recordName,
+          resourceGroupName,
+          ttl: record.ttl ?? 300,
+          zoneName: resolvedZoneName,
+        })
+      }
+      return [fqdn]
+    })
+  })
 }
 
 /**

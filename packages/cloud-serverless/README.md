@@ -7,18 +7,49 @@ compute providers:
 - Google Cloud Run
 - Azure Container Apps
 
-Select exactly one provider with `cloudProvider`. The checked-in development
-configuration defaults to AWS in `us-west-2`.
+Select exactly one provider with `cloudProvider`. New stacks use AWS in
+`us-east-1` unless you choose another provider and location.
+
+## Initialize a stack
+
+Pulumi does not execute a project-defined hook during `pulumi stack init`.
+Use the package wrapper to initialize a stack and apply safe defaults:
+
+```sh
+cd packages/cloud-serverless
+yarn init:stack dev aws us-east-1
+# or: yarn init:stack dev gcp us-central1
+# or: yarn init:stack dev azure westus2
+```
+
+The wrapper sets compute, location, SQLite, scaling, and manual-DNS defaults. It
+does not set domains or secrets. Configure those explicitly before previewing
+or deploying. Raw `pulumi stack init` remains available, but requires manual
+configuration.
+
+## Provider matrix
+
+| Layer | Options | Pulumi keys / notes |
+| --- | --- | --- |
+| Compute | `aws`, `gcp`, `azure` | `cloudProvider`, `location` |
+| Database | `neon`, `sqlite`, `rds` | `databaseProvider`; `rds` requires `aws`; Neon needs `neonApiKey` or `databaseUrl` |
+| DNS | native, cloudflare, manual | `manageDns`, `dnsProvider`; native = Route 53 / Cloud DNS / Azure DNS |
+
+See [Custom API domains and DNS](#custom-api-domains-and-dns) for per-cloud DNS
+setup. For SST-based deploys, see [`packages/serverless`](../serverless/README.md).
 
 ## Persistence defaults
 
-The default is Neon Serverless Postgres:
+The code default is Neon Serverless Postgres:
 
 ```text
 databaseProvider=neon
 neonRegion=aws-us-east-1
 NODE_ENV=serverless
 ```
+
+A newly initialized stack uses SQLite so a fresh preview needs no external
+database credentials. Set `databaseProvider=neon` for shared durable state.
 
 The `/tmp` filesystem is ephemeral and local to one serverless instance. It
 is suitable for demos and single-instance evaluation only. It is not a
@@ -49,26 +80,22 @@ Install Node.js 22+, Docker, Pulumi, and the repository dependencies:
 yarn install
 ```
 
-Build the Lambda bundle before an AWS deployment:
-
-```sh
-yarn build:sdk
-yarn build:preflight
-yarn build:server
-yarn workspace @limetry/server build:lambda
-```
-
-The GCP and Azure adapters build and push the API container from
-`packages/server/Dockerfile` during `pulumi up`.
+The `yarn up` and `yarn preview` package commands build the Lambda bundle
+automatically before Pulumi runs. Direct `pulumi up` and `pulumi preview` also
+rebuild it from the provider program before the archive is hashed. The GCP and
+Azure adapters build and push the API container from
+`packages/server/Dockerfile` during Pulumi evaluation.
 
 ## AWS
 
 ```sh
-export AWS_PROFILE=disrupt
+aws sso login
+aws sts get-caller-identity
 cd packages/cloud-serverless
-pulumi stack init dev
+yarn init:stack dev aws us-east-1
+pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomainZone example.com
 pulumi config set cloudProvider aws
-pulumi config set location us-west-2
 pulumi preview
 pulumi up
 ```
@@ -113,16 +140,19 @@ Container Registry, and Neon API access when the default database is used.
 
 The stack generates encrypted Pulumi secrets for `bearerToken`, `jwtSecret`,
 and `decisionHmacSecret`. RDS also generates `databasePassword` when it is
-selected. Neon uses the `NEON_API_KEY` environment variable or the encrypted
-`neonApiKey` Pulumi config value.
+selected. Neon provisions a project when encrypted `neonApiKey` is set, or uses
+an existing pooled connection from encrypted `databaseUrl`. Configure secrets
+only through Pulumi (not shell environment variables) so local `.env` values
+never leak into deployed stacks.
 Provide stable values explicitly when rotating or restoring a deployment:
 
 ```sh
-pulumi config set --secret bearerToken "replace-with-a-long-token"
-pulumi config set --secret jwtSecret "replace-with-a-long-secret"
-pulumi config set --secret decisionHmacSecret "replace-with-a-long-secret"
-pulumi config set --secret databasePassword "replace-with-a-long-password"
-pulumi config set --secret neonApiKey "replace-with-a-neon-api-key"
+pulumi config set --secret bearerToken "$(openssl rand -hex 32)"
+pulumi config set --secret jwtSecret "$(openssl rand -hex 32)"
+pulumi config set --secret decisionHmacSecret "$(openssl rand -hex 32)"
+pulumi config set --secret databasePassword "$(openssl rand -hex 32)"
+pulumi config set --secret neonApiKey YOUR_NEON_API_KEY
+pulumi config set --secret databaseUrl "postgresql://USER:PASSWORD@HOST/neondb?sslmode=verify-full"
 ```
 
 Useful settings include:
@@ -135,28 +165,88 @@ Useful settings include:
 - `minInstances` and `maxInstances`: Cloud Run or Container Apps scaling.
 - `memoryMb` and `timeoutSeconds`: serverless compute sizing.
 
-## Custom API domains
+## Custom API domains and DNS
 
-Set `apiDomain` to publish the API at a provider-native HTTPS hostname. The
-stack provisions native TLS/custom-domain resources for the selected provider
-and manages DNS-only Cloudflare records:
+Set `apiDomain` and `apiDomainZone` (apex zone, for example `example.com`) to
+publish HTTPS on your hostname. TLS and routing are created by the **compute**
+provider; **DNS** is configured separately.
 
 ```sh
 pulumi config set apiDomain api.dev.example.com
 pulumi config set apiDomainZone example.com
-pulumi config set manageCloudflare true
-pulumi config set --secret cloudflare:apiToken "replace-with-a-zone-dns-token"
+pulumi config set manageDns true
+pulumi config set dnsProvider native
 ```
 
-Cloudflare proxying is intentionally disabled. Set `cloudflareZoneId` when
-the zone cannot be resolved by name. The API's provider endpoint remains
-available through the `apiUrl` stack output.
+### DNS modes (`manageDns` + `dnsProvider`)
+
+| Setting | Behavior |
+| --- | --- |
+| `manageDns: true`, `dnsProvider: native` (default) | Creates records in the selected cloud's DNS service |
+| `manageDns: true`, `dnsProvider: cloudflare` | Creates **DNS-only** Cloudflare records (`proxied: false`) for any compute cloud |
+| `manageDns: false` | Exports validation records first; set `manualDnsValidated=true` after adding them, then deploy again for the traffic record |
+
+Legacy `manageCloudflare: true` is equivalent to `dnsProvider: cloudflare`.
+
+### Native DNS by compute provider
+
+**AWS — Route 53**
+
+1. Public hosted zone for `apiDomainZone` in the deploy AWS account.
+2. Domain NS delegated to Route 53.
+3. Optional `apiHostedZoneId` when name lookup is ambiguous.
+
+```sh
+aws sso login
+aws route53 list-hosted-zones-by-name --dns-name example.com
+```
+
+**GCP — Cloud DNS**
+
+1. Managed zone whose `dnsName` is `apiDomainZone.` (trailing dot in the API).
+2. NS delegated from the parent domain.
+3. Deploy identity can edit record sets in that zone.
+
+**Azure — Azure DNS**
+
+1. DNS zone named `apiDomainZone` in a resource group.
+2. NS delegated from the parent domain.
+3. `dnsResourceGroupName` when the zone is outside the stack resource group.
+
+### Cloudflare DNS (optional, any compute provider)
+
+```sh
+pulumi config set dnsProvider cloudflare
+pulumi config set --secret cloudflare:apiToken YOUR_ZONE_DNS_EDIT_TOKEN
+# optional: pulumi config set cloudflareZoneId "<zone id>"
+```
+
+Cloudflare must already host the zone. Records are never orange-clouded so ACM
+and API Gateway / Cloud Run / Container Apps terminate TLS on the cloud edge.
+
+### Manual DNS
+
+```sh
+pulumi config set manageDns false
+pulumi up
+pulumi stack output apiDnsRecords
+```
+
+Create the exported validation records first and wait for the certificate to
+issue. Then set `manualDnsValidated=true` and run `pulumi up` again to create
+the custom domain and export the traffic CNAME.
+
+Stack outputs include `dnsProvider` (`native`, `cloudflare`, or `manual`) and
+`apiDnsRecords` for verification.
 
 ## Outputs and teardown
 
 ```sh
 pulumi stack output apiUrl
 pulumi stack output databaseMode
+pulumi stack output databaseUrl
+# Use --show-secrets only when the connection string is needed.
+pulumi stack output --show-secrets databaseUrl
 pulumi destroy
 ```
 

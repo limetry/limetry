@@ -12,6 +12,19 @@ import type { ServerlessProviderArgs as ProviderArgs } from "./types"
 export function createNeonDatabase(args: ProviderArgs): {
   connectionString: pulumi.Output<string>
 } {
+  if (args.secrets.databaseUrl) {
+    return {
+      connectionString: pulumi.secret(args.secrets.databaseUrl),
+    }
+  }
+
+  if (!args.secrets.neonApiKey) {
+    throw new Error(
+      "databaseProvider=neon requires neonApiKey or databaseUrl. "
+      + "Set `pulumi config set --secret neonApiKey …` or `pulumi config set --secret databaseUrl …`.",
+    )
+  }
+
   const provider = new neon.Provider(`${args.name}-neon-provider`, {
     apiKey: args.secrets.neonApiKey,
   })
@@ -23,12 +36,12 @@ export function createNeonDatabase(args: ProviderArgs): {
       name: args.config.neonBranchName,
       roleName: args.config.neonRoleName,
     },
+    historyRetentionSeconds: 21600,
     name: args.config.neonProjectName,
     orgId: args.config.neonOrgId,
     pgVersion: 16,
     regionId: args.config.neonRegion,
     storePassword: "yes",
-    suspendTimeoutSeconds: 300,
   }, { provider })
 
   return {

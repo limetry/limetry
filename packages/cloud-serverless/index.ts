@@ -28,8 +28,13 @@ const serverlessConfig = buildServerlessConfig({
   apiImageTag: config.get("apiImageTag"),
   apiDomain: config.get("apiDomain"),
   apiDomainZone: config.get("apiDomainZone"),
+  apiHostedZoneId: config.get("apiHostedZoneId"),
   cloudflareZoneId: config.get("cloudflareZoneId"),
+  dnsProvider: config.get("dnsProvider"),
+  manageDns: config.getBoolean("manageDns"),
+  manualDnsValidated: config.getBoolean("manualDnsValidated"),
   manageCloudflare: config.getBoolean("manageCloudflare"),
+  dnsResourceGroupName: config.get("dnsResourceGroupName"),
   apiPathPrefix: config.get("apiPathPrefix"),
   cloudProvider: config.get("cloudProvider"),
   databaseName: config.get("databaseName"),
@@ -86,8 +91,12 @@ const decisionHmacSecret = resolveSecret("decisionHmacSecret", 64)
 const databasePassword = serverlessConfig.databaseProvider === "rds"
   ? resolveSecret("databasePassword", 40)
   : pulumi.secret("")
-const neonApiKey = config.getSecret("neonApiKey")
-  ?? (process.env.LIMETRY_NEON_API_KEY ? pulumi.secret(process.env.LIMETRY_NEON_API_KEY) : undefined)
+const configuredDatabaseUrl = serverlessConfig.databaseProvider === "neon"
+  ? config.getSecret("databaseUrl")
+  : undefined
+const neonApiKey = serverlessConfig.databaseProvider === "neon"
+  ? config.getSecret("neonApiKey")
+  : undefined
 
 /** Environment variables shared by all serverless provider adapters. */
 const environment = buildServerEnvironment(serverlessConfig, {
@@ -97,29 +106,37 @@ const environment = buildServerEnvironment(serverlessConfig, {
 })
 
 /** Inputs passed to the selected serverless provider adapter. */
+const usesCloudflareDns = serverlessConfig.manageDns
+  && serverlessConfig.dnsProvider === "cloudflare"
+  && Boolean(serverlessConfig.apiDomain)
+
+if (usesCloudflareDns) {
+  assertCloudflareAuth()
+}
+
 const providerArgs: ServerlessProviderArgs = {
   config: serverlessConfig,
-  environment,
-  name,
-  repoRoot,
-  createDnsRecords: serverlessConfig.manageCloudflare && serverlessConfig.apiDomain
+  createDnsRecords: usesCloudflareDns
     ? (resourcePrefix, records) => createCloudflareDnsRecords(
       `${name}-${resourcePrefix}`,
-      resolveCloudflareZoneId(serverlessConfig.apiDomainZone, config.get("cloudflareZoneId")),
+      resolveCloudflareZoneId(
+        serverlessConfig.apiDomainZone,
+        serverlessConfig.cloudflareZoneId,
+      ),
       records,
     )
     : undefined,
+  environment,
+  name,
+  repoRoot,
   secrets: {
     bearerToken,
     databasePassword,
+    databaseUrl: configuredDatabaseUrl,
     decisionHmacSecret,
     jwtSecret,
     neonApiKey,
   },
-}
-
-if (serverlessConfig.apiDomain && serverlessConfig.manageCloudflare) {
-  assertCloudflareAuth()
 }
 
 /** Provider-specific serverless resources. */
@@ -137,8 +154,22 @@ export const apiImageReference = provider.apiImageReference
 /** Selected compute provider. */
 export const cloudProvider = serverlessConfig.cloudProvider
 
+/** DNS backend used for the custom API hostname. */
+export const dnsProvider = serverlessConfig.manageDns
+  ? serverlessConfig.dnsProvider
+  : "manual"
+
 /** Whether the deployment uses a managed PostgreSQL database. */
 export const databaseMode = serverlessConfig.databaseProvider
 
 /** Managed database connection string, hidden unless Pulumi shows secrets. */
-export const databaseConnection = provider.managedDatabaseConnection ?? pulumi.secret("")
+const resolvedDatabaseUrl = provider.managedDatabaseConnection ?? pulumi.secret("")
+
+/** Database URL created by the selected managed provider or supplied in Pulumi config. */
+export const databaseUrl = resolvedDatabaseUrl
+
+/** Backwards-compatible alias for the managed database connection output. */
+export const databaseConnection = resolvedDatabaseUrl
+
+/** DNS records to create when manageDns is false or for verification after deploy. */
+export const apiDnsRecords = provider.apiDnsRecords

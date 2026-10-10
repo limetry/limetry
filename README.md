@@ -108,6 +108,36 @@ yarn build:cli
 
 Start a locally built server with `yarn dev:server`.
 
+## Deploy the serverless API
+
+Two deployment paths share the same API bundle and environment model:
+
+| Path | Package | Orchestration |
+| --- | --- | --- |
+| Pulumi | [`packages/cloud-serverless`](packages/cloud-serverless/README.md) | `pulumi up` per stack |
+| SST | [`packages/serverless`](packages/serverless/README.md) | `npm run deploy` (SST state on AWS) |
+
+Pick one **compute** provider: `aws`, `gcp`, or `azure`. Pick one **database**
+mode: `neon` (shared durable default on Pulumi), `sqlite` (ephemeral), or `rds`
+(AWS only, private VPC). Pick **DNS** when using a custom hostname:
+
+- **`dnsProvider: native`** (default) — Route 53 on AWS, Cloud DNS on GCP,
+  Azure DNS on Azure. The zone must exist in that cloud and be authoritative
+  (nameservers delegated).
+- **`dnsProvider: cloudflare`** — optional; creates **DNS-only** records
+  (`proxied: false`) in Cloudflare for any compute provider.
+- **`manageDns: false`** — no automatic records; apply `apiDnsRecords` from
+  stack output at your registrar.
+
+Install dependencies, authenticate the target cloud, then follow the README for
+the path you chose. Pulumi deployment commands build required Lambda, web, and
+container artifacts automatically. Example (Pulumi, AWS):
+
+```bash
+aws sso login
+cd packages/cloud-serverless && pulumi up
+```
+
 ## Quickstart
 
 ```bash

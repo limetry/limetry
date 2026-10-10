@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import {
   buildServerlessConfig,
+  defaultApiDomain,
+  defaultNeonDatabaseName,
+  isProductionStage,
   parseBoolean,
   parseDatabaseProvider,
   parseServerlessProvider,
@@ -16,6 +19,8 @@ describe("buildServerlessConfig", () => {
     expect(config.databaseProvider).toBe("sqlite")
     expect(config.managedDatabase).toBe(false)
     expect(config.sqliteDatabasePath).toBe("/tmp/limetry.sqlite")
+    expect(config.apiDomain).toBe("serverless-cloud.dev.limetry.org")
+    expect(config.neonDatabaseName).toBe("limetry-serverless-cloud-dev")
   })
 
   it("parses provider-specific deployment settings", () => {
@@ -40,6 +45,13 @@ describe("buildServerlessConfig", () => {
     expect(config.minInstances).toBe(1)
   })
 
+  it("uses production defaults for API and Neon database names", () => {
+    const config = buildServerlessConfig({}, "production")
+
+    expect(config.apiDomain).toBe("serverless-cloud.limetry.org")
+    expect(config.neonDatabaseName).toBe("limetry-serverless-cloud-prod")
+  })
+
   it("rejects invalid boolean and scaling values", () => {
     expect(() => parseBoolean("yes", false)).toThrow(/true/)
     expect(() => buildServerlessConfig({ LIMETRY_MAX_INSTANCES: "0" })).toThrow(/at least 1/)
@@ -55,6 +67,21 @@ describe("parseServerlessProvider", () => {
 
   it("defaults to AWS when no provider is supplied", () => {
     expect(parseServerlessProvider(undefined)).toBe("aws")
+  })
+})
+
+describe("default deployment names", () => {
+  it("normalizes production stage aliases", () => {
+    for (const stage of ["prod", "production"]) {
+      expect(isProductionStage(stage)).toBe(true)
+      expect(defaultApiDomain(stage)).toBe("serverless-cloud.limetry.org")
+      expect(defaultNeonDatabaseName(stage)).toBe("limetry-serverless-cloud-prod")
+    }
+  })
+
+  it("creates isolated names for non-production stages", () => {
+    expect(defaultApiDomain("preview-1")).toBe("serverless-cloud.preview-1.limetry.org")
+    expect(defaultNeonDatabaseName("preview-1")).toBe("limetry-serverless-cloud-preview-1")
   })
 })
 

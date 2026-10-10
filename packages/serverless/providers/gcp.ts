@@ -153,6 +153,7 @@ export async function createGcpProvider(args: ProviderArgs): Promise<ProviderRes
       })))
       : undefined,
     managedDatabaseConnection: cloudSqlDatabase?.connectionString ?? neonDatabase?.connectionString,
+    managedDatabaseHost: neonDatabase?.host,
     provider: "gcp",
   }
 }

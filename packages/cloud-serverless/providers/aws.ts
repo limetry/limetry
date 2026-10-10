@@ -130,22 +130,33 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       validationMethod: "DNS",
     })
     : undefined
-  const validationRecordNames = certificate && args.createDnsRecords
-    ? args.createDnsRecords("validation", certificate.domainValidationOptions.apply((options) =>
-      options.map<ServerlessDnsRecord>((option) => ({
-        content: option.resourceRecordValue,
-        name: option.resourceRecordName,
-        type: "CNAME",
-      })),
-    ))
+  const validationRecords = certificate
+    ? certificate.domainValidationOptions.apply((options) => dedupeAcmValidationRecords(options))
     : undefined
+  const manageNativeDns = args.config.manageDns && args.config.dnsProvider === "native"
+  const manageCloudflareDns = args.config.manageDns && args.config.dnsProvider === "cloudflare"
+  const manualDns = Boolean(args.config.apiDomain) && !args.config.manageDns
+  const dnsZoneId = args.config.apiDomain && manageNativeDns
+    ? resolveRoute53HostedZoneId(args.config)
+    : undefined
+  const validationRecordNames = certificate && validationRecords && manageCloudflareDns && args.createDnsRecords
+    ? args.createDnsRecords("validation", validationRecords)
+    : certificate && dnsZoneId && validationRecords
+      ? createRoute53Records(
+        `${args.name}-validation`,
+        dnsZoneId,
+        validationRecords,
+      )
+      : validationRecords?.apply((records) => records.map((record) => record.name.toString().replace(/\.$/, "")))
   const certificateValidation = certificate && validationRecordNames
+    && (!manualDns || args.config.manualDnsValidated)
     ? new aws.acm.CertificateValidation(`${args.name}-certificate-validation`, {
       certificateArn: certificate.arn,
       validationRecordFqdns: validationRecordNames,
     })
     : undefined
   const customDomain = certificate && args.config.apiDomain
+    && (!manualDns || args.config.manualDnsValidated)
     ? new aws.apigatewayv2.DomainName(`${args.name}-domain`, {
       domainName: args.config.apiDomain,
       domainNameConfiguration: {
@@ -162,15 +173,28 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
       stage: "$default",
     }, { dependsOn: [_stage] })
     : undefined
-  if (customDomain && args.createDnsRecords && args.config.apiDomain) {
-    args.createDnsRecords("traffic", [{
-      content: customDomain.domainNameConfiguration.targetDomainName,
-      name: args.config.apiDomain,
-      type: "CNAME",
-    }])
+  const trafficRecord = customDomain && args.config.apiDomain
+    ? pulumi.all([customDomain.domainNameConfiguration.targetDomainName]).apply(([targetDomainName]) => [{
+      content: targetDomainName,
+      name: args.config.apiDomain ?? "",
+      type: "CNAME" as const,
+    } satisfies ServerlessDnsRecord])
+    : undefined
+  if (customDomain && manageCloudflareDns && args.createDnsRecords && trafficRecord) {
+    args.createDnsRecords("traffic", trafficRecord)
+  } else if (customDomain && dnsZoneId && trafficRecord) {
+    createRoute53Records(`${args.name}-traffic`, dnsZoneId, trafficRecord)
   }
 
+  const apiDnsRecords = manualDns && !args.config.manualDnsValidated
+    ? validationRecords
+    : pulumi.all([
+      validationRecords ?? pulumi.output([]),
+      trafficRecord ?? pulumi.output([]),
+    ]).apply(([validation, traffic]) => [...validation, ...traffic])
+
   return {
+    apiDnsRecords,
     apiImageReference: "lambda-bundle",
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`
@@ -180,10 +204,92 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
 }
 
 /**
- * Builds the Lambda bundle when it is not already present.
+ * Resolves the Route 53 hosted zone id for managed DNS.
+ *
+ * @param config - Normalized serverless configuration.
+ * @returns Hosted zone id output.
+ */
+function resolveRoute53HostedZoneId(
+  config: ServerlessProviderArgs["config"],
+): pulumi.Output<string> {
+  if (config.apiHostedZoneId) {
+    return pulumi.output(config.apiHostedZoneId)
+  }
+  return aws.route53.getZoneOutput({
+    name: `${config.apiDomainZone}.`,
+    privateZone: false,
+  }).zoneId
+}
+
+/**
+ * Deduplicates ACM DNS validation options by record name.
+ *
+ * @param options - Certificate validation options from ACM.
+ * @returns Unique validation records for Route 53 or manual DNS.
+ */
+function dedupeAcmValidationRecords(
+  options: {
+    resourceRecordName: string
+    resourceRecordType: string
+    resourceRecordValue: string
+  }[],
+): ServerlessDnsRecord[] {
+  const seen = new Set<string>()
+  const records: ServerlessDnsRecord[] = []
+  for (const option of options) {
+    if (seen.has(option.resourceRecordName)) {
+      continue
+    }
+    seen.add(option.resourceRecordName)
+    records.push({
+      content: option.resourceRecordValue,
+      name: option.resourceRecordName,
+      type: option.resourceRecordType === "CNAME" ? "CNAME" : "TXT",
+    })
+  }
+  return records
+}
+
+/**
+ * Creates Route 53 records for ACM validation or API traffic.
+ *
+ * @param name - Resource prefix.
+ * @param zoneId - Route 53 hosted zone id.
+ * @param records - Records emitted by the AWS custom-domain resources.
+ * @returns FQDNs of the created records.
+ */
+function createRoute53Records(
+  name: string,
+  zoneId: pulumi.Input<string>,
+  records: pulumi.Input<ServerlessDnsRecord[]>,
+): pulumi.Output<string[]> {
+  return pulumi.all([zoneId, records]).apply(([resolvedZoneId, resolvedRecords]) => {
+    const seen = new Set<string>()
+    return resolvedRecords.flatMap((record, index) => {
+      const recordName = record.name.toString().replace(/\.$/, "")
+      const key = `${record.type}:${recordName}`
+      if (seen.has(key)) {
+        return []
+      }
+      seen.add(key)
+      new aws.route53.Record(`${name}-${index}`, {
+        name: recordName,
+        records: [record.content],
+        ttl: record.ttl ?? 300,
+        type: record.type,
+        zoneId: resolvedZoneId,
+      })
+      return [recordName]
+    })
+  })
+}
+
+/**
+ * Rebuilds the Lambda bundle before every Pulumi evaluation.
  *
  * Pulumi evaluates the program before registering the Lambda resource, so a
  * direct `pulumi up` must prepare the archive before `FileArchive` hashes it.
+ * Rebuilding every time also prevents Pulumi from reusing a stale landing page.
  *
  * @param repoRoot - Repository root containing the server bundle script.
  * @returns Existing or newly generated Lambda bundle directory.
@@ -191,13 +297,11 @@ export function createAwsProvider(args: ServerlessProviderArgs): ServerlessProvi
 function ensureLambdaBundle(repoRoot: string): string {
   const bundlePath = join(repoRoot, "packages/server/lambda-bundle")
   const bundleEntryPoint = join(bundlePath, "lambda.js")
-  if (!existsSync(bundleEntryPoint)) {
-    execFileSync(
-      process.execPath,
-      [join(repoRoot, "packages/server/scripts/build-lambda-bundle.mjs")],
-      { cwd: repoRoot, stdio: "inherit" },
-    )
-  }
+  execFileSync(
+    process.execPath,
+    [join(repoRoot, "packages/server/scripts/build-lambda-bundle.mjs")],
+    { cwd: repoRoot, stdio: "inherit" },
+  )
   if (!existsSync(bundleEntryPoint)) {
     throw new Error(`Lambda bundle was not created at ${bundleEntryPoint}`)
   }

@@ -55,4 +55,16 @@ describe("landing links", () => {
       "<a href=\"https://dev.limetry.org/docs/quick-start\">Docs</a> v1.2.3",
     )
   })
+
+  it("escapes dynamic landing-page values before rendering HTML", () => {
+    const html = renderLandingHtml("<a href=\"__API_ORIGIN__\">__APP_VERSION__</a>", {
+      apiOrigin: "https://example.com/?q=\"unsafe\"",
+      appVersion: "<script>alert(1)</script>",
+      webOrigin: "https://example.com",
+    })
+
+    expect(html).toBe(
+      "<a href=\"https://example.com/?q=&quot;unsafe&quot;\">&lt;script&gt;alert(1)&lt;/script&gt;</a>",
+    )
+  })
 })

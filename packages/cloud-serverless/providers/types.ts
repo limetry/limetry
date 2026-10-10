@@ -25,6 +25,7 @@ export type ServerlessProviderArgs = {
   secrets: {
     bearerToken: pulumi.Input<string>
     databasePassword: pulumi.Input<string>
+    databaseUrl?: pulumi.Input<string>
     decisionHmacSecret: pulumi.Input<string>
     jwtSecret: pulumi.Input<string>
     neonApiKey?: pulumi.Input<string>

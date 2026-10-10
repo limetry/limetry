@@ -1,6 +1,6 @@
 {
   "name": "@limetry/ui",
-  "version": "1.2.64-dev.cloud-agnostic-deploymen.8",
+  "version": "1.2.65-dev.cloud-agnostic-nav.4",
   "description": "Shared design system for Limetry — components, icons, and design tokens.",
   "license": "MIT",
   "type": "module",
@@ -20,6 +20,20 @@
       "browser": "./src/components/drawer-menu.web.tsx",
       "import": "./src/components/drawer-menu.web.tsx",
       "default": "./src/components/drawer-menu.web.tsx"
+    },
+    "./site-header": {
+      "types": "./src/components/site-header.web.tsx",
+      "react-native": "./src/components/site-header.tsx",
+      "browser": "./src/components/site-header.web.tsx",
+      "import": "./src/components/site-header.web.tsx",
+      "default": "./src/components/site-header.web.tsx"
+    },
+    "./theme-toggle": {
+      "types": "./src/components/theme-toggle.web.tsx",
+      "react-native": "./src/components/theme-toggle.tsx",
+      "browser": "./src/components/theme-toggle.web.tsx",
+      "import": "./src/components/theme-toggle.web.tsx",
+      "default": "./src/components/theme-toggle.web.tsx"
     },
     "./tailwind": "./tailwind.config.ts",
     "./global.css": "./src/global.css"

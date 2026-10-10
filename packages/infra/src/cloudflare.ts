@@ -363,7 +363,7 @@ export function assertCloudflareAuth(): void {
   }
   throw new Error(
     "Cloudflare DNS is enabled. Set CLOUDFLARE_API_TOKEN or "
-    + "`pulumi config set --secret cloudflare:apiToken <token>` "
+    + "the `cloudflare:apiToken` Pulumi secret "
     + "(Zone.DNS Edit + Zone.Read). Disable with limetry-oss:manageCloudflare false.",
   )
 }

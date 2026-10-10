@@ -1,9 +1,12 @@
+import { isProductionStage } from "./config"
+
 export default $config({
   app(input) {
+    const productionStage = isProductionStage(input?.stage)
     return {
       name: "limetry-serverless",
-      removal: input?.stage === "production" ? "retain" : "remove",
-      protect: ["production"].includes(input?.stage),
+      removal: productionStage ? "retain" : "remove",
+      protect: productionStage,
       home: "aws",
       providers: {
         aws: "7.20.0",
@@ -21,7 +24,7 @@ export default $config({
     const { createProvider, getProviderFactory } = await import("./providers")
 
     /** Normalized deployment configuration from LIMETRY_* environment variables. */
-    const config = buildServerlessConfig(process.env)
+    const config = buildServerlessConfig(process.env, $app.stage)
 
     /** Repository root used by the Lambda bundle and container image builders. */
     const repoRoot = resolve(process.cwd(), "../..")
@@ -102,14 +105,24 @@ export default $config({
     return {
       apiImageReference: provider.apiImageReference,
       apiUrl,
+      apiDomain: config.apiDomain,
       cloudProvider: config.cloudProvider,
       databaseMode: config.databaseProvider,
+      ...(config.databaseProvider === "neon"
+        ? { neonDatabaseName: config.neonDatabaseName }
+        : {}),
       docsUrl,
       openApiJsonUrl,
       openApiYamlUrl,
       ...(provider.dnsRecords ? { dnsRecords: provider.dnsRecords } : {}),
       ...(provider.managedDatabaseConnection
-        ? { databaseConnection: provider.managedDatabaseConnection }
+        ? {
+          databaseConnection: provider.managedDatabaseConnection,
+          databaseUrl: provider.managedDatabaseConnection,
+        }
+        : {}),
+      ...(provider.managedDatabaseHost
+        ? { databaseHost: provider.managedDatabaseHost }
         : {}),
     }
   },
