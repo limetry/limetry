@@ -379,7 +379,7 @@ function createAwsDatabase(args: ServerlessProviderArgs): {
   })
 
   /** PostgreSQL connection string used by Lambda. */
-  const connectionString = pulumi.secret(pulumi.interpolate`postgresql://${args.config.databaseUsername}:${password}@${cluster.endpoint}:5432/${args.config.databaseName}`)
+  const connectionString = pulumi.secret(pulumi.interpolate`postgresql://${args.config.databaseUsername}:${password}@${cluster.endpoint}:5432/${args.config.databaseName}?sslmode=require`)
 
   return {
     connectionString,
