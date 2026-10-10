@@ -6,6 +6,7 @@ import type { ServerEnv } from "../env.js"
 
 const baseEnv: ServerEnv = {
   LIMETRY_API_PORT: 3810,
+  LIMETRY_API_PATH_PREFIX: "",
   LIMETRY_BEARER_TOKEN: "test-bearer-token-123456",
   DATABASE_URL: "postgresql://localhost:5432/limetry",
   JWT_SECRET: "test-jwt-secret-at-least-32-characters",
