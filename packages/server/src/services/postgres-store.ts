@@ -278,7 +278,9 @@ export async function migratePostgres(pool: Pool, schema = "public"): Promise<vo
   }
   await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`)
   pool.on("connect", (client) => {
-    void client.query(`SET search_path TO "${schema}"`)
+    void client.query(`SET search_path TO "${schema}"`).catch((error: unknown) => {
+      console.error(`Failed to set Postgres search_path to "${schema}"`, error)
+    })
   })
   await pool.query(`SET search_path TO "${schema}";${POSTGRES_MIGRATION_SQL}`)
 }

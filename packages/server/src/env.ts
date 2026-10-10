@@ -48,6 +48,7 @@ const envSchema = z.object({
   LIMETRY_API_PATH_PREFIX: z.string().regex(/^\/?[\w/-]*$/).default(""),
   LIMETRY_BEARER_TOKEN: z.string().min(16),
   DATABASE_URL: z.string().url().default("postgresql://localhost:5432/limetry"),
+  POSTGRES_SCHEMA: z.string().regex(/^[a-z_]+$/).default("public"),
   SQLITE_DATABASE_PATH: z.string().min(1).default("~/.limetry/limetry.sqlite"),
   JWT_SECRET: z.string().min(32),
   REPLAY_WINDOW_MS: z.coerce.number().int().positive().default(300_000),
