@@ -45,14 +45,15 @@ does not require Corepack or a specific package manager.
 
 For local SST deployments, put your non-secret settings in
 `packages/serverless/.env`. SST loads that file when commands run from this
-package directory. Keep `LIMETRY_NEON_API_KEY` in that ignored file or export it
-in the shell; it is required when `LIMETRY_DATABASE_PROVIDER=neon`.
+package directory. Keep `LIMETRY_NEON_API_KEY` in that ignored file or provide
+it through your secret manager; it is required when
+`LIMETRY_DATABASE_PROVIDER=neon`.
 
 Authenticate the selected cloud before deploying:
 
 ```sh
 # AWS
-export AWS_PROFILE=disrupt
+aws sso login
 aws sts get-caller-identity
 
 # GCP
@@ -74,7 +75,7 @@ provider is GCP or Azure.
 The provider defaults to AWS and the location defaults to `us-west-2`:
 
 ```sh
-export AWS_PROFILE=disrupt
+aws sso login
 npm run deploy
 ```
 
@@ -181,9 +182,8 @@ when not using VNet integration. The SST path documents the same constraint via
 
 ### DNS (custom hostname)
 
-The API hostname defaults to `serverless-cloud.dev.limetry.org` for `dev` and
-`serverless-cloud.limetry.org` for `prod`. Set `LIMETRY_API_DOMAIN` and
-`LIMETRY_API_DOMAIN_ZONE` to override.
+The API hostname defaults to a stage-specific example hostname. Set
+`LIMETRY_API_DOMAIN` and `LIMETRY_API_DOMAIN_ZONE` to use your own domain.
 
 On AWS, SST uses **Route 53** when `LIMETRY_API_DOMAIN_ZONE` is a hosted-zone
 id. GCP and Azure expose required records in the `dnsRecords` output when the

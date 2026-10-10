@@ -27,4 +27,4 @@ Legacy `POST /v1/governance/authorize` is marked deprecated for payment-rail dem
 | --- | --- |
 | Schema matches current APIs | Action governance paths |
 | Runnable without GPT UI | Schema-only artifact |
-| Live hosted api.limetry.com | Requires your deploy |
+| Live hosted `https://api.example.com` | Requires your deployment |

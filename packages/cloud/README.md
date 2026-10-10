@@ -54,7 +54,7 @@ Neon is the default. Configure its project and region, and provide either
 
 ```sh
 pulumi config set databaseProvider neon
-pulumi config set neonProjectName limetry-core-dev
+pulumi config set neonProjectName example-project
 pulumi config set neonRegion aws-us-east-1
 pulumi config set --secret neonApiKey "replace-with-a-neon-api-key"
 pulumi config set replicas 2
@@ -78,7 +78,7 @@ The provider SDK must be authenticated before previewing or deploying:
 ### AWS
 
 ```sh
-export AWS_PROFILE=disrupt
+aws sso login
 pulumi config set cloudProvider aws
 pulumi config set location us-west-2
 ```
@@ -142,10 +142,10 @@ registry, configure Docker credentials in the deployment environment.
 
 The API Service defaults to `LoadBalancer`. If `apiDomain` is configured, the
 stack adds ExternalDNS annotations and uses `https://<apiDomain>` in its URL
-outputs. `apiDomainZone` defaults to `limetry.org`:
+outputs. Set `apiDomainZone` to the authoritative DNS zone for your domain:
 
 ```sh
-pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomain api.example.com
 pulumi config set apiDomainZone example.com
 pulumi up
 ```

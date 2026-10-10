@@ -3,6 +3,7 @@
   "main": "index.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "init:stack": "node scripts/init-stack.mjs",
     "preview": "pulumi preview",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",

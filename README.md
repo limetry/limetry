@@ -133,7 +133,7 @@ Install dependencies, build the server bundle, authenticate the target cloud,
 then follow the README for the path you chose. Example (Pulumi, AWS):
 
 ```bash
-export AWS_PROFILE=disrupt
+aws sso login
 yarn workspace @limetry/server build:lambda
 cd packages/cloud-serverless && pulumi up
 ```

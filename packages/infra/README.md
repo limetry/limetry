@@ -51,17 +51,17 @@ pulumi config set --secret decisionHmacSecret "$(openssl rand -hex 32)"
 
 Keep `jwtSecret`, `bearerToken`, and `decisionHmacSecret` private to this stack.
 
-### Already committed in `Pulumi.oss-prod.yaml` (plain)
+### Example stack configuration (plain)
 
 | Key | Current oss-prod value | Notes |
 | ----- | ------------------------ | ------- |
 | `aws:region` | `us-west-2` | AWS provider region (API Gateway, Lambda, S3). CloudFront is global; its ACM certs must be in **us-east-1**. |
-| `domain` | `limetry.com` | Apex for the marketing/docs site |
-| `apiHostname` | `api.limetry.com` | Public evaluate API host |
-| `portalHostname` | `app.limetry.com` | Optional app origin baked into the static export |
+| `domain` | `example.com` | Apex for the marketing/docs site |
+| `apiHostname` | `api.example.com` | Public evaluate API host |
+| `portalHostname` | `app.example.com` | Optional app origin baked into the static export |
 | `manageRoute53` | `false` | DNS lives in Cloudflare |
 | `manageCloudflare` | `true` | Create Cloudflare CNAMEs + ACM DNS validation |
-| `cloudflareZoneName` | `limetry.com` | Cloudflare zone for oss-prod (`limetry.org` on the `dev` stack) |
+| `cloudflareZoneName` | `example.com` | Cloudflare zone for the stack |
 | `createHostedZone` | `false` | Only used if `manageRoute53=true` |
 | `serverArtifactPath` | `../server/lambda-bundle` | Built by Pulumi (`buildArtifacts`) |
 | `webDistPath` | `../web/out` | Built by Pulumi (`LIMETRY_STATIC_EXPORT=1`) |
@@ -77,7 +77,7 @@ Keep `jwtSecret`, `bearerToken`, and `decisionHmacSecret` private to this stack.
 | `neonBranchId` | — | no | Metadata only |
 | `hostedZoneId` | — | no | Existing Route53 zone; required if `manageRoute53=true` and `createHostedZone=false` |
 | `manageCloudflare` | `true` | no | Create Cloudflare DNS + ACM certs. Needs `CLOUDFLARE_API_TOKEN` or `cloudflare:apiToken` |
-| `cloudflareZoneName` | inferred | no | Zone (`limetry.org` for `dev.limetry.org`) |
+| `cloudflareZoneName` | inferred | no | Zone for the configured domain |
 | `cloudflareZoneId` | — | no | Skip zone lookup |
 | `cloudflareProxied` | `false` | no | Ignored. Cloudflare DNS records are always DNS-only (never orange-clouded) |
 | `invalidateOnDeploy` | `true` | no | CloudFront `/*` invalidation when the web dist hash changes |
@@ -203,8 +203,8 @@ configuration whenever a production endpoint changes.
 `manageCloudflare` (default `true`) creates the records during `pulumi up`:
 
 1. ACM DNS validation CNAMEs (DNS-only, not proxied)
-2. Traffic CNAME `dev` → CloudFront (or `@`/`www` on the apex stack) — always DNS-only
-3. Traffic CNAME `api.dev` → API Gateway custom domain — always DNS-only
+2. Traffic CNAME `www` → CloudFront (or `@`/`www` on the apex stack) — always DNS-only
+3. Traffic CNAME `api` → API Gateway custom domain — always DNS-only
 
 > [!WARNING]
 > All Cloudflare DNS records created by Pulumi are **never orange-clouded**
@@ -215,10 +215,13 @@ configuration whenever a production endpoint changes.
 Set a token once:
 
 ```bash
-pulumi config set --secret cloudflare:apiToken "$CLOUDFLARE_API_TOKEN"
+pulumi config set --secret cloudflare:apiToken "<zone-dns-edit-token>"
 ```
 
-The token needs **Zone.DNS Edit** and **Zone.Read** on the zone (`limetry.org` for the `dev` stack). Subsequent deploys sync the static export into the origin **bucket** (one S3 bucket resource, not per-file `BucketObject`s) and invalidate CloudFront `/*` when `packages/web/out` changes.
+The token needs **Zone.DNS Edit** and **Zone.Read** on the configured zone.
+Subsequent deploys sync the static export into the origin **bucket** (one S3
+bucket resource, not per-file `BucketObject`s) and invalidate CloudFront `/*`
+when `packages/web/out` changes.
 
 Existing stacks that still track synced-folder objects can drop them from state (without deleting the files) before the next `pulumi up`:
 
@@ -234,10 +237,10 @@ Create the project in the Neon console (free/launch is enough). This stack does 
 
 | Output | Meaning |
 | -------- | --------- |
-| `websiteUrl` | Public docs/marketing URL (`https://dev.limetry.org` on the `dev` stack) |
+| `websiteUrl` | Public docs/marketing URL (`https://example.com`) |
 | `websiteWwwUrl` | `https://www.…` when the stack is the zone apex; empty otherwise |
 | `websiteEdgeUrl` | CloudFront distribution URL |
-| `apiUrl` / `apiEndpoint` | Legacy OSS stack API output; hosted API is `https://api.dev.limetry.com` |
+| `apiUrl` / `apiEndpoint` | Legacy OSS stack API output; hosted API is `https://api.example.com` |
 | `apiInvokeUrl` | Raw execute-api URL |
 | `appUrl` | Optional app origin baked into the static export |
 | `publicUrls` | All of the above plus Cloudflare CNAME hints |

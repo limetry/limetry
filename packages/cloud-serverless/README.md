@@ -7,8 +7,25 @@ compute providers:
 - Google Cloud Run
 - Azure Container Apps
 
-Select exactly one provider with `cloudProvider`. The checked-in development
-configuration defaults to AWS in `us-west-2`.
+Select exactly one provider with `cloudProvider`. New stacks use AWS in
+`us-east-1` unless you choose another provider and location.
+
+## Initialize a stack
+
+Pulumi does not execute a project-defined hook during `pulumi stack init`.
+Use the package wrapper to initialize a stack and apply safe defaults:
+
+```sh
+cd packages/cloud-serverless
+yarn init:stack dev aws us-east-1
+# or: yarn init:stack dev gcp us-central1
+# or: yarn init:stack dev azure westus2
+```
+
+The wrapper sets compute, location, Neon, scaling, and manual-DNS defaults. It
+does not set domains or secrets. Configure those explicitly before previewing
+or deploying. Raw `pulumi stack init` remains available, but requires manual
+configuration.
 
 ## Provider matrix
 
@@ -23,7 +40,7 @@ setup. For SST-based deploys, see [`packages/serverless`](../serverless/README.m
 
 ## Persistence defaults
 
-The default is Neon Serverless Postgres:
+The code default is Neon Serverless Postgres:
 
 ```text
 databaseProvider=neon
@@ -31,9 +48,8 @@ neonRegion=aws-us-east-1
 NODE_ENV=serverless
 ```
 
-The checked-in `dev` Pulumi stack selects SQLite so a fresh local preview does
-not require external database credentials. Set `databaseProvider=neon` when
-deploying a shared durable database.
+A newly initialized stack uses SQLite so a fresh preview needs no external
+database credentials. Set `databaseProvider=neon` for shared durable state.
 
 The `/tmp` filesystem is ephemeral and local to one serverless instance. It
 is suitable for demos and single-instance evaluation only. It is not a
@@ -79,11 +95,13 @@ The GCP and Azure adapters build and push the API container from
 ## AWS
 
 ```sh
-export AWS_PROFILE=disrupt
+aws sso login
+aws sts get-caller-identity
 cd packages/cloud-serverless
-pulumi stack init dev
+yarn init:stack dev aws us-east-1
+pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomainZone example.com
 pulumi config set cloudProvider aws
-pulumi config set location us-west-2
 pulumi preview
 pulumi up
 ```
@@ -155,13 +173,13 @@ Useful settings include:
 
 ## Custom API domains and DNS
 
-Set `apiDomain` and `apiDomainZone` (apex zone, for example `limetry.dev`) to
+Set `apiDomain` and `apiDomainZone` (apex zone, for example `example.com`) to
 publish HTTPS on your hostname. TLS and routing are created by the **compute**
 provider; **DNS** is configured separately.
 
 ```sh
-pulumi config set apiDomain test.limetry.dev
-pulumi config set apiDomainZone limetry.dev
+pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomainZone example.com
 pulumi config set manageDns true
 pulumi config set dnsProvider native
 ```
@@ -181,12 +199,12 @@ Legacy `manageCloudflare: true` is equivalent to `dnsProvider: cloudflare`.
 **AWS — Route 53**
 
 1. Public hosted zone for `apiDomainZone` in the deploy AWS account.
-2. Domain NS delegated to Route 53 (as for `limetry.dev`).
+2. Domain NS delegated to Route 53.
 3. Optional `apiHostedZoneId` when name lookup is ambiguous.
 
 ```sh
-export AWS_PROFILE=disrupt
-aws route53 list-hosted-zones-by-name --dns-name limetry.dev
+aws sso login
+aws route53 list-hosted-zones-by-name --dns-name example.com
 ```
 
 **GCP — Cloud DNS**
