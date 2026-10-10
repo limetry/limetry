@@ -74,16 +74,9 @@ export function SiteHeader({
   )
 
   useEffect(() => {
-    let cancelled = false
-    void Promise.resolve().then(() => {
-      if (!cancelled) {
-        setMenuOpen(false)
-      }
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [pathname, setMenuOpen])
+    setInternalMenuOpen(false)
+    onMenuOpenChange?.(false)
+  }, [pathname, onMenuOpenChange])
 
   return (
     <>
