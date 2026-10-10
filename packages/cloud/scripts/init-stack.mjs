@@ -23,6 +23,8 @@ if (!Object.hasOwn(defaultLocations, cloudProvider)) {
 }
 
 const location = args[2] ?? defaultLocations[cloudProvider]
+
+function runPulumi(pulumiArgs) {
   execFileSync("pulumi", pulumiArgs, {
     cwd: process.cwd(),
     stdio: "inherit",
