@@ -154,12 +154,18 @@ export function createGcpProvider(args: ServerlessProviderArgs): ServerlessProvi
       args.name,
       managedZoneName,
       project,
+      args.config.apiDomainZone,
       domainDnsRecords,
     )
   }
 
+  const apiDnsRecords = domainDnsRecords?.apply((records) => records.map((record) => ({
+    ...record,
+    name: normalizeGoogleDnsRecordName(record.name.toString(), args.config.apiDomainZone),
+  })))
+
   return {
-    apiDnsRecords: domainDnsRecords,
+    apiDnsRecords,
     apiImageReference: image.ref,
     apiUrl: args.config.apiDomain
       ? pulumi.interpolate`https://${args.config.apiDomain}`
@@ -193,6 +199,25 @@ function resolveGcpManagedZoneName(
 }
 
 /**
+ * Converts a provider-relative record name into a Cloud DNS FQDN.
+ *
+ * @param recordName - Provider-reported record name.
+ * @param configuredZoneName - DNS zone apex.
+ * @returns A fully qualified record name.
+ */
+function normalizeGoogleDnsRecordName(recordName: string, configuredZoneName?: string): string {
+  const zone = configuredZoneName?.replace(/\.$/, "")
+  const name = recordName.replace(/\.$/, "")
+  if (!zone) {
+    return `${name}.`
+  }
+  if (!name || name === "@") {
+    return `${zone}.`
+  }
+  return name === zone || name.endsWith(`.${zone}`) ? `${name}.` : `${name}.${zone}.`
+}
+
+/**
  * Creates records in the configured Google Cloud DNS managed zone.
  *
  * @param name - Resource prefix.
@@ -205,12 +230,13 @@ function createGoogleDnsRecords(
   name: string,
   zoneName: pulumi.Input<string>,
   project: pulumi.Input<string>,
+  configuredZoneName: string,
   records: pulumi.Input<ServerlessDnsRecord[]>,
 ): pulumi.Output<string[]> {
   return pulumi.all([zoneName, project, records]).apply(([resolvedZoneName, resolvedProject, resolvedRecords]) => {
     const seen = new Set<string>()
     return resolvedRecords.flatMap((record, index) => {
-      const recordName = record.name.toString().endsWith(".") ? record.name.toString() : `${record.name}.`
+      const recordName = normalizeGoogleDnsRecordName(record.name.toString(), configuredZoneName)
       const key = `${record.type}:${recordName}`
       if (seen.has(key)) {
         return []
