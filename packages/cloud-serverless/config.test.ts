@@ -4,6 +4,7 @@ import {
   buildServerEnvironment,
   buildServerlessConfig,
   parseDatabaseProvider,
+  parseDnsProvider,
   parseServerlessProvider,
 } from "./config"
 
@@ -43,8 +44,30 @@ describe("serverless configuration", () => {
     expect(buildServerlessConfig({ apiDomain: "https://API.dev.example.com/" })).toMatchObject({
       apiDomain: "api.dev.example.com",
       apiDomainZone: "example.com",
-      manageCloudflare: true,
+      manageDns: true,
     })
+    expect(buildServerlessConfig({
+      apiDomain: "api.dev.example.com",
+      dnsResourceGroupName: "dns",
+    })).toMatchObject({
+      manageDns: true,
+      dnsResourceGroupName: "dns",
+    })
+    expect(buildServerlessConfig({
+      apiDomain: "api.dev.example.com",
+      manageDns: false,
+    })).toMatchObject({
+      manageDns: false,
+      manualDnsValidated: false,
+    })
+    expect(buildServerlessConfig({
+      apiDomain: "api.dev.example.com",
+      manageDns: false,
+      manualDnsValidated: true,
+    }).manualDnsValidated).toBe(true)
+    expect(buildServerlessConfig({
+      apiHostedZoneId: "Z1234567890ABC",
+    }).apiHostedZoneId).toBe("Z1234567890ABC")
     expect(() => buildServerlessConfig({ apiDomain: "https://example.com/path" }))
       .toThrow("apiDomain")
   })
@@ -72,6 +95,18 @@ describe("serverless configuration", () => {
       USE_POSTGRES_STORE: "false",
     })
     expect(buildServerEnvironment(managedConfig, secrets).USE_POSTGRES_STORE).toBe("true")
+  })
+
+  /** Verifies DNS provider defaults and Cloudflare selection. */
+  it("selects DNS providers by configuration", () => {
+    expect(parseDnsProvider(undefined, undefined, false)).toBe("native")
+    expect(parseDnsProvider(undefined, undefined, true)).toBe("native")
+    expect(parseDnsProvider("cloudflare", undefined, true)).toBe("cloudflare")
+    expect(parseDnsProvider(undefined, true, true)).toBe("cloudflare")
+    expect(buildServerlessConfig({
+      apiDomain: "api.example.com",
+      dnsProvider: "cloudflare",
+    }).dnsProvider).toBe("cloudflare")
   })
 
   /** Verifies database provider defaults and AWS-only RDS validation. */

@@ -26,6 +26,7 @@ import {
   resolveLandingWebOrigin,
 } from "./landing-links.js"
 import { createBearerAuthMiddleware, requireScopes } from "./middleware/bearer-auth.js"
+import { jsonApiErrorHandler, jsonApiNotFoundHandler } from "./middleware/json-errors.js"
 import { createRequestContextMiddleware, logger, metrics } from "./observability.js"
 import { runOssPreflight } from "./preflight.js"
 import { createActionRoutes } from "./routes/actions.js"
@@ -128,6 +129,29 @@ export function resolvePublicDir(explicit?: string): string | null {
 }
 
 /**
+ * Resolves the public origin for request-scoped API examples.
+ *
+ * @param request - Incoming Express request.
+ * @returns Absolute request origin, or undefined when the host is unavailable.
+ */
+function resolveRequestOrigin(request: express.Request): string | undefined {
+  const protocol = request.protocol
+  const host = request.get("host")
+  if (!host || (protocol !== "http" && protocol !== "https")) {
+    return undefined
+  }
+  try {
+    const origin = new URL(`${protocol}://${host}`)
+    if (origin.pathname !== "/" || origin.search || origin.hash || origin.username || origin.password) {
+      return undefined
+    }
+    return origin.origin
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * Reads the Swagger UI document and points it at the requested OpenAPI spec.
  *
  * @param publicDir - Directory containing the packaged documentation assets.
@@ -167,6 +191,12 @@ export function createApp(options: CreateAppOptions): Express {
   }
 
   const app = express()
+  app.set(
+    "trust proxy",
+    (address: string) => address === "127.0.0.1"
+      || address === "::1"
+      || address === "::ffff:127.0.0.1",
+  )
   app.use(express.json({ limit: "1mb" }))
   app.use(createRequestContextMiddleware())
   app.use((_request, _response, next) => {
@@ -176,12 +206,13 @@ export function createApp(options: CreateAppOptions): Express {
 
   const publicDir = resolvePublicDir(options.publicDir)
   if (publicDir) {
-    app.get("/", (_request, response) => {
+    app.get("/", (request, response) => {
       const html = renderLandingHtml(
         readFileSync(join(publicDir, "index.html"), "utf8"),
         {
           appVersion: APP_VERSION,
           appOrigin: resolveLandingAppOrigin(),
+          apiOrigin: resolveRequestOrigin(request),
           webOrigin: resolveLandingWebOrigin(),
         },
       )
@@ -266,6 +297,9 @@ export function createApp(options: CreateAppOptions): Express {
     approvalStore,
     userService,
   })
+
+  app.use(jsonApiNotFoundHandler)
+  app.use(jsonApiErrorHandler)
 
   return app
 }

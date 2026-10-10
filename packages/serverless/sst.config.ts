@@ -1,9 +1,12 @@
+import { isProductionStage } from "./config"
+
 export default $config({
   app(input) {
+    const productionStage = isProductionStage(input?.stage)
     return {
       name: "limetry-serverless",
-      removal: input?.stage === "production" ? "retain" : "remove",
-      protect: ["production"].includes(input?.stage),
+      removal: productionStage ? "retain" : "remove",
+      protect: productionStage,
       home: "aws",
       providers: {
         aws: "7.20.0",

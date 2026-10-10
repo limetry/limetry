@@ -4,6 +4,21 @@ import * as pulumi from "@pulumi/pulumi"
 import type { ServerlessDnsRecord } from "./providers/types"
 
 /**
+ * Normalizes a DNS record hostname to an absolute FQDN without a trailing dot.
+ *
+ * @param value - Relative or absolute DNS name.
+ * @returns Lowercase FQDN.
+ */
+export function normalizeDnsName(value: string): string {
+  return value
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.$/, "")
+    .toLowerCase()
+}
+
+/**
  * Resolves a Cloudflare zone id from an explicit id or an active zone name.
  *
  * @param zoneName - Cloudflare zone name.
@@ -37,35 +52,16 @@ export function resolveCloudflareZoneId(
  */
 export function assertCloudflareAuth(): void {
   const config = new pulumi.Config("cloudflare")
-  if (config.get("apiToken") || process.env.CLOUDFLARE_API_TOKEN) {
+  if (config.get("apiToken")) {
     return
   }
   throw new Error(
-    "Cloudflare DNS is enabled. Set CLOUDFLARE_API_TOKEN or "
-    + "`pulumi config set --secret cloudflare:apiToken <token>`",
+    "Cloudflare DNS is enabled. Set the `cloudflare:apiToken` Pulumi secret.",
   )
 }
 
 /**
- * Normalizes a DNS record hostname to an absolute FQDN without a trailing dot.
- *
- * @param value - Relative or absolute DNS name.
- * @returns Lowercase FQDN.
- */
-export function normalizeDnsName(value: string): string {
-  return value
-    .trim()
-    .replace(/^https?:\/\//i, "")
-    .replace(/\/.*$/, "")
-    .replace(/\.$/, "")
-    .toLowerCase()
-}
-
-/**
  * Creates or adopts DNS-only Cloudflare records for a provider custom domain.
- *
- * The provider callback is evaluated only after provider outputs are known,
- * allowing ACM, Cloud Run, and Azure validation records to be adopted safely.
  *
  * @param name - Pulumi resource prefix.
  * @param zoneId - Cloudflare zone id.
@@ -96,7 +92,7 @@ export function createCloudflareDnsRecords(
         zoneId: resolvedZoneId,
       })
       new cloudflare.DnsRecord(`${name}-dns-${index}`, {
-        comment: "Limetry provider custom domain",
+        comment: "Limetry serverless custom domain",
         content: record.content,
         name: recordName,
         proxied: false,

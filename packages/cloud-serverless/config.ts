@@ -12,15 +12,26 @@ export type DatabaseProvider = "neon" | "rds" | "sqlite"
 /** Supported database provider identifiers. */
 export const DATABASE_PROVIDERS: DatabaseProvider[] = ["neon", "rds", "sqlite"]
 
+/** DNS management backends when `manageDns` is true. */
+export type DnsProvider = "native" | "cloudflare"
+
+/** Supported DNS provider identifiers. */
+export const DNS_PROVIDERS: DnsProvider[] = ["native", "cloudflare"]
+
 /** Normalized serverless deployment configuration. */
 export type ServerlessConfig = {
   allowPublicDatabase: boolean
   apiImageRepository?: string
   apiImageTag: string
   apiDomain?: string
-  cloudflareZoneId?: string
   apiDomainZone: string
-  manageCloudflare: boolean
+  /** AWS Route 53 hosted zone id (`Z…`) when lookup by `apiDomainZone` is not used. */
+  apiHostedZoneId?: string
+  cloudflareZoneId?: string
+  manageDns: boolean
+  manualDnsValidated: boolean
+  dnsProvider: DnsProvider
+  dnsResourceGroupName?: string
   apiPathPrefix: string
   cloudProvider: ServerlessProvider
   databaseProvider: DatabaseProvider
@@ -95,9 +106,14 @@ export function buildServerlessConfig(values: {
   apiImageRepository?: string
   apiImageTag?: string
   apiDomain?: string
-  cloudflareZoneId?: string
   apiDomainZone?: string
+  apiHostedZoneId?: string
+  cloudflareZoneId?: string
+  dnsProvider?: string
+  manageDns?: boolean
+  manualDnsValidated?: boolean
   manageCloudflare?: boolean
+  dnsResourceGroupName?: string
   apiPathPrefix?: string
   cloudProvider?: string
   databaseProvider?: string
@@ -146,19 +162,25 @@ export function buildServerlessConfig(values: {
   }
 
   const apiDomain = normalizeApiDomain(values.apiDomain)
-  const manageCloudflare = values.manageCloudflare ?? Boolean(apiDomain)
-  if (apiDomain && !manageCloudflare) {
-    throw new Error("manageCloudflare must be true when apiDomain is configured")
-  }
+  const manageDns = values.manageDns ?? Boolean(apiDomain)
+  const dnsProvider = parseDnsProvider(
+    values.dnsProvider,
+    values.manageCloudflare,
+    manageDns,
+  )
 
   return {
     allowPublicDatabase: values.allowPublicDatabase ?? false,
     apiImageRepository: values.apiImageRepository?.trim() || undefined,
     apiImageTag: values.apiImageTag?.trim() || "latest",
     apiDomain,
-    cloudflareZoneId: values.cloudflareZoneId?.trim() || undefined,
     apiDomainZone: values.apiDomainZone?.trim() || inferDnsZone(values.apiDomain),
-    manageCloudflare,
+    apiHostedZoneId: normalizeAwsHostedZoneId(values.apiHostedZoneId),
+    cloudflareZoneId: values.cloudflareZoneId?.trim() || undefined,
+    manageDns,
+    manualDnsValidated: values.manualDnsValidated ?? false,
+    dnsProvider,
+    dnsResourceGroupName: values.dnsResourceGroupName?.trim() || undefined,
     apiPathPrefix: normalizePathPrefix(values.apiPathPrefix),
     cloudProvider,
     databaseProvider,
@@ -211,10 +233,53 @@ function normalizeApiDomain(value: string | undefined): string | undefined {
 }
 
 /**
- * Infers the Cloudflare zone from a public hostname.
+ * Parses the DNS management backend for custom domains.
+ *
+ * @param value - Raw dnsProvider value.
+ * @param legacyManageCloudflare - Deprecated manageCloudflare flag.
+ * @param manageDns - Whether DNS is managed by the stack.
+ * @param cloudProvider - Selected compute provider.
+ * @returns Native or Cloudflare DNS management.
+ */
+export function parseDnsProvider(
+  value: string | undefined,
+  legacyManageCloudflare: boolean | undefined,
+  manageDns: boolean,
+): DnsProvider {
+  if (!manageDns) {
+    return "native"
+  }
+  if (value === "cloudflare" || legacyManageCloudflare === true) {
+    return "cloudflare"
+  }
+  if (value === "native" || !value) {
+    return "native"
+  }
+  throw new Error(`Unsupported dnsProvider "${value}". Use native or cloudflare.`)
+}
+
+/**
+ * Normalizes an AWS Route 53 hosted zone id.
+ *
+ * @param value - Raw zone id from Pulumi config.
+ * @returns Zone id or undefined when omitted.
+ */
+function normalizeAwsHostedZoneId(value: string | undefined): string | undefined {
+  const trimmed = value?.trim() ?? ""
+  if (trimmed.length === 0) {
+    return undefined
+  }
+  if (!/^Z[A-Z0-9]+$/i.test(trimmed)) {
+    throw new Error("apiHostedZoneId must be an AWS Route 53 hosted zone id (for example Z1234567890ABC)")
+  }
+  return trimmed.toUpperCase()
+}
+
+/**
+ * Infers the DNS zone from a public hostname.
  *
  * @param value - Configured API hostname.
- * @returns Inferred zone or the production default.
+ * @returns Inferred zone apex or the production default.
  */
 function inferDnsZone(value: string | undefined): string {
   const hostname = normalizeApiDomain(value)

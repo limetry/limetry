@@ -20,7 +20,8 @@ export function createNeonDatabase(args: ProviderArgs): {
 
   if (!args.secrets.neonApiKey) {
     throw new Error(
-      "databaseProvider=neon requires neonApiKey or DATABASE_URL. Set Pulumi neonApiKey, NEON_API_KEY, or DATABASE_URL.",
+      "databaseProvider=neon requires neonApiKey or databaseUrl. "
+      + "Set `pulumi config set --secret neonApiKey …` or `pulumi config set --secret databaseUrl …`.",
     )
   }
 

@@ -48,7 +48,7 @@ export type ServerlessEnvironment = Record<string, string | undefined>
  */
 export function defaultApiDomain(stage = "dev"): string {
   const normalizedStage = normalizeStage(stage)
-  const hostnameStage = normalizedStage === "production" || normalizedStage === "prod"
+  const hostnameStage = isProductionStage(normalizedStage)
     ? ""
     : `.${normalizedStage}`
 
@@ -63,9 +63,20 @@ export function defaultApiDomain(stage = "dev"): string {
  */
 export function defaultNeonDatabaseName(stage = "dev"): string {
   const normalizedStage = normalizeStage(stage)
-  const databaseStage = normalizedStage === "production" ? "prod" : normalizedStage
+  const databaseStage = isProductionStage(normalizedStage) ? "prod" : normalizedStage
 
   return `limetry-serverless-cloud-${databaseStage}`
+}
+
+/**
+ * Returns whether a stage uses production retention and protection settings.
+ *
+ * @param stage - Raw SST stage name.
+ * @returns Whether the stage is `prod` or `production`.
+ */
+export function isProductionStage(stage: string | undefined): boolean {
+  const normalizedStage = normalizeStage(stage ?? "")
+  return normalizedStage === "prod" || normalizedStage === "production"
 }
 
 /**
@@ -278,6 +289,6 @@ function normalizeDomain(value: string | undefined): string | undefined {
  * @param value - Raw stage name.
  * @returns A safe stage identifier.
  */
-function normalizeStage(value: string): string {
+export function normalizeStage(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-") || "dev"
 }
