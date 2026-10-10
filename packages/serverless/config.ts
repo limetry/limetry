@@ -148,7 +148,7 @@ export function buildServerlessConfig(
   return {
     allowPublicDatabase: parseBoolean(values.LIMETRY_ALLOW_PUBLIC_DATABASE, false),
     apiCertificateId: values.LIMETRY_API_CERTIFICATE_ID?.trim() || undefined,
-    apiDomain: normalizeDomain(values.LIMETRY_API_DOMAIN) ?? defaultApiDomain(stage),
+apiDomain: normalizeDomain(values.LIMETRY_API_DOMAIN),
     apiDomainZone: values.LIMETRY_API_DOMAIN_ZONE?.trim() || undefined,
     apiImageRepository: values.LIMETRY_API_IMAGE_REPOSITORY?.trim() || undefined,
     apiImageTag: values.LIMETRY_API_IMAGE_TAG?.trim() || "latest",
