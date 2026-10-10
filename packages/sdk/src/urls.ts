@@ -19,7 +19,7 @@ export const LIMETRY_OSS_ORIGINS = {
  */
 export const LIMETRY_CLOUD_ORIGINS = {
   web: "https://limetry.com",
-  api: "https://api.limetry.com",
+  api: "https://api.app.limetry.com",
   app: "https://app.limetry.com",
   ossApi: "https://api.limetry.com",
 } as const

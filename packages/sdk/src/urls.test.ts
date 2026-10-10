@@ -34,8 +34,8 @@ describe("resolveLimetryBaseUrl", () => {
 })
 
 describe("LIMETRY_CLOUD_ORIGINS", () => {
-  it("points the hosted API at api.limetry.com", () => {
-    expect(LIMETRY_CLOUD_ORIGINS.api).toBe("https://api.limetry.com")
+  it("points the hosted API at api.app.limetry.com", () => {
+    expect(LIMETRY_CLOUD_ORIGINS.api).toBe("https://api.app.limetry.com")
     expect(LIMETRY_CLOUD_ORIGINS.web).toBe("https://limetry.com")
   })
 })
