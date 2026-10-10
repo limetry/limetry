@@ -310,7 +310,7 @@ export async function prepareApp(env: ServerEnv): Promise<{
 
   if (env.USE_POSTGRES_STORE) {
     const pool = new Pool({ connectionString: env.DATABASE_URL })
-    await migratePostgres(pool, "evaluate")
+    await migratePostgres(pool)
     postgresPool = pool
     options.policyRegistry = new PostgresPolicyRegistry(pool)
     options.stateStore = new PostgresGovernanceStateStore(pool)
