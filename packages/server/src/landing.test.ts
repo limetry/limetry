@@ -60,6 +60,7 @@ describe("landing page", () => {
       expect(response.text).not.toContain("__APP_VERSION__")
       expect(response.text).not.toContain("__WEB_ORIGIN__")
       expect(response.text).toContain("https://dev.limetry.org/docs/quick-start")
+      expect(response.text).toContain('href="/openapi"')
       expect(response.text).toContain("Agent action governance — evaluate, allow, deny, and audit tool calls before they land.")
       expect(response.text).toContain("© ")
       expect(response.text).not.toContain("__YEAR__")
