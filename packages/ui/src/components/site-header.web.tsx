@@ -53,16 +53,17 @@ export function SiteHeader({
   topOffset = 64,
 }: SiteHeaderProps): JSX.Element {
   const [internalMenuOpen, setInternalMenuOpen] = useState(false)
+  const controlledMenuOpenRef = useRef(controlledMenuOpen)
+  const onMenuOpenChangeRef = useRef(onMenuOpenChange)
+  controlledMenuOpenRef.current = controlledMenuOpen
+  onMenuOpenChangeRef.current = onMenuOpenChange
   const menuOpen = controlledMenuOpen ?? internalMenuOpen
-  const setMenuOpen = useCallback(
-    (open: boolean): void => {
-      if (controlledMenuOpen === undefined) {
-        setInternalMenuOpen(open)
-      }
-      onMenuOpenChange?.(open)
-    },
-    [controlledMenuOpen, onMenuOpenChange],
-  )
+  const setMenuOpen = useCallback((open: boolean): void => {
+    if (controlledMenuOpenRef.current === undefined) {
+      setInternalMenuOpen(open)
+    }
+    onMenuOpenChangeRef.current?.(open)
+  }, [])
   const NavigationLink = (props: SiteHeaderLinkProps): JSX.Element => (
     <LinkComponent
       {...props}
