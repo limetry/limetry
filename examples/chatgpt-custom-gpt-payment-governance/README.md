@@ -1,6 +1,7 @@
 # ChatGPT Custom GPT Actions
 
-OpenAPI 3.1 schema aligned with Limetry **action governance**:
+OpenAPI 3.1 schema for connecting a Custom GPT Action to Limetry **action
+governance**:
 
 - `PUT /v1/policies/{policyId}`
 - `POST /v1/policy/evaluate`
@@ -21,10 +22,11 @@ Legacy `POST /v1/governance/authorize` is marked deprecated for payment-rail dem
 - On deny, surface `reasons` to the user; do not invent approval.
 - Prefer evaluate/record over legacy authorize unless settling a payment rail.
 
-## Scope
+## Scope and boundaries
 
-| Claim | Reality |
+| Demonstrated | Boundary |
 | --- | --- |
-| Schema matches current APIs | Action governance paths |
-| Runnable without GPT UI | Schema-only artifact |
-| Live hosted `https://api.example.com` | Requires your deployment |
+| Current governance paths | The schema covers policy upsert, evaluate, record, and audit |
+| GPT Action integration | Import the schema in the ChatGPT builder and configure bearer auth |
+| Standalone execution | Not runnable by itself; it is an OpenAPI artifact for the GPT UI |
+| Payment settlement | Not implemented; the legacy authorize path is documented as deprecated |

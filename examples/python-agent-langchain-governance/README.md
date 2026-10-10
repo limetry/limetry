@@ -1,9 +1,10 @@
 # Python LangChain-style governance
 
 Plain-Python simulation of a LangChain-style agent that upserts an `ActionPolicy` and evaluates
-`ActionIntent`s over HTTP before provisioning cloud resources.
+`ActionIntent`s over HTTP before a caller could provision cloud resources.
 
-The LangChain SDK is **not** a dependency. The example uses the HTTP evaluate contract only.
+The LangChain SDK is **not** a dependency. The example uses the HTTP evaluate
+contract only and makes no cloud-provider calls or resource changes.
 
 ## Quickstart
 
@@ -30,10 +31,11 @@ Default base URL is `http://localhost:3810` (not the marketed cloud host).
 1. Upsert action policy (`max_cost_minor` $10.00, allow `provision_instance` on `aws:ec2:*`)
 2. Evaluate intent for `t3.micro` (allow) vs `g5.4xlarge` (deny)
 
-## Scope
+## Scope and boundaries
 
-| Claim | Reality |
+| Demonstrated | Boundary |
 | --- | --- |
-| HTTP evaluate contract | Upsert + `/v1/policy/evaluate` |
-| Cost ceiling deny | Unit tests with mocked httpx |
-| Live LangChain SDK | Not used — simulation |
+| HTTP evaluate contract | Policy upsert + `/v1/policy/evaluate` |
+| Cost ceiling deny | Unit tests with mocked `httpx` |
+| LangChain integration | Not included; this is a plain-Python simulation |
+| Cloud provisioning | Not performed; no AWS or other provider SDK is called |

@@ -19,14 +19,16 @@ confirmed high-severity issues.
 Limetry is a **policy evaluation and audit/telemetry control plane** for agent tool calls and
 optional payment-domain intents. It is not a payment network, custody layer, or MPC signer.
 
-Honest boundaries:
+The security boundary is explicit:
 
-| Claim | Reality |
+| Capability | Actual boundary |
 | --- | --- |
-| Policy eval + audit | Authoritative when clients call Limetry (`/v1/policy/evaluate`, MCP/CLI). Decisions can include HMAC receipts (`DECISION_HMAC_SECRET`). Audit rows are written for evaluations and recorded actions. |
-| Agents cannot bypass Limetry | **False unless you wire it.** An agent that skips evaluate never hits Limetry. Enforce in your agent loop or with resource-side middleware. |
-| Decisions prove execution | **No.** Evaluate returns allow/deny; `POST /v1/actions/record` is telemetry about what the agent claims it did. |
-| Settle proves payment | **Settle records a claimed rail receipt** when the optional payment path is used. With `X402_FACILITATOR_URL`, Limetry verifies with the facilitator; otherwise settle may be signature-verification-only. |
+| Policy evaluation | Authoritative for callers that invoke Limetry (`/v1/policy/evaluate`, MCP, or CLI). |
+| Decision integrity | Evaluations can include HMAC receipts when `DECISION_HMAC_SECRET` is configured. |
+| Audit | The server records evaluation and caller-reported action events; it cannot observe calls that bypass Limetry. |
+| Agent enforcement | Not automatic. Enforce evaluation in the agent loop or with resource-side middleware. |
+| Execution proof | Not provided. `POST /v1/actions/record` records what the caller reports, not independently verified execution. |
+| Payment settlement | `settle` records a claimed rail receipt. With `X402_FACILITATOR_URL`, Limetry verifies with the facilitator; otherwise verification may be signature-only. |
 
 ## Scope
 
