@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto"
+
 import * as azure from "@pulumi/azure-native"
 import type { RegistryArgs } from "@pulumi/docker-build/types/input"
 import * as k8s from "@pulumi/kubernetes"
@@ -82,6 +84,22 @@ export function createAzureProvider(
       username: credentials.apply((value) => value.username),
     }]
     : undefined
+
+  // Allow the AKS kubelet identity to pull the private registry image.
+  if (registry && cluster) {
+    new azure.authorization.RoleAssignment(`${name}-acr-pull`, {
+      name: registry.id.apply((id) => {
+        const hash = createHash("sha256").update(id).digest("hex")
+        return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`
+      }),
+      principalId: cluster.identityProfile.apply(
+        (profile) => profile?.kubeletidentity?.objectId ?? "",
+      ),
+      principalType: "ServicePrincipal",
+      roleDefinitionId: pulumi.interpolate`${registry.id}/providers/Microsoft.Authorization/roleDefinitions/7f951dda-4ed3-4680-a7ca-43fe172d538d`,
+      scope: registry.id,
+    })
+  }
 
   return {
     cloudProvider: "azure",
