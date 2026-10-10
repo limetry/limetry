@@ -44,7 +44,7 @@ function cacheControlFor(key) {
     || key.endsWith(".txt")
     || (!key.includes(".") && !key.startsWith("_next/"))
   ) {
-    return "public, max-age=60, stale-while-revalidate=300"
+    return "public, max-age=0, must-revalidate"
   }
   return "public, max-age=3600"
 }
