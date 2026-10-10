@@ -208,23 +208,42 @@ function createGoogleDnsRecords(
   records: pulumi.Input<ServerlessDnsRecord[]>,
 ): pulumi.Output<string[]> {
   return pulumi.all([zoneName, project, records]).apply(([resolvedZoneName, resolvedProject, resolvedRecords]) => {
-    const seen = new Set<string>()
-    return resolvedRecords.flatMap((record, index) => {
-      const recordName = record.name.toString().endsWith(".") ? record.name.toString() : `${record.name}.`
+    const groupedRecords = new Map<string, {
+      contents: string[]
+      name: string
+      ttl: number
+      type: ServerlessDnsRecordType
+    }>()
+    for (const record of resolvedRecords) {
+      const normalizedName = record.name.toString().replace(/\.$/, "").toLowerCase()
+      const recordName = `${normalizedName}.`
       const key = `${record.type}:${recordName}`
-      if (seen.has(key)) {
-        return []
+      const group = groupedRecords.get(key)
+      const content = record.content.toString()
+      if (group) {
+        if (!group.contents.includes(content)) {
+          group.contents.push(content)
+        }
+        continue
       }
-      seen.add(key)
-      new gcp.dns.RecordSet(`${name}-dns-${index}`, {
-        managedZone: resolvedZoneName,
+      groupedRecords.set(key, {
+        contents: [content],
         name: recordName,
-        project: resolvedProject,
-        rrdatas: [record.content.toString()],
         ttl: record.ttl ?? 300,
         type: record.type,
       })
-      return [recordName]
+    }
+
+    return [...groupedRecords.values()].map((record, index) => {
+      new gcp.dns.RecordSet(`${name}-dns-${index}`, {
+        managedZone: resolvedZoneName,
+        name: record.name,
+        project: resolvedProject,
+        rrdatas: record.contents,
+        ttl: record.ttl,
+        type: record.type,
+      })
+      return record.name
     })
   })
 }

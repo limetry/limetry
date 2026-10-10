@@ -4,6 +4,7 @@ import {
   buildServerlessConfig,
   defaultApiDomain,
   defaultNeonDatabaseName,
+  isProductionStage,
   parseBoolean,
   parseDatabaseProvider,
   parseServerlessProvider,
@@ -71,8 +72,11 @@ describe("parseServerlessProvider", () => {
 
 describe("default deployment names", () => {
   it("normalizes production stage aliases", () => {
-    expect(defaultApiDomain("prod")).toBe("serverless-cloud.limetry.org")
-    expect(defaultNeonDatabaseName("prod")).toBe("limetry-serverless-cloud-prod")
+    for (const stage of ["prod", "production"]) {
+      expect(isProductionStage(stage)).toBe(true)
+      expect(defaultApiDomain(stage)).toBe("serverless-cloud.limetry.org")
+      expect(defaultNeonDatabaseName(stage)).toBe("limetry-serverless-cloud-prod")
+    }
   })
 
   it("creates isolated names for non-production stages", () => {
