@@ -78,7 +78,7 @@ export function collectOssEnvChecks(env: ServerEnv, nodeEnv = process.env.NODE_E
     envCheck({
       name: "USE_POSTGRES_STORE",
       display: env.USE_POSTGRES_STORE ? "true" : "false",
-      ok: env.USE_POSTGRES_STORE || !isProduction(nodeEnv),
+      ok: env.USE_POSTGRES_STORE || Boolean(env.SQLITE_DATABASE_PATH),
       required: isProduction(nodeEnv),
     }),
     envCheck({
