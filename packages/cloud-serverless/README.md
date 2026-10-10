@@ -22,7 +22,7 @@ yarn init:stack dev aws us-east-1
 # or: yarn init:stack dev azure westus2
 ```
 
-The wrapper sets compute, location, Neon, scaling, and manual-DNS defaults. It
+The wrapper sets compute, location, SQLite, scaling, and manual-DNS defaults. It
 does not set domains or secrets. Configure those explicitly before previewing
 or deploying. Raw `pulumi stack init` remains available, but requires manual
 configuration.
