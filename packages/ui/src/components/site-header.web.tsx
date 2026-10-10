@@ -119,7 +119,9 @@ export function SiteHeader({
             ) : null}
           </div>
 
-          <div className="hidden shrink-0 items-center gap-2 lg:flex">{desktopActions}</div>
+          <div className="hidden shrink-0 flex-nowrap items-center gap-2 lg:flex">
+            {desktopActions}
+          </div>
 
           <div className="flex items-center gap-1 lg:hidden">
             {mobileActions}
