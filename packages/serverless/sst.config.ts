@@ -11,12 +11,13 @@ export default $config({
         "azure-native": "3.28.0",
         "docker-build": "0.0.22",
         gcp: "10.1.0",
+        random: "4.21.2",
       },
     }
   },
   async run() {
     const { resolve } = await import("node:path")
-    const { randomBytes } = await import("node:crypto")
+    const random = await import("@pulumi/random")
     const { buildServerEnvironment, buildServerlessConfig } = await import("./config")
     const { createProvider, getProviderFactory } = await import("./providers")
 
@@ -41,7 +42,11 @@ export default $config({
       if (configured) {
         return $util.secret(configured)
       }
-      return $util.secret(randomBytes(length).toString("base64url"))
+      const generated = new random.RandomPassword(`limetry-${environmentKey}`, {
+        length,
+        special: false,
+      })
+      return $util.secret(generated.result)
     }
 
     /** Bearer token used by the API's machine-to-machine authentication middleware. */
@@ -101,6 +106,7 @@ export default $config({
 
     return {
       apiImageReference: provider.apiImageReference,
+      bearerToken,
       apiUrl,
       apiDomain: config.apiDomain,
       cloudProvider: config.cloudProvider,
