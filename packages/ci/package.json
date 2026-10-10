@@ -1,6 +1,6 @@
 {
   "name": "@limetry/ci",
-  "version": "1.2.65-dev.cloud-agnostic-nav.3",
+  "version": "1.2.65-dev.cloud-agnostic-nav.4",
   "description": "Limetry GitHub Action and helpers for CI privilege and release gating",
   "license": "MIT",
   "type": "module",
