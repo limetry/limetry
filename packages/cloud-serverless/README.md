@@ -80,17 +80,11 @@ Install Node.js 22+, Docker, Pulumi, and the repository dependencies:
 yarn install
 ```
 
-Build the Lambda bundle before an AWS deployment:
-
-```sh
-yarn build:sdk
-yarn build:preflight
-yarn build:server
-yarn workspace @limetry/server build:lambda
-```
-
-The GCP and Azure adapters build and push the API container from
-`packages/server/Dockerfile` during `pulumi up`.
+The `yarn up` and `yarn preview` package commands build the Lambda bundle
+automatically before Pulumi runs. Direct `pulumi up` and `pulumi preview` also
+rebuild it from the provider program before the archive is hashed. The GCP and
+Azure adapters build and push the API container from
+`packages/server/Dockerfile` during Pulumi evaluation.
 
 ## AWS
 

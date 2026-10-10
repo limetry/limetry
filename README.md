@@ -129,12 +129,12 @@ mode: `neon` (shared durable default on Pulumi), `sqlite` (ephemeral), or `rds`
 - **`manageDns: false`** — no automatic records; apply `apiDnsRecords` from
   stack output at your registrar.
 
-Install dependencies, build the server bundle, authenticate the target cloud,
-then follow the README for the path you chose. Example (Pulumi, AWS):
+Install dependencies, authenticate the target cloud, then follow the README for
+the path you chose. Pulumi deployment commands build required Lambda, web, and
+container artifacts automatically. Example (Pulumi, AWS):
 
 ```bash
 aws sso login
-yarn workspace @limetry/server build:lambda
 cd packages/cloud-serverless && pulumi up
 ```
 

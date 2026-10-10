@@ -3,7 +3,10 @@
   "main": "index.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build:lambda": "yarn workspace @limetry/server build:lambda",
     "init:stack": "node scripts/init-stack.mjs",
+    "prepreview": "yarn build:lambda",
+    "preup": "yarn build:lambda",
     "preview": "pulumi preview",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
