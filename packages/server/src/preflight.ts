@@ -44,8 +44,8 @@ function isProduction(nodeEnv: string | undefined): boolean {
 /**
  * Builds env-status checks for bearer/JWT/HMAC secrets and store URLs.
  *
- * In production, `DECISION_HMAC_SECRET` and `USE_POSTGRES_STORE` are required;
- * `DATABASE_URL` is required when Postgres store is enabled. Redis is optional.
+ * In production, `DECISION_HMAC_SECRET` is required; `DATABASE_URL` is
+ * required when Postgres store is enabled. Redis is optional.
  *
  * @param env - Validated server environment.
  * @param nodeEnv - `NODE_ENV` used for required/ok thresholds.
@@ -78,8 +78,8 @@ export function collectOssEnvChecks(env: ServerEnv, nodeEnv = process.env.NODE_E
     envCheck({
       name: "USE_POSTGRES_STORE",
       display: env.USE_POSTGRES_STORE ? "true" : "false",
-      ok: env.USE_POSTGRES_STORE || !isProduction(nodeEnv),
-      required: isProduction(nodeEnv),
+      ok: true,
+      required: false,
     }),
     envCheck({
       name: "DATABASE_URL",
