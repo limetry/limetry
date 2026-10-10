@@ -10,19 +10,19 @@ if (!stackName || stackName.startsWith("-")) {
   process.exit(1)
 }
 
-const cloudProvider = args[1] ?? "aws"
-const location = args[2] ?? {
+const defaultLocations = {
   aws: "us-east-1",
   gcp: "us-central1",
   azure: "westus2",
-}[cloudProvider]
+}
+const cloudProvider = args[1] ?? "aws"
 
-if (!location) {
+if (!Object.hasOwn(defaultLocations, cloudProvider)) {
   console.error(`Unsupported cloud provider "${cloudProvider}"`)
   process.exit(1)
 }
 
-const runPulumi = (pulumiArgs) => {
+const location = args[2] ?? defaultLocations[cloudProvider]
   execFileSync("pulumi", pulumiArgs, {
     cwd: process.cwd(),
     stdio: "inherit",
