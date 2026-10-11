@@ -48,7 +48,7 @@ describe("landing page", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers["content-type"]).toMatch(/html/)
-      expect(response.text).toContain("Limetry Central")
+      expect(response.text).toContain("Limetry API home")
       expect(response.text).toContain("/v1/policy/evaluate")
       expect(response.text).toContain("Available paths")
       expect(response.text).toContain("https://oss-api-dev.limetry.org/health")
