@@ -4,8 +4,7 @@
     {
       "name": "Run All",
       "configurations": [
-        "MCP",
-        "Server",
+        "API",
         "Web",
       ]
     }
@@ -13,7 +12,7 @@
   "configurations": [
     {
       "type": "node",
-      "name": "Server",
+      "name": "API",
       "request": "launch",
       "cwd": "${workspaceFolder}",
       "runtimeExecutable": "yarn",
@@ -27,21 +26,6 @@
       "skipFiles": [
         "<node_internals>/**"
       ]
-    },
-    {
-      "type": "node",
-      "name": "MCP",
-      "request": "launch",
-      "runtimeExecutable": "yarn",
-      "runtimeArgs": [
-        "dev:mcp"
-      ],
-      "env": {
-        "NODE_ENV": "development",
-        "LIMETRY_API_KEY": "replace-with-secure-bearer-token",
-        "LIMETRY_BASE_URL": "http://localhost:3810"
-      },
-      "console": "integratedTerminal"
     },
     {
       "type": "node",
