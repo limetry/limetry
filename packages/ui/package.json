@@ -1,6 +1,6 @@
 {
   "name": "@limetry/ui",
-  "version": "1.2.64",
+  "version": "1.2.65",
   "description": "Shared design system for Limetry — components, icons, and design tokens.",
   "license": "MIT",
   "type": "module",
@@ -20,6 +20,20 @@
       "browser": "./src/components/drawer-menu.web.tsx",
       "import": "./src/components/drawer-menu.web.tsx",
       "default": "./src/components/drawer-menu.web.tsx"
+    },
+    "./site-header": {
+      "types": "./src/components/site-header.web.tsx",
+      "react-native": "./src/components/site-header.tsx",
+      "browser": "./src/components/site-header.web.tsx",
+      "import": "./src/components/site-header.web.tsx",
+      "default": "./src/components/site-header.web.tsx"
+    },
+    "./theme-toggle": {
+      "types": "./src/components/theme-toggle.web.tsx",
+      "react-native": "./src/components/theme-toggle.tsx",
+      "browser": "./src/components/theme-toggle.web.tsx",
+      "import": "./src/components/theme-toggle.web.tsx",
+      "default": "./src/components/theme-toggle.web.tsx"
     },
     "./tailwind": "./tailwind.config.ts",
     "./global.css": "./src/global.css"
@@ -62,7 +76,7 @@
     "react-native-css-interop": "^0.2.6",
     "react-native-reanimated": "~3.17.5",
     "react-native-svg": "15.15.5",
-    "tailwindcss": "^3.4.19",
+    "tailwindcss": "^4.3.3",
     "tsup": "^8.5.0",
     "typescript": "^5.8.2",
     "vitest": "4.1.11"

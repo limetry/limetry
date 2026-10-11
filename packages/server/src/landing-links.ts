@@ -16,6 +16,11 @@ export const CANONICAL_WEB_ORIGIN = "https://limetry.org"
 export const CANONICAL_APP_ORIGIN = "https://app.limetry.com"
 
 /**
+ * Default GitHub repository URL for landing header links.
+ */
+export const CANONICAL_GITHUB_URL = "https://github.com/limetry/limetry"
+
+/**
  * Local marketing site origin used when not in a deployed runtime.
  */
 export const LOCAL_WEB_ORIGIN = "http://localhost:3800"
@@ -26,6 +31,11 @@ export const LOCAL_WEB_ORIGIN = "http://localhost:3800"
 export const LOCAL_APP_ORIGIN = "http://localhost:3830"
 
 /**
+ * Local API origin used when a landing page is rendered outside a request.
+ */
+export const LOCAL_API_ORIGIN = "http://localhost:3810"
+
+/**
  * Strips a trailing slash from an origin URL.
  *
  * @param value - Origin or URL string.
@@ -33,6 +43,23 @@ export const LOCAL_APP_ORIGIN = "http://localhost:3830"
  */
 function trimOrigin(value: string): string {
   return value.replace(/\/$/, "")
+}
+
+/**
+ * Escapes values before substituting them into the landing page HTML.
+ *
+ * @param value - Text or URL value inserted into HTML.
+ * @returns HTML-safe value.
+ */
+function escapeHtml(value: string): string {
+  const replacements: Record<string, string> = {
+    "&": "&amp;",
+    "'": "&#39;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+  }
+  return value.replace(/[&<>"']/g, (character) => replacements[character] ?? character)
 }
 
 /**
@@ -87,6 +114,38 @@ export function resolveLandingAppOrigin(
 }
 
 /**
+ * Resolves the GitHub URL injected into the API landing header.
+ *
+ * @param source - Process env bag; defaults to `process.env`.
+ * @returns Absolute GitHub URL without a trailing slash.
+ */
+export function resolveLandingGithubUrl(
+  source: NodeJS.ProcessEnv = process.env,
+): string {
+  const explicit = source.NEXT_PUBLIC_GITHUB_URL ?? source.GITHUB_URL
+  if (explicit && explicit.trim().length > 0) {
+    return trimOrigin(explicit.trim())
+  }
+  return CANONICAL_GITHUB_URL
+}
+
+/**
+ * Resolves the API origin used by landing-page examples.
+ *
+ * @param source - Process env bag; defaults to `process.env`.
+ * @returns Absolute origin without a trailing slash.
+ */
+export function resolveLandingApiOrigin(
+  source: NodeJS.ProcessEnv = process.env,
+): string {
+  const explicit = source.LIMETRY_PUBLIC_BASE_URL ?? source.LIMETRY_BASE_URL
+  if (explicit && explicit.trim().length > 0) {
+    return trimOrigin(explicit.trim())
+  }
+  return LOCAL_API_ORIGIN
+}
+
+/**
  * Builds the quick-start docs URL for the API landing page.
  *
  * @param webOrigin - Absolute marketing origin from {@link resolveLandingWebOrigin}.
@@ -133,15 +192,18 @@ export function stripHiddenLaunchBlocks(
  */
 export function renderLandingHtml(
   html: string,
-  input: { appVersion: string, appOrigin?: string, webOrigin: string },
+  input: { apiOrigin?: string, appVersion: string, appOrigin?: string, webOrigin: string },
   source: NodeJS.ProcessEnv = process.env,
 ): string {
   const origin = trimOrigin(input.webOrigin)
   const appOrigin = trimOrigin(input.appOrigin ?? resolveLandingAppOrigin(source))
+  const apiOrigin = trimOrigin(input.apiOrigin ?? resolveLandingApiOrigin(source))
   const rendered = stripHiddenLaunchBlocks(html, source)
-    .replaceAll("__APP_VERSION__", input.appVersion)
-    .replaceAll("__WEB_ORIGIN__", origin)
-    .replaceAll("__APP_ORIGIN__", appOrigin)
+    .replaceAll("__APP_VERSION__", escapeHtml(input.appVersion))
+    .replaceAll("__API_ORIGIN__", escapeHtml(apiOrigin))
+    .replaceAll("__WEB_ORIGIN__", escapeHtml(origin))
+    .replaceAll("__APP_ORIGIN__", escapeHtml(appOrigin))
+    .replaceAll("__GITHUB_URL__", escapeHtml(resolveLandingGithubUrl(source)))
     .replaceAll("__YEAR__", String(new Date().getFullYear()))
   return rendered
 }

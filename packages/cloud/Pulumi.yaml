@@ -1,0 +1,16 @@
+name: limetry-serverless
+description: Deploy the Limetry API to AWS Lambda, GCP Cloud Run, or Azure Container Apps
+runtime:
+  name: nodejs
+  options:
+    packagemanager: yarn
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript
+packages:
+  neon:
+    source: terraform-provider
+    version: 1.4.0
+    parameters:
+      - kislerdm/neon

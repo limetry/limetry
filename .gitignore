@@ -29,6 +29,7 @@ package.json.pack-backup
 **/.venv/
 *.pyc
 .vercel
+.limetry/
 
 .env.sentry-build-plugin
 

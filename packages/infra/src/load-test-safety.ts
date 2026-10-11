@@ -3,6 +3,8 @@ const LOAD_TEST_STACK_PREFIXES = ["load-target-", "load-test-"]
 export const DEFAULT_LOAD_TEST_PROTECTED_STACK_NAMES = ["dev", "prod"] as const
 
 export const DEFAULT_LOAD_TEST_PROTECTED_HOSTNAMES = [
+  "api.dev.limetry.com",
+  "api.limetry.com",
   "api.dev.limetry.org",
   "api.limetry.org",
   "dev.limetry.org",

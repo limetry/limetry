@@ -68,7 +68,7 @@ export async function setupCommand(): Promise<void> {
 
   const { target } = await inquirer.prompt<{ target: SetupTarget }>([
     {
-      type: "list",
+      type: "select",
       name: "target",
       message: "Which API will this CLI use?",
       choices: [

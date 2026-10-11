@@ -25,6 +25,7 @@ type ProxyHandler = (
  * Warm-start cache for the serverless-express proxy.
  */
 let cachedHandler: ProxyHandler | undefined
+let apiPathPrefix = ""
 
 /**
  * Lazily builds and caches the Express-backed Lambda proxy handler.
@@ -38,6 +39,7 @@ async function resolveHandler(): Promise<ProxyHandler> {
   }
 
   const env = loadEnv()
+  apiPathPrefix = env.LIMETRY_API_PATH_PREFIX.replace(/\/$/, "")
   initServerTelemetry()
   const { app } = await prepareApp(env)
   cachedHandler = serverlessExpress({ app }) as unknown as ProxyHandler
@@ -60,6 +62,19 @@ export async function handler(
   context: Context,
 ): Promise<APIGatewayProxyStructuredResultV2> {
   const resolved = await resolveHandler()
-  const result = await resolved(event, context)
+  const normalizedEvent = apiPathPrefix && event.rawPath.startsWith(apiPathPrefix)
+    ? {
+      ...event,
+      rawPath: event.rawPath.slice(apiPathPrefix.length) || "/",
+      requestContext: {
+        ...event.requestContext,
+        http: {
+          ...event.requestContext.http,
+          path: event.requestContext.http.path.slice(apiPathPrefix.length) || "/",
+        },
+      },
+    }
+    : event
+  const result = await resolved(normalizedEvent, context)
   return result as APIGatewayProxyStructuredResultV2
 }

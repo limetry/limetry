@@ -1,0 +1,315 @@
+# Limetry serverless deployment
+
+This Pulumi program deploys the Limetry API to one of three serverless
+compute providers:
+
+- AWS Lambda with API Gateway HTTP API
+- Google Cloud Run
+- Azure Container Apps
+
+Select exactly one provider with `cloudProvider`. New stacks use AWS in
+`us-east-1` unless you choose another provider and location.
+
+## Initialize a stack
+
+Pulumi does not execute a project-defined hook during `pulumi stack init`.
+Use the package wrapper to initialize a stack and apply safe defaults:
+
+```sh
+cd packages/cloud
+yarn init:stack dev aws us-east-1
+# or: yarn init:stack dev gcp us-central1
+# or: yarn init:stack dev azure westus2
+```
+
+The wrapper sets compute, location, SQLite, scaling, and manual-DNS defaults. It
+does not set domains or secrets. Configure those explicitly before previewing
+or deploying. Raw `pulumi stack init` remains available, but requires manual
+configuration.
+
+## Provider matrix
+
+| Layer | Options | Pulumi keys / notes |
+| --- | --- | --- |
+| Compute | `aws`, `gcp`, `azure` | `cloudProvider`, `location` |
+| Database | `neon`, `sqlite`, `rds` | `databaseProvider`; `rds` requires `aws`; Neon needs `neonApiKey` or `databaseUrl` |
+| DNS | native, cloudflare, manual | `manageDns`, `dnsProvider`; native = Route 53 / Cloud DNS / Azure DNS |
+
+See [Custom API domains and DNS](#custom-api-domains-and-dns) for per-cloud DNS
+
+## Persistence defaults
+
+The code default is Neon Serverless Postgres:
+
+```text
+databaseProvider=neon
+neonRegion=aws-us-east-1
+NODE_ENV=serverless
+```
+
+A newly initialized stack uses SQLite so a fresh preview needs no external
+database credentials. Set `databaseProvider=neon` for shared durable state.
+
+The `/tmp` filesystem is ephemeral and local to one serverless instance. It
+is suitable for demos and single-instance evaluation only. It is not a
+durable shared database, and scaling to multiple instances can produce
+different policy and audit state in different instances.
+
+The `serverless` runtime marker keeps SQLite-compatible startup preflight
+enabled while still requiring production-strength bearer, JWT, and HMAC
+secrets.
+
+Set `databaseProvider=sqlite` for ephemeral local storage, or
+`databaseProvider=rds` with `cloudProvider=aws` to provision:
+
+AWS provisions Aurora Serverless v2, starting at 0.5 ACU, in the default VPC.
+Neon is managed outside the selected compute provider and uses a pooled
+connection string. RDS uses private AWS connectivity from Lambda.
+
+Managed PostgreSQL adds ongoing charges even when request volume is low. Review
+the current provider pricing before enabling it. `pulumi destroy` removes the
+database resources, but backups or retained snapshots may incur separate
+charges.
+
+## Prerequisites
+
+Install Node.js 22+, Docker, Pulumi, and the repository dependencies:
+
+```sh
+yarn install
+```
+
+The `yarn up` and `yarn preview` package commands build the Lambda bundle
+automatically before Pulumi runs. Direct `pulumi up` and `pulumi preview` also
+rebuild it from the provider program before the archive is hashed. The GCP and
+Azure adapters build and push the API container from
+`packages/server/Dockerfile` during Pulumi evaluation.
+
+## AWS
+
+```sh
+aws login
+aws sts get-caller-identity
+cd packages/cloud
+yarn init:stack dev aws us-east-1
+pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomainZone example.com
+pulumi config set cloudProvider aws
+pulumi preview
+pulumi up
+```
+
+The AWS identity needs permissions for Lambda, API Gateway, IAM, VPC
+descriptions, security groups, and, when `databaseProvider=rds`, Aurora and
+subnet resources. The managed database uses the default VPC and private
+security-group access from Lambda.
+
+## Google Cloud
+
+```sh
+gcloud auth application-default login
+gcloud config set project YOUR_PROJECT_ID
+cd packages/cloud
+pulumi stack init gcp-dev
+pulumi config set cloudProvider gcp
+pulumi config set location us-central1
+pulumi preview
+pulumi up
+```
+
+The Google identity needs permissions for Artifact Registry, Cloud Run,
+service accounts, IAM, and Neon API access when the default database is used.
+
+## Azure
+
+```sh
+az login
+cd packages/cloud
+pulumi stack init azure-dev
+pulumi config set cloudProvider azure
+pulumi config set location westus2
+pulumi preview
+pulumi up
+```
+
+The Azure identity needs permissions for resource groups, Container Apps,
+Container Registry, and Neon API access when the default database is used.
+
+## Secrets and configuration
+
+The stack generates encrypted Pulumi secrets for `bearerToken`, `jwtSecret`,
+and `decisionHmacSecret`. RDS also generates `databasePassword` when it is
+selected. Neon provisions a project when encrypted `neonApiKey` is set, or uses
+an existing pooled connection from encrypted `databaseUrl`. Configure secrets
+only through Pulumi (not shell environment variables) so local `.env` values
+never leak into deployed stacks.
+Provide stable values explicitly when rotating or restoring a deployment:
+
+```sh
+pulumi config set --secret bearerToken "$(openssl rand -hex 32)"
+pulumi config set --secret jwtSecret "$(openssl rand -hex 32)"
+pulumi config set --secret decisionHmacSecret "$(openssl rand -hex 32)"
+pulumi config set --secret databasePassword "$(openssl rand -hex 32)"
+pulumi config set --secret neonApiKey YOUR_NEON_API_KEY
+pulumi config set --secret databaseUrl "postgresql://USER:PASSWORD@HOST/neondb?sslmode=verify-full"
+```
+
+Useful settings include:
+
+- `apiImageRepository`: existing image repository instead of the provider-
+  created registry. Configure image-pull credentials through the target
+  provider when the repository is private.
+- `apiImageTag`: image tag, default `latest`.
+- `apiPathPrefix`: path prefix when the API is behind another proxy.
+- `minInstances` and `maxInstances`: Cloud Run or Container Apps scaling.
+- `memoryMb` and `timeoutSeconds`: serverless compute sizing.
+
+## Custom API domains and DNS
+
+Set `apiDomain` and `apiDomainZone` (apex zone, for example `example.com`) to
+publish HTTPS on your hostname. TLS and routing are created by the **compute**
+provider; **DNS** is configured separately.
+
+```sh
+pulumi config set apiDomain api.dev.example.com
+pulumi config set apiDomainZone example.com
+pulumi config set manageDns true
+pulumi config set dnsProvider native
+```
+
+### DNS modes (`manageDns` + `dnsProvider`)
+
+| Setting | Behavior |
+| --- | --- |
+| `manageDns: true`, `dnsProvider: native` (default) | Creates records in the selected cloud's DNS service |
+| `manageDns: true`, `dnsProvider: cloudflare` | Creates **DNS-only** Cloudflare records (`proxied: false`) for any compute cloud |
+| `manageDns: false` | Exports validation records first; set `manualDnsValidated=true` after adding them, then deploy again for the traffic record |
+
+Legacy `manageCloudflare: true` is equivalent to `dnsProvider: cloudflare`.
+
+### Native DNS by compute provider
+
+**AWS — Route 53**
+
+1. Public hosted zone for `apiDomainZone` in the deploy AWS account.
+2. Domain NS delegated to Route 53.
+3. Optional `apiHostedZoneId` when name lookup is ambiguous.
+
+```sh
+aws login
+aws route53 list-hosted-zones-by-name --dns-name example.com
+```
+
+**GCP — Cloud DNS**
+
+1. Managed zone whose `dnsName` is `apiDomainZone.` (trailing dot in the API).
+2. NS delegated from the parent domain.
+3. Deploy identity can edit record sets in that zone.
+
+**Azure — Azure DNS**
+
+1. DNS zone named `apiDomainZone` in a resource group.
+2. NS delegated from the parent domain.
+3. `dnsResourceGroupName` when the zone is outside the stack resource group.
+
+### Cloudflare DNS (optional, any compute provider)
+
+```sh
+pulumi config set dnsProvider cloudflare
+pulumi config set --secret cloudflare:apiToken YOUR_ZONE_DNS_EDIT_TOKEN
+# optional: pulumi config set cloudflareZoneId "<zone id>"
+```
+
+Cloudflare must already host the zone. Records are never orange-clouded so ACM
+and API Gateway / Cloud Run / Container Apps terminate TLS on the cloud edge.
+
+### Manual DNS
+
+```sh
+pulumi config set manageDns false
+pulumi up
+pulumi stack output apiDnsRecords
+```
+
+Create the exported validation records first and wait for the certificate to
+issue. Then set `manualDnsValidated=true` and run `pulumi up` again to create
+the custom domain and export the traffic CNAME.
+
+Stack outputs include `dnsProvider` (`native`, `cloudflare`, or `manual`) and
+`apiDnsRecords` for verification.
+
+## Outputs and teardown
+
+```sh
+pulumi stack output apiUrl
+pulumi stack output databaseMode
+pulumi stack output databaseUrl
+# Use --show-secrets only when the connection string is needed.
+pulumi stack output --show-secrets databaseUrl
+pulumi destroy
+```
+
+Do not remove the Pulumi stack until `pulumi destroy` completes. The stack
+does not delete an existing image repository configured with
+`apiImageRepository`.
+ # AWS TypeScript Pulumi Template
+
+ A minimal Pulumi template for provisioning AWS infrastructure using TypeScript. This template creates an Amazon S3 bucket and exports its name.
+
+ ## Prerequisites
+
+ - Pulumi CLI (>= v3): https://www.pulumi.com/docs/get-started/install/
+ - Node.js (>= 14): https://nodejs.org/
+ - AWS credentials configured (e.g., via `aws configure` or environment variables)
+
+ ## Getting Started
+
+ 1. Initialize a new Pulumi project:
+
+    ```bash
+    pulumi new aws-typescript
+    ```
+
+    Follow the prompts to set your:
+    - Project name
+    - Project description
+    - AWS region (defaults to `us-east-1`)
+
+ 2. Preview and deploy your infrastructure:
+
+    ```bash
+    pulumi preview
+    pulumi up
+    ```
+
+ 3. When you're finished, tear down your stack:
+
+    ```bash
+    pulumi destroy
+    pulumi stack rm
+    ```
+
+ ## Project Layout
+
+ - `Pulumi.yaml` — Pulumi project and template metadata
+ - `index.ts` — Main Pulumi program (creates an S3 bucket)
+ - `package.json` — Node.js dependencies
+ - `tsconfig.json` — TypeScript compiler options
+
+ ## Configuration
+
+ | Key           | Description                             | Default     |
+ | ------------- | --------------------------------------- | ----------- |
+ | `aws:region`  | The AWS region to deploy resources into | `us-east-1` |
+
+ Use `pulumi config set <key> <value>` to customize configuration.
+
+ ## Next Steps
+
+ - Extend `index.ts` to provision additional resources (e.g., VPCs, Lambda functions, DynamoDB tables).
+ - Explore [Pulumi AWSX](https://www.pulumi.com/docs/reference/pkg/awsx/) for higher-level AWS components.
+ - Consult the [Pulumi documentation](https://www.pulumi.com/docs/) for more examples and best practices.
+
+ ## Getting Help
+
+ If you encounter any issues or have suggestions, please open an issue in this repository.

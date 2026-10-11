@@ -1,6 +1,7 @@
 /**
  * Pure helpers for limetry release versioning: parse/format semver
- * `x.y.z[-beta.N]` strings, compute bumps, and parse `yarn release` CLI flags.
+ * `x.y.z[-beta.N|-dev.branch.N]` strings, compute bumps, and parse
+ * `yarn release` CLI flags.
  *
  * Used by `sync-version.ts` (interactive release) and unit tests. No I/O.
  */
@@ -34,6 +35,10 @@ export const PUBLISHABLE_WORKSPACES = [
 export type ParsedVersion = {
   /** Prerelease beta counter, or `null` for a stable version. */
   beta: number | null
+  /** Abbreviated development branch slug for a dev build. */
+  branch?: string
+  /** Incrementing build number for a development branch. */
+  branchIncrement?: number
   major: number
   minor: number
   /** Patch component, stored as an integer and formatted without leading zeros. */
@@ -71,34 +76,42 @@ export type ReleaseCliArgs = {
 }
 
 /**
- * Parses `x.y.z` versions with optional `-beta.N`.
+ * Parses `x.y.z` versions with optional beta or branch development metadata.
  *
  * Leading zeros are accepted on input so older padded releases still parse.
  * {@link formatVersion} always emits canonical semver without them.
  *
  * @param version - Raw version string (whitespace trimmed).
- * @returns Parsed major/minor/patch and optional beta counter.
+ * @returns Parsed major/minor/patch and optional prerelease metadata.
  * @throws Error When the string does not match the supported format.
  */
 export function parseVersion(version: string): ParsedVersion {
-  const match = version.trim().match(/^(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?$/)
+  const match = version.trim().match(
+    /^(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+)|-dev\.([0-9a-z-]+)\.(\d+))?$/,
+  )
   if (!match) {
     throw new Error(`Unsupported version format: ${version}`)
   }
 
-  return {
+  const parsed: ParsedVersion = {
     major: Number.parseInt(match[1], 10),
     minor: Number.parseInt(match[2], 10),
     patch: Number.parseInt(match[3], 10),
     beta: match[4] != null ? Number.parseInt(match[4], 10) : null,
   }
+  if (match[5] != null && match[6] != null) {
+    parsed.branch = match[5]
+    parsed.branchIncrement = Number.parseInt(match[6], 10)
+  }
+  return parsed
 }
 
 /**
- * Formats a {@link ParsedVersion} as semver `x.y.z` or `x.y.z-beta.N`.
+ * Formats a {@link ParsedVersion} as semver `x.y.z`, `x.y.z-beta.N`, or a
+ * branch development version.
  *
  * @param version - Parsed version components.
- * @param prerelease - When true, appends `-beta.{beta ?? 0}`.
+ * @param prerelease - When true, appends the parsed prerelease metadata.
  * @returns Canonical semver string with no leading zeros.
  */
 export function formatVersion(version: ParsedVersion, prerelease: boolean): string {
@@ -106,7 +119,61 @@ export function formatVersion(version: ParsedVersion, prerelease: boolean): stri
   if (!prerelease) {
     return base
   }
+  if (version.branch != null && version.branchIncrement != null) {
+    return `${base}-dev.${version.branch}.${version.branchIncrement}`
+  }
   return `${base}-beta.${version.beta ?? 0}`
+}
+
+/**
+ * Abbreviates a git branch into a valid, stable semver prerelease identifier.
+ *
+ * @param branch - Git branch name.
+ * @returns Lowercase branch slug limited to 24 characters.
+ */
+export function abbreviateBranch(branch: string): string {
+  const slug = branch
+    .trim()
+    .toLowerCase()
+    .replace(/^(feature|bugfix|chore|fix|hotfix|release)[/-]+/, "")
+    .replace(/[^0-9a-z]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24)
+  return slug || "branch"
+}
+
+/**
+ * Creates the next development version for a non-stable branch.
+ *
+ * The base version is supplied by normal release planning. Repeated releases
+ * on the same branch retain that base and increment the branch build number.
+ *
+ * @param plannedVersion - Stable version selected by release planning.
+ * @param currentVersion - Current package version.
+ * @param branch - Git branch name.
+ * @returns Incrementing branch development version.
+ */
+export function branchDevelopmentVersion(
+  plannedVersion: string,
+  currentVersion: string,
+  branch: string,
+): string {
+  const slug = abbreviateBranch(branch)
+  const current = parseVersion(currentVersion)
+  const planned = parseVersion(plannedVersion)
+  const sameBranch = current.branch === slug && current.branchIncrement != null
+  const base = sameBranch
+    ? current
+    : planned
+  const increment = sameBranch ? (current.branchIncrement ?? 0) + 1 : 1
+  return formatVersion({
+    major: base.major,
+    minor: base.minor,
+    patch: base.patch,
+    beta: null,
+    branch: slug,
+    branchIncrement: increment,
+  }, true)
 }
 
 /**
@@ -118,7 +185,7 @@ export function formatVersion(version: ParsedVersion, prerelease: boolean): stri
  */
 export function canonicalizeVersion(version: string): string {
   const parsed = parseVersion(version)
-  return formatVersion(parsed, parsed.beta != null)
+  return formatVersion(parsed, parsed.beta != null || parsed.branch != null)
 }
 
 /**
@@ -230,10 +297,16 @@ export function compareVersions(left: string, right: string): number {
   if (a.major !== b.major) return a.major - b.major
   if (a.minor !== b.minor) return a.minor - b.minor
   if (a.patch !== b.patch) return a.patch - b.patch
-  if (a.beta === b.beta) return 0
-  if (a.beta == null) return 1
-  if (b.beta == null) return -1
-  return a.beta - b.beta
+  const aPrerelease = a.beta != null || a.branch != null
+  const bPrerelease = b.beta != null || b.branch != null
+  if (!aPrerelease && !bPrerelease) return 0
+  if (!aPrerelease) return 1
+  if (!bPrerelease) return -1
+  if (a.branch != null || b.branch != null) {
+    if (a.branch !== b.branch) return (a.branch ?? "").localeCompare(b.branch ?? "")
+    return (a.branchIncrement ?? 0) - (b.branchIncrement ?? 0)
+  }
+  return (a.beta ?? 0) - (b.beta ?? 0)
 }
 
 /**

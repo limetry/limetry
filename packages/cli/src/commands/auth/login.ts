@@ -16,7 +16,7 @@ import { clerkAuthProvider } from "./browser.js"
  * Posts to `POST {baseUrl}/v1/auth/login`.
  *
  * Base URL resolution order: saved `config.baseUrl`, then `LIMETRY_BASE_URL`, then
- * `https://api.limetry.org`.
+ * `https://api.limetry.com`.
  *
  * Side effects:
  * - Prompts for email and password on stdin.

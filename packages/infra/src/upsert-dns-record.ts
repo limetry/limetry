@@ -137,6 +137,7 @@ export function upsertDnsRecord(
       ...restOpts,
       aliases,
       deleteBeforeReplace: true,
+      replaceOnChanges: ["content", "name", "type"],
       ...(importId ? { import: importId } : {}),
     },
   )

@@ -15,7 +15,7 @@ import {
   resolveDevListenPort,
 } from "@limetry/preflight"
 import { APP_VERSION } from "@limetry/sdk"
-import express from "express"
+import express, { type Express } from "express"
 import { Redis } from "ioredis"
 import { Pool } from "pg"
 
@@ -26,6 +26,7 @@ import {
   resolveLandingWebOrigin,
 } from "./landing-links.js"
 import { createBearerAuthMiddleware, requireScopes } from "./middleware/bearer-auth.js"
+import { jsonApiErrorHandler, jsonApiNotFoundHandler } from "./middleware/json-errors.js"
 import { createRequestContextMiddleware, logger, metrics } from "./observability.js"
 import { runOssPreflight } from "./preflight.js"
 import { createActionRoutes } from "./routes/actions.js"
@@ -55,6 +56,7 @@ import {
   PostgresPolicyRegistry,
 } from "./services/postgres-store.js"
 import { PostgresUserService } from "./services/postgres-user-service.js"
+import { SqliteStore } from "./services/sqlite-store.js"
 import { InMemoryUserService, type UserService } from "./services/user-service.js"
 
 /**
@@ -127,13 +129,51 @@ export function resolvePublicDir(explicit?: string): string | null {
 }
 
 /**
+ * Resolves the public origin for request-scoped API examples.
+ *
+ * @param request - Incoming Express request.
+ * @returns Absolute request origin, or undefined when the host is unavailable.
+ */
+function resolveRequestOrigin(request: express.Request): string | undefined {
+  const protocol = request.protocol
+  const host = request.get("host")
+  if (!host || (protocol !== "http" && protocol !== "https")) {
+    return undefined
+  }
+  try {
+    const origin = new URL(`${protocol}://${host}`)
+    if (origin.pathname !== "/" || origin.search || origin.hash || origin.username || origin.password) {
+      return undefined
+    }
+    return origin.origin
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Reads the Swagger UI document and points it at the requested OpenAPI spec.
+ *
+ * @param publicDir - Directory containing the packaged documentation assets.
+ * @param specPath - URL path served by the current documentation route.
+ * @returns Swagger UI HTML.
+ */
+function readSwaggerPage(publicDir: string, specPath: string): string {
+  const swaggerPage = join(publicDir, "openapi.html")
+  if (!existsSync(swaggerPage)) {
+    return ""
+  }
+  return readFileSync(swaggerPage, "utf8").replace('url: "/openapi.yaml"', `url: "${specPath}"`)
+}
+
+/**
  * Builds the Express application with JSON parsing, request context, optional
  * static landing page, health/metrics, and all HTTP route modules.
  *
  * @param options - Env plus optional store overrides for tests.
  * @returns Configured Express app (not listening).
  */
-export function createApp(options: CreateAppOptions) {
+export function createApp(options: CreateAppOptions): Express {
   const userService = options.userService ?? new InMemoryUserService()
   const policyRegistry = options.policyRegistry ?? new InMemoryPolicyRegistry()
   const auditStore = options.auditStore ?? new InMemoryAuditStore()
@@ -151,6 +191,12 @@ export function createApp(options: CreateAppOptions) {
   }
 
   const app = express()
+  app.set(
+    "trust proxy",
+    (address: string) => address === "127.0.0.1"
+      || address === "::1"
+      || address === "::ffff:127.0.0.1",
+  )
   app.use(express.json({ limit: "1mb" }))
   app.use(createRequestContextMiddleware())
   app.use((_request, _response, next) => {
@@ -160,44 +206,59 @@ export function createApp(options: CreateAppOptions) {
 
   const publicDir = resolvePublicDir(options.publicDir)
   if (publicDir) {
-    app.get("/", (_request, response) => {
+    app.get("/", (request, response) => {
       const html = renderLandingHtml(
         readFileSync(join(publicDir, "index.html"), "utf8"),
         {
           appVersion: APP_VERSION,
           appOrigin: resolveLandingAppOrigin(),
+          apiOrigin: resolveRequestOrigin(request),
           webOrigin: resolveLandingWebOrigin(),
         },
       )
       response.type("html").send(html)
     })
 
-    app.get("/openapi", (_request, response) => {
-      const swaggerPage = join(publicDir, "openapi.html")
-      if (!existsSync(swaggerPage)) {
-        response.redirect(302, "/openapi.yaml")
+    const serveSwaggerPage = (specPath: string, response: express.Response) => {
+      const html = readSwaggerPage(publicDir, specPath)
+      if (!html) {
+        response.redirect(302, specPath)
         return
       }
-      response.type("html").send(readFileSync(swaggerPage, "utf8"))
+      response.type("html").send(html)
+    }
+
+    app.get("/openapi", (_request, response) => {
+      serveSwaggerPage("/openapi.yaml", response)
     })
 
-    app.get("/openapi.yaml", (_request, response) => {
+    app.get("/v1/docs", (_request, response) => {
+      serveSwaggerPage("/v1/openapi.yaml", response)
+    })
+
+    const serveOpenApiYaml = (_request: express.Request, response: express.Response) => {
       const filePath = join(publicDir, "openapi.yaml")
       if (!existsSync(filePath)) {
         response.status(404).json({ error: "openapi_yaml_missing" })
         return
       }
       response.type("text/yaml").send(readFileSync(filePath, "utf8"))
-    })
+    }
 
-    app.get("/openapi.json", (_request, response) => {
+    app.get("/openapi.yaml", serveOpenApiYaml)
+    app.get("/v1/openapi.yaml", serveOpenApiYaml)
+
+    const serveOpenApiJson = (_request: express.Request, response: express.Response) => {
       const filePath = join(publicDir, "openapi.json")
       if (!existsSync(filePath)) {
         response.status(404).json({ error: "openapi_json_missing" })
         return
       }
       response.type("json").send(readFileSync(filePath, "utf8"))
-    })
+    }
+
+    app.get("/openapi.json", serveOpenApiJson)
+    app.get("/v1/openapi.json", serveOpenApiJson)
 
     app.use(express.static(publicDir, {
       index: false,
@@ -237,30 +298,45 @@ export function createApp(options: CreateAppOptions) {
     userService,
   })
 
+  app.use(jsonApiNotFoundHandler)
+  app.use(jsonApiErrorHandler)
+
   return app
 }
 
 /**
- * Builds a fully wired Express app (Postgres/Redis stores when configured)
+ * Builds a fully wired Express app (SQLite, Postgres, or Redis stores when configured)
  * without binding a TCP port. Used by both the long-running server and Lambda.
  *
  * @param env - Validated server environment.
  * @returns Express app and optional Postgres pool for retention purge.
  * @throws When preflight fails hard, Postgres migrate fails, or Redis ping fails.
  */
-export async function prepareApp(env: ServerEnv) {
+export async function prepareApp(env: ServerEnv): Promise<{
+  app: Express
+  postgresPool?: Pool
+  sqliteStore?: SqliteStore
+}> {
   await runOssPreflight(env)
   const options: CreateAppOptions = { env }
   let postgresPool: Pool | undefined
+  let sqliteStore: SqliteStore | undefined
 
   if (env.USE_POSTGRES_STORE) {
     const pool = new Pool({ connectionString: env.DATABASE_URL })
-    await migratePostgres(pool)
+    await migratePostgres(pool, "evaluate")
     postgresPool = pool
     options.policyRegistry = new PostgresPolicyRegistry(pool)
     options.stateStore = new PostgresGovernanceStateStore(pool)
     options.userService = new PostgresUserService(pool)
     options.auditStore = new PostgresAuditStore(pool)
+  } else {
+    sqliteStore = SqliteStore.open(env.SQLITE_DATABASE_PATH)
+    options.policyRegistry = sqliteStore.policyRegistry
+    options.stateStore = sqliteStore.governanceStateStore
+    options.userService = sqliteStore.userService
+    options.auditStore = sqliteStore.auditStore
+    options.approvalStore = sqliteStore.approvalStore
   }
 
   if (env.REDIS_URL) {
@@ -274,7 +350,7 @@ export async function prepareApp(env: ServerEnv) {
     options.jwtRevocationStore = new RedisJwtRevocationStore(redis)
   }
 
-  return { app: createApp(options), postgresPool }
+  return { app: createApp(options), postgresPool, sqliteStore }
 }
 
 /**
@@ -298,7 +374,7 @@ export async function startServer(env: ServerEnv) {
     process.env.LIMETRY_API_PORT = String(hop.port)
   }
 
-  const { app, postgresPool } = await prepareApp(env)
+  const { app, postgresPool, sqliteStore } = await prepareApp(env)
 
   if (
     postgresPool &&
@@ -312,7 +388,9 @@ export async function startServer(env: ServerEnv) {
     })
   }
 
-  return app.listen(env.LIMETRY_API_PORT, () => {
+  const server = app.listen(env.LIMETRY_API_PORT, () => {
     logger.info({ port: env.LIMETRY_API_PORT, version: APP_VERSION }, "server.listening")
   })
+  server.once("close", () => sqliteStore?.close())
+  return server
 }

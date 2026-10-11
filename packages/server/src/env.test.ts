@@ -27,17 +27,17 @@ describe("server environment", () => {
     expect(env.REDIS_URL).toBe("redis://localhost:6379")
   })
 
-  it("rejects in-memory storage in production", () => {
-    expect(() =>
-      loadEnv({
-        NODE_ENV: "production",
-        LIMETRY_BEARER_TOKEN: "production-bearer-token-at-least-32-chars",
-        JWT_SECRET: "production-jwt-secret-at-least-32-characters",
-        DECISION_HMAC_SECRET: "production-decision-secret-at-least-32-chars",
-        DATABASE_URL: "postgresql://limetry:limetry@db.example.com:5432/limetry",
-        USE_POSTGRES_STORE: "false",
-      }),
-    ).toThrow("USE_POSTGRES_STORE=true is required in production")
+  it("allows durable SQLite storage in production", () => {
+    const env = loadEnv({
+      NODE_ENV: "production",
+      LIMETRY_BEARER_TOKEN: "production-bearer-token-at-least-32-chars",
+      JWT_SECRET: "production-jwt-secret-at-least-32-characters",
+      DECISION_HMAC_SECRET: "production-decision-secret-at-least-32-chars",
+      SQLITE_DATABASE_PATH: "/var/lib/limetry/limetry.sqlite",
+      USE_POSTGRES_STORE: "false",
+    })
+
+    expect(env.SQLITE_DATABASE_PATH).toBe("/var/lib/limetry/limetry.sqlite")
   })
 
   it("requires a dedicated decision HMAC secret in production", () => {

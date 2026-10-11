@@ -6,6 +6,7 @@ import { describe, it } from "node:test"
 
 import { hashDirectory } from "./content-hash.ts"
 import {
+  acmValidationRecordSuffix,
   cloudflareTrafficHints,
   dnsRecordFqdn,
   hostnameFromTarget,
@@ -17,6 +18,11 @@ import {
 } from "./dns-names.ts"
 
 describe("OSS DNS names", () => {
+  it("builds stable ACM validation resource suffixes from FQDNs", () => {
+    const fqdn = dnsRecordFqdn("_abc123.dev.limetry.org")
+    assert.equal(acmValidationRecordSuffix(fqdn), "_abc123-dev-limetry-org")
+  })
+
   it("infers the Cloudflare zone from a preview hostname", () => {
     assert.equal(inferCloudflareZoneName("dev.limetry.org"), "limetry.org")
     assert.equal(inferCloudflareZoneName("limetry.org"), "limetry.org")

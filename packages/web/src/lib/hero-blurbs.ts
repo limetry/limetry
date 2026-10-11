@@ -155,7 +155,7 @@ export const HERO_BLURB_PARTS: HeroBlurbPart[] = [
     prefix: "Seamless hosted upgrade",
     emphasis: "when you need a team portal.",
     highlight:
-      "Transition from a local node to our hosted control plane for collaborative team reviews without changing your client code.",
+      "Transition from a local node to Limetry Cloud for shared policies, approvals, and audit retention without changing your client code.",
   },
   {
     prefix: "Air-gapped deployment",

@@ -38,7 +38,9 @@ export type NavItem = {
  * @returns Normalized path beginning with `/`, or `"/"` when empty after stripping.
  */
 export function normalizePathname(pathname: string): string {
-  const normalized = pathname.replace(/\/\([^/]+\)/g, "")
+  const withoutOrigin = pathname.replace(/^[a-z][a-z\d+\-.]*:\/\/[^/]+/i, "")
+  const withoutQuery = withoutOrigin.split(/[?#]/, 1)[0] ?? ""
+  const normalized = withoutQuery.replace(/\/\([^/]+\)/g, "")
   return normalized.length > 0 ? normalized : "/"
 }
 

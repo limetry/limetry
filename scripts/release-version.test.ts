@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  abbreviateBranch,
+  branchDevelopmentVersion,
   canonicalizeVersion,
   computeNextVersion,
   deployTargetFromChoice,
@@ -30,6 +32,17 @@ describe("release-version", () => {
     })
     expect(canonicalizeVersion("1.2.042")).toBe("1.2.42")
     expect(canonicalizeVersion("1.2.42-beta.1")).toBe("1.2.42-beta.1")
+    expect(parseVersion("1.2.64-dev.cloud-agnostic-deployment.1")).toEqual({
+      major: 1,
+      minor: 2,
+      patch: 64,
+      beta: null,
+      branch: "cloud-agnostic-deployment",
+      branchIncrement: 1,
+    })
+    expect(canonicalizeVersion("1.2.64-dev.cloud-agnostic-deployment.1")).toBe(
+      "1.2.64-dev.cloud-agnostic-deployment.1",
+    )
   })
 
   it("bumps semver patch versions", () => {
@@ -85,6 +98,33 @@ describe("release-version", () => {
   it("formats APP_VERSION source", () => {
     expect(formatAppVersionSource("1.0.1")).toBe("export const APP_VERSION = \"1.0.1\"\n")
     expect(formatVersion({ major: 1, minor: 0, patch: 1, beta: null }, false)).toBe("1.0.1")
+    expect(
+      formatVersion(
+        {
+          major: 1,
+          minor: 2,
+          patch: 64,
+          beta: null,
+          branch: "cloud-agnostic-deployment",
+          branchIncrement: 1,
+        },
+        true,
+      ),
+    ).toBe("1.2.64-dev.cloud-agnostic-deployment.1")
+  })
+
+  it("creates incrementing abbreviated branch versions", () => {
+    expect(abbreviateBranch("feature/cloud-agnostic-deployment")).toBe("cloud-agnostic-deploymen")
+    expect(branchDevelopmentVersion("1.2.64", "1.2.63", "feature/cloud-agnostic-deployment")).toBe(
+      "1.2.64-dev.cloud-agnostic-deploymen.1",
+    )
+    expect(
+      branchDevelopmentVersion(
+        "1.2.64",
+        "1.2.64-dev.cloud-agnostic-deploymen.1",
+        "feature/cloud-agnostic-deployment",
+      ),
+    ).toBe("1.2.64-dev.cloud-agnostic-deploymen.2")
   })
 
   it("writes a semver version into package.json text", () => {

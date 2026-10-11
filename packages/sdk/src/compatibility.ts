@@ -50,7 +50,7 @@ export const COMPATIBILITY = {
   },
   "schemas": {
     "openapi.evaluate": {
-      "version": "1.0.1",
+      "version": "1.0.4",
       "compatible": ">=1.0.0 <2.0.0",
     },
     "openapi.custom-gpt": {

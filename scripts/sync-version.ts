@@ -16,6 +16,7 @@ import readline from "node:readline"
 import { fileURLToPath } from "node:url"
 
 import {
+  branchDevelopmentVersion,
   canonicalizeVersion,
   type DeployTarget,
   deployTargetFromChoice,
@@ -112,7 +113,7 @@ const VERSION_FILES = [
 function printHelp(): void {
   console.log(`Usage:
   yarn release                 Interactive production release (main/master)
-  yarn release:aws             Release then deploy AWS (Pulumi), no deploy prompt
+  yarn release:aws             Release then deploy AWS (Pulumi), using dev on feature branches
   yarn release:vercel          Push release then watch GitHub→Vercel deploys
   yarn release --patch --yes   Non-interactive patch release
   yarn release --minor --yes
@@ -139,8 +140,8 @@ beside this repo. The Cloud script does its own stamp, commit, and prod
 deploy, then this repo pushes. --no-peer stays on this stack. A Cloud
 checkout already tagged at this version still gets a prod Pulumi update.
 
-AWS: runs Pulumi against the prod stack (limetry.org) before push, ignoring the
-locally selected stack. Failed deploys roll back the local commit/tag.
+AWS: runs Pulumi against the prod stack on main/master, or the dev stack on
+other branches, before push. Failed deploys roll back the local commit/tag.
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
 that commit SHA until READY. Failed Vercel builds cannot un-push; fix forward
 or revert. Use yarn deploy:vercel only as a CLI escape hatch.`)
@@ -568,29 +569,47 @@ async function promptDeployTarget(
 }
 
 /**
- * Pulumi stack that serves the public site (`limetry.org`).
- * Releases ignore whichever stack happens to be selected locally.
+ * Resolves the Pulumi stack for a release branch.
+ *
+ * Stable release branches deploy production; every other branch deploys the
+ * isolated development stack.
+ *
+ * @param branch - Git branch name.
+ * @returns Pulumi stack name.
  */
-const RELEASE_PULUMI_STACK = "prod"
+export function releasePulumiStack(branch: string): "prod" | "dev" {
+  return branch === "main" || branch === "master" ? "prod" : "dev"
+}
 
 /**
- * Runs the production Pulumi update for a release.
+ * Runs the branch-appropriate Pulumi update for a release.
  *
+ * @param branch - Git branch name.
  * @returns Nothing.
  * @throws Error When typecheck or `pulumi up` fails.
  */
-function runAwsDeploy(): void {
+function runAwsDeploy(branch = getCurrentBranch()): void {
+  const stack = releasePulumiStack(branch)
   console.log("")
   console.log("▶ AWS deploy (Pulumi)")
-  console.log(`   Running yarn typecheck:infra && pulumi up --yes --stack ${RELEASE_PULUMI_STACK}`)
+  console.log(`   Running yarn typecheck:infra && pulumi refresh && pulumi up --yes --stack ${stack}`)
   runYarn(["typecheck:infra"])
-  const result = spawnSync("pulumi", ["up", "--yes", "--stack", RELEASE_PULUMI_STACK], {
-    cwd: join(ROOT_DIR, "packages/infra"),
+  const infraDir = join(ROOT_DIR, "packages/infra")
+  const refresh = spawnSync("pulumi", ["refresh", "--yes", "--stack", stack], {
+    cwd: infraDir,
+    stdio: "inherit",
+    env: process.env,
+  })
+  if (refresh.status !== 0) {
+    throw new Error(`pulumi refresh --stack ${stack} failed (exit ${refresh.status ?? 1})`)
+  }
+  const result = spawnSync("pulumi", ["up", "--yes", "--stack", stack], {
+    cwd: infraDir,
     stdio: "inherit",
     env: process.env,
   })
   if (result.status !== 0) {
-    throw new Error(`pulumi up --stack ${RELEASE_PULUMI_STACK} failed (exit ${result.status ?? 1})`)
+    throw new Error(`pulumi up --stack ${stack} failed (exit ${result.status ?? 1})`)
   }
   console.log("✨ AWS deploy succeeded.")
 }
@@ -689,8 +708,9 @@ async function main(): Promise<void> {
     return
   }
 
-  if (!isStableReleaseBranch(currentBranch)) {
-    console.error(`Release requires main or master (current: ${currentBranch}).`)
+  const isAwsDeploy = args.deploy === "aws" || args.deployOnly === "aws"
+  if (!isStableReleaseBranch(currentBranch) && !isAwsDeploy) {
+    console.error(`Release requires main or master unless deploying AWS to dev (current: ${currentBranch}).`)
     process.exit(1)
   }
 
@@ -767,7 +787,9 @@ async function main(): Promise<void> {
         bump: releaseType,
       })
     }
-    const newVersion = plan.version
+    const newVersion = isStableReleaseBranch(currentBranch)
+      ? plan.version
+      : branchDevelopmentVersion(plan.version, currentVersion, currentBranch)
 
     if (plan.action === "adopt-peer") {
       console.log(`Using ${newVersion} already released on ${PEER_NAME}.`)

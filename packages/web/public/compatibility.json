@@ -1,5 +1,5 @@
 {
-  "product": "1.2.64",
+  "product": "1.2.65",
   "compatibleProduct": ">=1.2.0 <1.3.0",
   "packages": {
     "@limetry/ci": {
@@ -37,17 +37,17 @@
   },
   "websites": {
     "oss": {
-      "version": "1.2.64",
+      "version": "1.2.65",
       "compatible": ">=1.2.0 <1.3.0"
     },
     "cloud": {
-      "version": "1.2.64",
+      "version": "1.2.65",
       "compatible": ">=1.2.0 <1.3.0"
     }
   },
   "schemas": {
     "openapi.evaluate": {
-      "version": "1.0.1",
+      "version": "1.0.4",
       "compatible": ">=1.0.0 <2.0.0"
     },
     "openapi.custom-gpt": {

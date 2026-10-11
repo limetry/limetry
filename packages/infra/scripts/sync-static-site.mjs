@@ -35,16 +35,16 @@ function cacheControlFor(key) {
   if (key.startsWith("_next/static/")) {
     return "public, max-age=31536000, immutable"
   }
-  // HTML and RSC .txt payloads must revalidate so Safari does not keep a prior
-  // deploy's document that points at deleted hashed chunks. Extensionless keys
-  // are mirrors of `*.html` for CloudFront deep links (`/pricing` → pricing.html).
+  // HTML and RSC payloads use a short cache window because deploys invalidate
+  // CloudFront. This avoids a network revalidation on every navigation.
+  // Extensionless keys are mirrors of `*.html` for deep links.
   if (
     key.endsWith(".html")
     || key === "index.html"
     || key.endsWith(".txt")
     || (!key.includes(".") && !key.startsWith("_next/"))
   ) {
-    return "public, max-age=0, must-revalidate"
+    return "public, max-age=60, stale-while-revalidate=300"
   }
   return "public, max-age=3600"
 }
