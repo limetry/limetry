@@ -16,7 +16,9 @@ YARN="$ROOT/.yarn/releases/yarn-4.13.0.cjs"
 
 find "$ROOT" -name .DS_Store -delete
 
+# Include root (`limetry`) so typedoc / tsgo and other root binaries stay installed.
 node "$YARN" workspaces focus \
+  limetry \
   @limetry/sdk \
   @limetry/ui \
   @limetry/preflight \

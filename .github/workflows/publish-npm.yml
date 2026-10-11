@@ -44,7 +44,7 @@ jobs:
           yarn workspace @limetry/sdk test:critical-coverage
           yarn workspace @limetry/preflight test
           yarn workspace @limetry/cli test
-          yarn tsgo -p packages/mcp/tsconfig.json --noEmit
+          yarn exec tsgo -p packages/mcp/tsconfig.json --noEmit
           node -e "require('node:fs').accessSync('packages/mcp/dist/index.js')"
           yarn workspace @limetry/ci test
           yarn workspace @limetry/shopify test

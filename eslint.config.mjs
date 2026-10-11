@@ -36,6 +36,8 @@ export default tseslint.config(
       "**/sst-env.d.ts",
       "archive/**",
       "docs/api/**",
+      "packages/cloud/**",
+      "packages/pulumi-neon/**",
       "target/**",
     ],
   },
