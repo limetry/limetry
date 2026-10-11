@@ -16,6 +16,11 @@ export const CANONICAL_WEB_ORIGIN = "https://limetry.org"
 export const CANONICAL_APP_ORIGIN = "https://app.limetry.com"
 
 /**
+ * Default GitHub repository URL for landing header links.
+ */
+export const CANONICAL_GITHUB_URL = "https://github.com/limetry/limetry"
+
+/**
  * Local marketing site origin used when not in a deployed runtime.
  */
 export const LOCAL_WEB_ORIGIN = "http://localhost:3800"
@@ -109,6 +114,22 @@ export function resolveLandingAppOrigin(
 }
 
 /**
+ * Resolves the GitHub URL injected into the API landing header.
+ *
+ * @param source - Process env bag; defaults to `process.env`.
+ * @returns Absolute GitHub URL without a trailing slash.
+ */
+export function resolveLandingGithubUrl(
+  source: NodeJS.ProcessEnv = process.env,
+): string {
+  const explicit = source.NEXT_PUBLIC_GITHUB_URL ?? source.GITHUB_URL
+  if (explicit && explicit.trim().length > 0) {
+    return trimOrigin(explicit.trim())
+  }
+  return CANONICAL_GITHUB_URL
+}
+
+/**
  * Resolves the API origin used by landing-page examples.
  *
  * @param source - Process env bag; defaults to `process.env`.
@@ -182,6 +203,7 @@ export function renderLandingHtml(
     .replaceAll("__API_ORIGIN__", escapeHtml(apiOrigin))
     .replaceAll("__WEB_ORIGIN__", escapeHtml(origin))
     .replaceAll("__APP_ORIGIN__", escapeHtml(appOrigin))
+    .replaceAll("__GITHUB_URL__", escapeHtml(resolveLandingGithubUrl(source)))
     .replaceAll("__YEAR__", String(new Date().getFullYear()))
   return rendered
 }

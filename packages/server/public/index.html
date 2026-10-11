@@ -11,7 +11,17 @@
   <link rel="icon" href="/favicon.ico" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("limetry-theme");
+        var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var useDark = stored === "dark" || (stored !== "light" && systemDark);
+        document.documentElement.classList.toggle("dark", useDark);
+      } catch (e) {}
+    })();
+  </script>
   <style>
     :root {
       --background: 0 0% 100%;
@@ -95,37 +105,96 @@
       .shell { padding: 3rem 1.5rem 5rem; }
     }
 
-    header {
+    html.dark {
+      --background: 222 47% 6%;
+      --foreground: 210 40% 98%;
+      --card: 222 47% 9%;
+      --muted: 217 33% 14%;
+      --muted-foreground: 215 20% 65%;
+      --border: 217 33% 18%;
+      --primary: 160 84% 39%;
+      --primary-foreground: 222 47% 6%;
+      --surface: 222 47% 9%;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      margin: 0 -1.25rem 3rem;
+      border-bottom: 1px solid hsl(var(--border) / 0.6);
+      background: hsl(var(--background) / 0.95);
+      backdrop-filter: blur(16px);
+    }
+
+    .site-header-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 3rem;
+      max-width: 72rem;
+      margin: 0 auto;
+      min-height: 4rem;
+      padding: 0 1.25rem;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 0.75rem;
-      color: var(--brand);
+      color: hsl(var(--foreground));
       text-decoration: none;
-      font-family: Inter, var(--font-sans);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      font-size: 1.25rem;
     }
 
-    .brand img {
-      width: 2rem;
+    .brand:hover { text-decoration: none; }
+
+    .brand-logo {
+      display: block;
       height: 2rem;
+      width: auto;
     }
+
+    html:not(.dark) .brand-logo-dark { display: none; }
+    html.dark .brand-logo-light { display: none; }
 
     .nav {
       display: flex;
+      align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
     }
+
+    .nav-link {
+      color: hsl(var(--muted-foreground));
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .nav-link:hover {
+      color: hsl(var(--foreground));
+      text-decoration: none;
+    }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.75rem;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+    }
+
+    .theme-toggle:hover {
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+    }
+
+    html:not(.dark) .icon-moon { display: none; }
+    html.dark .icon-sun { display: none; }
 
     .btn {
       display: inline-flex;
@@ -403,6 +472,9 @@
       .site-footer-logo .logo-dark { display: block; }
     }
 
+    html.dark .site-footer-logo .logo-light { display: none; }
+    html.dark .site-footer-logo .logo-dark { display: block; }
+
     .site-footer-blurb {
       margin: 0.75rem 0 0;
       font-size: 0.875rem;
@@ -457,17 +529,31 @@
     <img class="accent" src="/limetry-icon.svg" alt="" aria-hidden="true" />
 
     <div class="shell">
-      <header>
-        <a class="brand" href="/" aria-label="Limetry Central home">
-          <img src="/limetry-icon.svg" alt="" />
-          <span>Limetry Central</span>
-        </a>
-        <nav class="nav" aria-label="Primary">
-          <a class="btn btn-ghost" href="/health">Health</a>
-          <a class="btn btn-ghost" href="/openapi">OpenAPI</a>
-          <a class="btn btn-ghost" href="__WEB_ORIGIN__/docs/quick-start">Docs</a>
-          <a class="btn btn-primary" href="https://github.com/limetry/limetry" target="_blank" rel="noopener noreferrer">GitHub</a>
-        </nav>
+      <header class="site-header">
+        <div class="site-header-inner">
+          <a class="brand" href="/" aria-label="Limetry API home">
+            <img class="brand-logo brand-logo-light" src="/limetry-logo-black.png" alt="Limetry" />
+            <img class="brand-logo brand-logo-dark" src="/limetry-logo-white.png" alt="Limetry" />
+          </a>
+          <nav class="nav" aria-label="Primary">
+            <a class="nav-link" href="/health">Health</a>
+            <a class="nav-link" href="/openapi">OpenAPI</a>
+            <a class="nav-link" href="__WEB_ORIGIN__/docs/quick-start">Docs</a>
+            <a class="nav-link" href="__GITHUB_URL__" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <button type="button" class="theme-toggle" aria-label="Toggle color theme">
+              <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+              <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </button>
+            <!-- launching-soon:cloud -->
+            <a class="btn btn-primary" href="__APP_ORIGIN__">Cloud</a>
+            <!-- /launching-soon:cloud -->
+          </nav>
+        </div>
       </header>
 
       <main>
@@ -625,8 +711,8 @@ limetry audit tail --limit 5</pre>
         <div class="site-footer-grid">
           <div class="site-footer-brand">
             <a class="site-footer-logo" href="__WEB_ORIGIN__" aria-label="Limetry home">
-              <img class="logo-light" src="/limetry-logo-black.svg" alt="Limetry" />
-              <img class="logo-dark" src="/limetry-logo-white.svg" alt="" />
+              <img class="logo-light" src="/limetry-logo-black.png" alt="Limetry" />
+              <img class="logo-dark" src="/limetry-logo-white.png" alt="" />
             </a>
             <p class="site-footer-blurb">Agent action governance — evaluate, allow, deny, and audit tool calls before they land.</p>
             <div class="site-footer-social">
@@ -680,5 +766,16 @@ limetry audit tail --limit 5</pre>
       </div>
     </footer>
   </div>
+  <script>
+    (function () {
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var nextDark = !document.documentElement.classList.contains("dark");
+        document.documentElement.classList.toggle("dark", nextDark);
+        try { localStorage.setItem("limetry-theme", nextDark ? "dark" : "light"); } catch (e) {}
+      });
+    })();
+  </script>
 </body>
 </html>

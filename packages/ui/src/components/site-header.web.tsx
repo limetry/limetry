@@ -4,8 +4,8 @@
  * Shared DOM site header for the OSS and enterprise web frontends.
  */
 
-import type { JSX } from "react"
-import { useCallback, useEffect, useState } from "react"
+import type { ComponentType, JSX } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { cn } from "../lib/cn"
 import { isNavItemActive } from "../navigation/types"
@@ -26,6 +26,38 @@ function isDesktopItemActive(pathname: string, href: string): boolean {
     return pathname.startsWith("/docs")
   }
   return isNavItemActive(pathname, href)
+}
+
+function externalLinkProps(href: string): Pick<SiteHeaderLinkProps, "rel" | "target"> {
+  if (!isExternalHref(href)) {
+    return {}
+  }
+  return { rel: "noopener noreferrer", target: "_blank" }
+}
+
+type HeaderNavLinkProps = SiteHeaderLinkProps & {
+  LinkComponent: ComponentType<SiteHeaderLinkProps>
+  onHeaderNavigate?: () => void
+}
+
+/**
+ * Stable adapter so drawer and desktop links do not remount when the header re-renders.
+ */
+function HeaderNavLink({
+  LinkComponent,
+  onHeaderNavigate,
+  onClick,
+  ...props
+}: HeaderNavLinkProps): JSX.Element {
+  return (
+    <LinkComponent
+      {...props}
+      onClick={() => {
+        onClick?.()
+        onHeaderNavigate?.()
+      }}
+    />
+  )
 }
 
 /**
@@ -63,15 +95,19 @@ export function SiteHeader({
     },
     [controlledMenuOpen, onMenuOpenChange],
   )
-  const NavigationLink = (props: SiteHeaderLinkProps): JSX.Element => (
-    <LinkComponent
-      {...props}
-      onClick={() => {
-        props.onClick?.()
-        onNavigate?.()
-      }}
-    />
-  )
+
+  const NavLink = useMemo((): ComponentType<SiteHeaderLinkProps> => {
+    function BoundHeaderNavLink(props: SiteHeaderLinkProps): JSX.Element {
+      return (
+        <HeaderNavLink
+          {...props}
+          LinkComponent={LinkComponent}
+          onHeaderNavigate={onNavigate}
+        />
+      )
+    }
+    return BoundHeaderNavLink
+  }, [LinkComponent, onNavigate])
 
   useEffect(() => {
     setInternalMenuOpen(false)
@@ -88,31 +124,32 @@ export function SiteHeader({
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-6 md:gap-8">
-            <NavigationLink href={brandHref} className="flex shrink-0 items-center">
+            <NavLink href={brandHref} className="flex shrink-0 items-center">
               {brand}
-            </NavigationLink>
+            </NavLink>
 
             {showDesktopNav ? (
               <nav className="hidden min-w-0 items-center gap-4 lg:flex xl:gap-6">
                 {items.map((item) => {
                   const active = isDesktopItemActive(pathname, item.href)
                   return (
-                    <NavigationLink
+                    <NavLink
                       key={item.href}
                       href={item.href}
+                      {...externalLinkProps(item.href)}
                       onClick={() => {
                         setMenuOpen(false)
                       }}
                       ariaCurrent={active ? "page" : undefined}
                       className={cn(
-                        "whitespace-nowrap text-sm font-medium transition-colors hover:text-foreground",
+                        "whitespace-nowrap text-sm transition-colors hover:text-foreground",
                         active
                           ? "font-semibold text-emerald-600 dark:text-emerald-400"
-                          : "text-muted-foreground",
+                          : "font-medium text-muted-foreground",
                       )}
                     >
                       {item.label}
-                    </NavigationLink>
+                    </NavLink>
                   )
                 })}
               </nav>
@@ -145,7 +182,7 @@ export function SiteHeader({
         onOpenChange={setMenuOpen}
         items={items}
         pathname={pathname}
-        LinkComponent={NavigationLink}
+        LinkComponent={NavLink}
         renderIcon={renderIcon}
         footer={drawerFooter}
         topOffset={topOffset}
