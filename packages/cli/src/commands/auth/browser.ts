@@ -74,11 +74,14 @@ export async function browserLoginCommand(baseUrl = resolveLimetryCloudBaseUrl()
     "policy:evaluate actions:record tokens:manage approvals:manage audit:read policies:write",
   )
 
+  const authorizeHref = authorizeUrl.toString()
   logInfo("Opening Limetry Cloud in your browser...")
   logInfo("Complete sign-in or sign-up there, then approve CLI access.")
+  logInfo(`If the browser does not open, visit:\n  ${authorizeHref}`)
+  logInfo("Waiting for approval (times out after 5 minutes)...")
 
   try {
-    await open(authorizeUrl.toString())
+    await open(authorizeHref)
     const result = await callback.result
     const response = await fetch(`${baseUrl.replace(/\/$/, "")}/v1/auth/cli/token`, {
       method: "POST",
