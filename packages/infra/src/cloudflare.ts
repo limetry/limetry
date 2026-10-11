@@ -11,13 +11,14 @@ import * as cloudflare from "@pulumi/cloudflare"
 import * as pulumi from "@pulumi/pulumi"
 
 import type { CustomDomainCerts } from "./certificates.js"
+import type { CloudflareDnsUpsert} from "./cloudflare-dns-upsert.js"
+import { upsertValidationDnsRecord } from "./cloudflare-dns-upsert.js"
 import {
   acmValidationRecordSuffix,
   dnsRecordFqdn,
   hostnameFromTarget,
   stripTrailingDot,
 } from "./dns-names.js"
-import { CloudflareDnsUpsert, upsertValidationDnsRecord } from "./cloudflare-dns-upsert.js"
 import { getName, getProject, getStackName } from "./tags.js"
 import {
   legacyDnsResourceName,
