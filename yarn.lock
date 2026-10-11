@@ -3257,12 +3257,12 @@ __metadata:
 
 "@pulumi/neon@file:sdks/neon::locator=limetry-cloud-serverless%40workspace%3Apackages%2Fcloud":
   version: 0.18.0
-  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=37746c&locator=limetry-cloud-serverless%40workspace%3Apackages%2Fcloud"
+  resolution: "@pulumi/neon@file:sdks/neon#sdks/neon::hash=cdc8ca&locator=limetry-cloud-serverless%40workspace%3Apackages%2Fcloud"
   dependencies:
     "@pulumi/pulumi": "npm:^3.238.0"
     "@types/node": "npm:^20"
     typescript: "npm:^4.7.0"
-  checksum: 10c0/56fece2f012fa5f1cdd7d9c0922126cc6796cd6ccf958436f6f912fcec4b5827137e6b851629e73bac30b4d46cba669a7f6169a7fae11930eae34891f1da8c5d
+  checksum: 10c0/be6b63d3576659f747671ecd24b909b80c2b0bc20cc0f514dd33ce69540dc3bab77fd6308e8a6d157db16394accaed70ea0cb30d4afe725ed94bcbbb95cf72d2
   languageName: node
   linkType: hard
 
