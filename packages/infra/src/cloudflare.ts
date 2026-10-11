@@ -12,12 +12,17 @@ import * as pulumi from "@pulumi/pulumi"
 
 import type { CustomDomainCerts } from "./certificates.js"
 import {
+  acmValidationRecordSuffix,
   dnsRecordFqdn,
   hostnameFromTarget,
   stripTrailingDot,
 } from "./dns-names.js"
-import { getName } from "./tags.js"
-import { upsertDnsRecord, upsertDnsRecordAdopting } from "./upsert-dns-record.js"
+import { CloudflareDnsUpsert, upsertValidationDnsRecord } from "./cloudflare-dns-upsert.js"
+import { getName, getProject, getStackName } from "./tags.js"
+import {
+  legacyDnsResourceName,
+  upsertDnsRecord,
+} from "./upsert-dns-record.js"
 
 /**
  * Inputs for writing ACM DNS validation records into Cloudflare.
@@ -179,23 +184,25 @@ function createSharedValidationRecords(
     resourceRecordValue: string
   }[]>,
 ): pulumi.Output<{
-  api: cloudflare.DnsRecord[]
-  web: cloudflare.DnsRecord[]
+  api: CloudflareDnsUpsert[]
+  web: CloudflareDnsUpsert[]
 }> {
+  type ValidationRecord = CloudflareDnsUpsert
+
   return pulumi
     .all([zoneId, webOptions, apiOptions])
-    .apply(async ([zid, webRaw, apiRaw]) => {
-      const byFqdn = new Map<string, cloudflare.DnsRecord>()
+    .apply(([zid, webRaw, apiRaw]) => {
+      const byFqdn = new Map<string, ValidationRecord>()
 
-      const adoptGroup = async (
+      const adoptGroup = (
         kind: string,
         rawOptions: readonly {
           resourceRecordName: string
           resourceRecordType: string
           resourceRecordValue: string
         }[],
-      ): Promise<cloudflare.DnsRecord[]> => {
-        const records: cloudflare.DnsRecord[] = []
+      ): ValidationRecord[] => {
+        const records: ValidationRecord[] = []
         let createIndex = 0
         for (const option of uniqueValidationOptions(rawOptions)) {
           const fqdn = dnsRecordFqdn(option.resourceRecordName)
@@ -205,8 +212,9 @@ function createSharedValidationRecords(
             continue
           }
 
-          const suffix = `${kind}-acm-${createIndex}`
-          const record = await upsertDnsRecordAdopting(
+          const fqdnSuffix = acmValidationRecordSuffix(fqdn)
+          const suffix = `${kind}-acm-${fqdnSuffix}`
+          const record = upsertValidationDnsRecord(
             getName(suffix),
             {
               zoneId: zid,
@@ -216,7 +224,14 @@ function createSharedValidationRecords(
               ttl: 60,
               comment: "ACM validation (Pulumi limetry-oss)",
             },
-            { legacySuffix: suffix },
+            {
+              aliases: [
+                { name: legacyDnsResourceName(`${kind}-acm-${createIndex}`) },
+                {
+                  name: `${getProject()}-${kind}-acm-${getStackName()}-${createIndex}`,
+                },
+              ],
+            },
           )
           byFqdn.set(fqdn, record)
           records.push(record)
@@ -225,8 +240,8 @@ function createSharedValidationRecords(
         return records
       }
 
-      const web = await adoptGroup("web", webRaw)
-      const api = await adoptGroup("api", apiRaw)
+      const web = adoptGroup("web", webRaw)
+      const api = adoptGroup("api", apiRaw)
       return { web, api }
     })
 }

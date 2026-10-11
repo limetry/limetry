@@ -592,10 +592,19 @@ function runAwsDeploy(branch = getCurrentBranch()): void {
   const stack = releasePulumiStack(branch)
   console.log("")
   console.log("▶ AWS deploy (Pulumi)")
-  console.log(`   Running yarn typecheck:infra && pulumi up --yes --stack ${stack}`)
+  console.log(`   Running yarn typecheck:infra && pulumi refresh && pulumi up --yes --stack ${stack}`)
   runYarn(["typecheck:infra"])
+  const infraDir = join(ROOT_DIR, "packages/infra")
+  const refresh = spawnSync("pulumi", ["refresh", "--yes", "--stack", stack], {
+    cwd: infraDir,
+    stdio: "inherit",
+    env: process.env,
+  })
+  if (refresh.status !== 0) {
+    throw new Error(`pulumi refresh --stack ${stack} failed (exit ${refresh.status ?? 1})`)
+  }
   const result = spawnSync("pulumi", ["up", "--yes", "--stack", stack], {
-    cwd: join(ROOT_DIR, "packages/infra"),
+    cwd: infraDir,
     stdio: "inherit",
     env: process.env,
   })

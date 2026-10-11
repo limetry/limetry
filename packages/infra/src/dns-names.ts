@@ -61,6 +61,28 @@ export function dnsRecordFqdn(hostname: string): string {
 }
 
 /**
+ * Stable Pulumi suffix for an ACM validation record keyed by validation FQDN.
+ *
+ * @param fqdn - Normalized validation hostname.
+ * @returns Short slug safe for Pulumi logical names.
+ */
+export function acmValidationRecordSuffix(fqdn: string): string {
+  const slug = dnsRecordFqdn(fqdn)
+    .replace(/\./g, "-")
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+  if (slug.length <= 48) {
+    return slug
+  }
+  let hash = 0
+  for (const char of slug) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  }
+  return `${slug.slice(0, 40)}-${hash.toString(16)}`
+}
+
+/**
  * Apex stacks get a `www` record; preview hosts like `dev.limetry.org` do not.
  *
  * @param domain - Stack marketing domain.
