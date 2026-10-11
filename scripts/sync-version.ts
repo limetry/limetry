@@ -133,7 +133,7 @@ checkout is beside this repo, its product version is stamped to match.
 
 Then the release runs a quality gate, commits, and tags locally. Pushing the
 release tag triggers npm publishing for all public packages at the same
-version. Publishable packages keep `^semver` `@limetry/*` ranges in git for npm.
+version. Publishable packages keep ^semver @limetry/* ranges in git for npm.
 
 AWS and Vercel also release and deploy Limetry Cloud when that checkout is
 beside this repo. The Cloud script does its own stamp, commit, and prod
