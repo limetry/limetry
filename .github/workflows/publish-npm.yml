@@ -24,6 +24,8 @@ jobs:
           node-version: "24"
           package-manager-cache: false
 
+      - name: Remove macOS metadata from checkout
+        run: find . -name .DS_Store -delete
       - name: Install dependencies
         run: yarn install --immutable
 

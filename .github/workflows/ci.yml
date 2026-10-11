@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: "22"
           cache: yarn
+      - name: Remove macOS metadata from checkout
+        run: find . -name .DS_Store -delete
       - name: Install dependencies
         run: yarn install --immutable
       - name: Lint
@@ -77,6 +79,8 @@ jobs:
         with:
           node-version: "22"
           cache: yarn
+      - name: Remove macOS metadata from checkout
+        run: find . -name .DS_Store -delete
       - run: yarn install --immutable
       - run: yarn build:sdk && yarn build:preflight && yarn build:server
       - name: Run critical-path coverage gates
