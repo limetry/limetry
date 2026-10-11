@@ -76,9 +76,9 @@ export async function browserLoginCommand(baseUrl = resolveLimetryCloudBaseUrl()
 
   const authorizeHref = authorizeUrl.toString()
   logInfo("Opening Limetry Cloud in your browser...")
-  logInfo("Complete sign-in or sign-up there, then approve CLI access.")
+  logInfo("Sign in or create an account; email verification finishes CLI setup automatically.")
   logInfo(`If the browser does not open, visit:\n  ${authorizeHref}`)
-  logInfo("Waiting for approval (times out after 5 minutes)...")
+  logInfo("Waiting for browser authentication (times out after 5 minutes)...")
 
   try {
     await open(authorizeHref)
@@ -185,20 +185,89 @@ function handleCallbackRequest(
   const state = requestUrl.searchParams.get("state")
   const error = requestUrl.searchParams.get("error")
   if (error) {
-    response.writeHead(400, { "Content-Type": "text/html" })
-    response.end("<h1>Limetry CLI authorization failed</h1><p>You can close this window.</p>")
+    response.writeHead(400, { "Content-Type": "text/html; charset=utf-8" })
+    response.end(cliCallbackHtml({
+      title: "Limetry CLI authorization failed",
+      body: "Return to the terminal and try again, or close this window.",
+      ok: false,
+    }))
     rejectResult(new Error(`Browser authorization failed: ${error}`))
     return
   }
   if (!code || !state || state !== expectedState) {
-    response.writeHead(400, { "Content-Type": "text/html" })
-    response.end("<h1>Invalid Limetry CLI callback</h1><p>You can close this window.</p>")
+    response.writeHead(400, { "Content-Type": "text/html; charset=utf-8" })
+    response.end(cliCallbackHtml({
+      title: "Invalid Limetry CLI callback",
+      body: "Return to the terminal and try again, or close this window.",
+      ok: false,
+    }))
     rejectResult(new Error("Invalid browser authentication state"))
     return
   }
-  response.writeHead(200, { "Content-Type": "text/html" })
-  response.end("<h1>Limetry CLI connected</h1><p>You can close this window.</p>")
+  response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
+  response.end(cliCallbackHtml({
+    title: "Limetry CLI connected",
+    body: "You can close this window and return to the terminal.",
+    ok: true,
+  }))
   resolveResult({ code, state })
+}
+
+/**
+ * Renders a minimal success/error page for the loopback OAuth callback.
+ *
+ * @param options - Title, body copy, and success styling flag.
+ * @returns HTML document string.
+ */
+function cliCallbackHtml(options: {
+  title: string
+  body: string
+  ok: boolean
+}): string {
+  const accent = options.ok ? "#059669" : "#dc2626"
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${options.title}</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #020617; color: #e2e8f0; }
+    }
+    main {
+      max-width: 28rem;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 { font-size: 1.5rem; margin: 0 0 0.75rem; color: ${accent}; }
+    p { margin: 0 0 1.5rem; line-height: 1.5; opacity: 0.85; }
+    nav { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    a { color: #059669; font-weight: 600; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${options.title}</h1>
+    <p>${options.body}</p>
+    <nav>
+      <a href="https://limetry.com">limetry.com</a>
+      <a href="https://limetry.org">limetry.org</a>
+    </nav>
+  </main>
+</body>
+</html>`
 }
 
 function closeServer(server: ReturnType<typeof createServer>): Promise<void> {
