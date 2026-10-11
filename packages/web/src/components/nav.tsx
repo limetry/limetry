@@ -37,12 +37,14 @@ function buildNavItems(docsChildren: NavItem[]): NavItem[] {
     { href: "/", label: "Home" },
     { href: "/blog", label: "Blog" },
     { href: "/community", label: "Community" },
+    { href: "/changelog", label: "Changelog" },
     {
       href: "/docs/introduction",
       label: "Docs",
       children: docsChildren.length > 0 ? docsChildren : undefined,
     },
     { href: "/examples", label: "Examples" },
+    { href: "/signup", label: "Get started" },
     { href: `${siteUrls.api}/openapi`, label: "API" },
   ]
 }
