@@ -80,4 +80,17 @@ describe("Navigation Types & Drawer Highlight", () => {
     expect(isNavItemOrChildActive("/dashboard", cloudHome)).toBe(false)
     expect(isNavItemOrChildActive("/pricing", cloudPricing)).toBe(true)
   })
+
+  it("does not highlight a cross-origin root next to Home on /", () => {
+    const home = { href: "/", label: "Home" }
+    const limetryOrg = { href: "https://limetry.org", label: "Limetry.org" }
+    const pathname = "/"
+
+    for (const items of [[home, limetryOrg], [limetryOrg, home]]) {
+      const activeHref = findActiveNavHref(pathname, items)
+      expect(activeHref).toBe("/")
+      expect(isItemHighlighted(pathname, home, activeHref)).toBe(true)
+      expect(isItemHighlighted(pathname, limetryOrg, activeHref)).toBe(false)
+    }
+  })
 })

@@ -229,7 +229,7 @@ function SearchButton({
       }`}
     >
       <SearchIcon />
-      <span className="hidden lg:inline">Search</span>
+      <span className="hidden xl:inline">Search</span>
       <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground xl:inline">
         ⌘K
       </kbd>

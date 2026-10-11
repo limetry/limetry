@@ -89,15 +89,25 @@ export function findActiveNavHref(pathname: string, items: NavItem[]): string | 
   let bestHref: string | null = null
   let bestLength = -1
   let bestDepth = -1
+  let bestAbsolute = false
 
   const walk = (list: NavItem[], depth: number): void => {
     for (const item of list) {
       if (isNavItemActive(pathname, item.href)) {
         const length = normalizePathname(item.href).length
-        if (length > bestLength || (length === bestLength && depth > bestDepth)) {
+        const absolute = /^https?:\/\//i.test(item.href)
+        const betterLength = length > bestLength
+        const betterDepth = length === bestLength && depth > bestDepth
+        const preferRelative =
+          length === bestLength
+          && depth === bestDepth
+          && bestAbsolute
+          && !absolute
+        if (betterLength || betterDepth || preferRelative) {
           bestLength = length
           bestDepth = depth
           bestHref = item.href
+          bestAbsolute = absolute
         }
       }
       if (item.children) {
@@ -128,8 +138,12 @@ export function isItemHighlighted(
   if (activeHref === null) {
     return false
   }
-  const matches = normalizePathname(item.href) === normalizePathname(activeHref)
-  if (!matches) {
+  /**
+   * Compare the winning href literally so cross-origin roots (for example
+   * `https://limetry.org` next to Home `/`) do not both light up after
+   * {@link normalizePathname} strips the origin to `/`.
+   */
+  if (item.href !== activeHref) {
     return false
   }
   const hasActiveChild =
@@ -150,5 +164,5 @@ export function isHighlightedNavItem(pathname: string, href: string, items: NavI
   if (activeHref === null) {
     return false
   }
-  return normalizePathname(href) === normalizePathname(activeHref)
+  return href === activeHref
 }
