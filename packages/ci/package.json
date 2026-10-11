@@ -31,15 +31,12 @@
     "directory": "packages/ci"
   },
   "scripts": {
-    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
-    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
-    "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --coverage",
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@limetry/sdk": "workspace:*"
+    "@limetry/sdk": "^1.2.70"
   },
   "peerDependencies": {
     "@limetry/sdk": "*"

@@ -24,7 +24,6 @@ docs/api
 .env.local
 .env.*.local
 *.log
-package.json.pack-backup
 **/__pycache__/
 **/.venv/
 *.pyc

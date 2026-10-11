@@ -213,6 +213,49 @@ export function setPackageVersionText(source: string, version: string): string {
   return updated
 }
 
+const PUBLISHED_DEPENDENCY_FIELDS = [
+  "dependencies",
+  "devDependencies",
+  "optionalDependencies",
+] as const
+
+/**
+ * Sets every `@limetry/*` runtime/dev dependency range to `^version` for npm publish.
+ *
+ * Publishable packages keep semver ranges in git so `npm publish` needs no manifest rewrite.
+ *
+ * @param source - package.json text.
+ * @param version - Product version (padded patches are accepted).
+ * @returns Updated package.json text, or the original when nothing changed.
+ */
+export function setPublishedLimetryDependencyRanges(source: string, version: string): string {
+  const canonical = canonicalizeVersion(version)
+  const range = `^${canonical}`
+  const manifest = JSON.parse(source) as Record<string, Record<string, string> | undefined>
+  let changed = false
+  for (const field of PUBLISHED_DEPENDENCY_FIELDS) {
+    const dependencies = manifest[field]
+    if (!dependencies || typeof dependencies !== "object") {
+      continue
+    }
+    for (const [name, depRange] of Object.entries(dependencies)) {
+      if (!name.startsWith("@limetry/") || typeof depRange !== "string") {
+        continue
+      }
+      if (depRange !== range) {
+        dependencies[name] = range
+        changed = true
+      }
+    }
+  }
+  if (!changed) {
+    return source
+  }
+  const updated = `${JSON.stringify(manifest, null, 2)}\n`
+  JSON.parse(updated)
+  return updated
+}
+
 /**
  * Returns whether `branch` is a stable release branch (`main` / `master`).
  *

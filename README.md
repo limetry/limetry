@@ -174,8 +174,9 @@ are skipped, so the retry can finish the remaining packages.
 The `v*` tag runs `.github/workflows/publish-npm.yml`. Publishing uses npm
 Trusted Publishing via GitHub Actions OIDC; no npm write token or `NPM_TOKEN`
 Actions secret is needed. npm generates provenance. Root and publishable
-package versions are the same semver (`1.2.42`). `npm publish` rewrites Yarn
-`workspace:` ranges to that semver while packing, then restores the manifests.
+package versions are the same semver (`1.2.42`). Publishable packages list
+`@limetry/*` dependencies as `^semver` in git so `npm publish` needs no manifest
+rewrite (`yarn sync-version` keeps those ranges in sync).
 
 ### Configure npm Trusted Publishing
 

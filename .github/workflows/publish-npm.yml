@@ -104,10 +104,6 @@ jobs:
           package="${{ matrix.package }}"
           name="@limetry/$package"
           version="$(node -p "require('./packages/${package}/package.json').version")"
-          restore_pack_manifest() {
-            node scripts/rewrite-workspace-protocol.mjs restore "packages/$package" || true
-          }
-          trap restore_pack_manifest EXIT
           if npm view "$name@$version" version >/dev/null 2>&1; then
             echo "$name@$version is already published; skipping it."
             exit 0

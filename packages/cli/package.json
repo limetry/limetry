@@ -22,16 +22,13 @@
     "directory": "packages/cli"
   },
   "scripts": {
-    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
-    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
-    "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "dev": "node dist/index.js",
     "test": "vitest run --passWithNoTests",
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@limetry/sdk": "workspace:*",
+    "@limetry/sdk": "^1.2.70",
     "chalk": "^6.0.0",
     "commander": "^15.0.0",
     "inquirer": "^14.0.2",

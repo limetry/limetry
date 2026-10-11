@@ -29,6 +29,7 @@ import {
   type ReleaseBump,
   releaseTypeFromChoice,
   setPackageVersionText,
+  setPublishedLimetryDependencyRanges,
 } from "./release-version.js"
 import {
   buildCompatibility,
@@ -132,8 +133,7 @@ checkout is beside this repo, its product version is stamped to match.
 
 Then the release runs a quality gate, commits, and tags locally. Pushing the
 release tag triggers npm publishing for all public packages at the same
-version. npm publish rewrites workspace: ranges while packing and restores
-the manifests afterward.
+version. Publishable packages keep `^semver` `@limetry/*` ranges in git for npm.
 
 AWS and Vercel also release and deploy Limetry Cloud when that checkout is
 beside this repo. The Cloud script does its own stamp, commit, and prod
@@ -330,9 +330,16 @@ function applyReleaseVersion(version: string, schemaBump: ReleaseBump = "patch")
     join(ROOT_DIR, "packages/web/package.json"),
     ...PUBLISHABLE_WORKSPACES.map((workspace) => join(ROOT_DIR, workspace, "package.json")),
   ]
+  const publishableManifests = new Set(
+    PUBLISHABLE_WORKSPACES.map((workspace) => join(ROOT_DIR, workspace, "package.json")),
+  )
   for (const absolute of productPaths) {
     const source = readFileSync(absolute, "utf8")
-    writeFileSync(absolute, setPackageVersionText(source, canonical))
+    let next = setPackageVersionText(source, canonical)
+    if (publishableManifests.has(absolute)) {
+      next = setPublishedLimetryDependencyRanges(next, canonical)
+    }
+    writeFileSync(absolute, next)
   }
   writeFileSync(APP_VERSION_PATH, formatAppVersionSource(canonical))
 

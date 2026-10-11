@@ -150,11 +150,12 @@ The workflow builds and tests packages, then publishes them with GitHub OIDC.
 npm requires Node 22.14+ and npm 11.5.1+ for Trusted Publishing; the workflow
 uses Node 24 and npm 11.5.1. npm generates provenance automatically. Release
 versions are semver (`1.2.42`) in the root manifest and in every publishable
-package.json. One-off publish from a package directory is `npm publish`; pack
-scripts rewrite `workspace:` ranges for the tarball and restore the files.
+package.json, with `@limetry/*` dependencies as `^semver` (updated by
+`yarn sync-version`). Local maintainer publish:
 
 ```bash
-npm publish --access public
+yarn publish:cli
+# or: yarn publish:all  (builds, then publishes in dependency order)
 ```
 
 ### Configure Trusted Publishing on npmjs.com

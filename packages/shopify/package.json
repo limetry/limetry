@@ -26,9 +26,6 @@
     "directory": "packages/shopify"
   },
   "scripts": {
-    "prepack": "node ../../scripts/rewrite-workspace-protocol.mjs prepare",
-    "postpack": "node ../../scripts/rewrite-workspace-protocol.mjs restore-after-pack",
-    "postpublish": "node ../../scripts/rewrite-workspace-protocol.mjs restore",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --coverage",
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
@@ -37,7 +34,7 @@
     "@limetry/sdk": "*"
   },
   "devDependencies": {
-    "@limetry/sdk": "workspace:*",
+    "@limetry/sdk": "^1.2.70",
     "@types/node": "^26.4.1",
     "@vitest/coverage-v8": "4.1.11",
     "typescript": "^5.8.2",

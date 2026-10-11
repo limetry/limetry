@@ -14,6 +14,7 @@ import {
   planSharedRelease,
   releaseTypeFromChoice,
   setPackageVersionText,
+  setPublishedLimetryDependencyRanges,
 } from "./release-version.js"
 
 describe("release-version", () => {
@@ -138,6 +139,22 @@ describe("release-version", () => {
     })
     expect(setPackageVersionText(withVersion, "1.2.43")).toContain("\"version\": \"1.2.43\"")
     expect(setPackageVersionText(withVersion, "1.2.42")).toBe(withVersion)
+  })
+
+  it("rewrites @limetry dependencies to caret semver for npm publish", () => {
+    const source = [
+      "{",
+      "  \"dependencies\": {",
+      "    \"@limetry/sdk\": \"workspace:*\",",
+      "    \"chalk\": \"^6.0.0\"",
+      "  }",
+      "}",
+      "",
+    ].join("\n")
+    const updated = setPublishedLimetryDependencyRanges(source, "1.2.70")
+    expect(updated).toContain("\"@limetry/sdk\": \"^1.2.70\"")
+    expect(updated).toContain("\"chalk\": \"^6.0.0\"")
+    expect(setPublishedLimetryDependencyRanges(updated, "1.2.70")).toBe(updated)
   })
 
   it("parses CLI flags", () => {

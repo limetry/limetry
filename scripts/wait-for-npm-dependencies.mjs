@@ -5,8 +5,6 @@ import { readFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { readWorkspaceVersions } from "./rewrite-workspace-protocol.mjs"
-
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const workspacePath = process.argv[2]
 
@@ -15,10 +13,20 @@ if (!workspacePath) {
   process.exit(1)
 }
 
+/**
+ * @param {string} range - Semver range from package.json.
+ * @returns {string} Exact version to check on the registry.
+ */
+function versionFromRange(range) {
+  if (range.startsWith("^") || range.startsWith("~")) {
+    return range.slice(1)
+  }
+  return range
+}
+
 const packageJson = JSON.parse(
   readFileSync(join(rootDir, workspacePath, "package.json"), "utf8"),
 )
-const workspaceVersions = readWorkspaceVersions(rootDir)
 const dependencies = Object.entries(packageJson.dependencies ?? {})
   .filter(([name]) => name.startsWith("@limetry/"))
 
@@ -26,15 +34,13 @@ for (const [name, range] of dependencies) {
   if (typeof range !== "string") {
     throw new Error(`Invalid npm dependency range for ${name}.`)
   }
-
-  let publishedRange = range
   if (range.startsWith("workspace:")) {
-    const version = workspaceVersions.get(name)
-    if (typeof version !== "string") {
-      throw new Error(`Missing semver version for workspace dependency ${name}.`)
-    }
-    publishedRange = version
+    throw new Error(
+      `${name} still uses ${range}; publishable packages should use ^semver (run yarn sync-version).`,
+    )
   }
+
+  const publishedRange = versionFromRange(range)
 
   let published = false
   for (let attempt = 1; attempt <= 60; attempt += 1) {
