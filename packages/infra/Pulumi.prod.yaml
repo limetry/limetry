@@ -17,7 +17,7 @@ config:
   limetry-oss:enableCostMonitoring: "true"
   limetry-oss:githubUrl: https://github.com/limetry/limetry
   limetry-oss:invalidateOnDeploy: "true"
-  limetry-oss:isCloudEnabled: "false"
+  limetry-oss:isCloudEnabled: "true"
   limetry-oss:launchingSoon: "false"
   limetry-oss:manageCloudflare: "true"
   limetry-oss:manageRoute53: "false"
