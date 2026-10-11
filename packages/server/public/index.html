@@ -231,6 +231,22 @@
       box-shadow: 0 10px 24px hsl(var(--primary) / 0.25);
     }
 
+    .btn-header-cta {
+      background: linear-gradient(to right, #10b981, #06b6d4);
+      color: #fff;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+      padding: 0.375rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .btn-header-cta:hover {
+      background: linear-gradient(to right, #34d399, #22d3ee);
+      box-shadow: 0 4px 6px rgb(0 0 0 / 0.1);
+      transform: none;
+    }
+
     .btn-ghost {
       background: hsl(var(--card));
       color: hsl(var(--foreground));
@@ -562,7 +578,7 @@
             </svg>
           </button>
           <!-- launching-soon:cloud -->
-          <a class="btn btn-primary" href="__APP_ORIGIN__">Cloud</a>
+          <a class="btn btn-header-cta" href="__APP_ORIGIN__">Cloud →</a>
           <!-- /launching-soon:cloud -->
         </nav>
       </div>
