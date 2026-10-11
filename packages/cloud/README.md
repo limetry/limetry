@@ -10,6 +10,16 @@ compute providers:
 Select exactly one provider with `cloudProvider`. New stacks use AWS in
 `us-east-1` unless you choose another provider and location.
 
+## Monorepo install
+
+`packages/cloud` is not part of the root Yarn workspace (it vendors the Neon
+provider via `file:../../pulumi-neon`). From the repo root:
+
+```sh
+cd packages/pulumi-neon && yarn build
+cd ../cloud && yarn install
+```
+
 ## Initialize a stack
 
 Pulumi does not execute a project-defined hook during `pulumi stack init`.

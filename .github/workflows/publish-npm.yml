@@ -21,13 +21,11 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: "24"
-          package-manager-cache: false
+          node-version: "22"
+          cache: yarn
 
-      - name: Remove macOS metadata from checkout
-        run: find . -name .DS_Store -delete
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Install publish workspace dependencies
+        run: bash scripts/yarn-focus-publish.sh
 
       - name: Build all packages
         run: |

@@ -5,8 +5,7 @@
     "repository": "https://github.com/kislerdm/terraform-provider-neon",
     "main": "bin/index.js",
     "scripts": {
-        "build": "tsc",
-        "postinstall": "node ./scripts/postinstall.js"
+        "build": "tsc && node ./scripts/copy-package-json.js"
     },
     "dependencies": {
         "@pulumi/pulumi": "^3.238.0",

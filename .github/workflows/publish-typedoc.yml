@@ -29,10 +29,8 @@ jobs:
         with:
           node-version: "22"
           cache: yarn
-      - name: Remove macOS metadata from checkout
-        run: find . -name .DS_Store -delete
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Install publish workspace dependencies
+        run: bash scripts/yarn-focus-publish.sh
       - name: Build workspace packages for TypeDoc resolution
         run: >
           yarn build:sdk
