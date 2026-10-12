@@ -29,6 +29,12 @@ export { AlertBanner, EmptyState, PageHeader } from "./components/page-header"
 export { StatCard } from "./components/stat-card"
 export { cn } from "./lib/cn"
 export {
+  buildSiteFooterLinks,
+  type BuildSiteFooterLinksInput,
+  type SiteFooterLink,
+  type SiteFooterLinks,
+} from "./lib/site-footer-links"
+export {
   findActiveNavHref,
   isHighlightedNavItem,
   isItemHighlighted,

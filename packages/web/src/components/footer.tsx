@@ -3,6 +3,7 @@
  */
 
 import { APP_VERSION } from "@limetry/sdk"
+import { buildSiteFooterLinks, type SiteFooterLink } from "@limetry/ui"
 import Link from "next/link"
 
 import { Logo } from "@/components/brand"
@@ -11,32 +12,22 @@ import { isLaunchOpen } from "@/lib/launching-soon"
 import { isExternalHref, siteUrls } from "@/lib/site-urls"
 
 /**
- * Builds footer link columns from {@link siteUrls}.
+ * Renders one footer destination with optional new-tab attributes.
  *
- * @returns Product, open-source, and docs link groups.
+ * @param props - Link model from {@link buildSiteFooterLinks}.
+ * @returns Anchor list item content.
  */
-function getFooterLinks() {
-  return {
-    product: [
-      { href: "/docs/introduction", label: "Docs" },
-      { href: "/examples", label: "Examples" },
-      { href: "/docs/quick-start", label: "Quick start" },
-      ...(isLaunchOpen() ? [{ href: siteUrls.app, label: "Limetry Cloud" }] : []),
-      { href: `${siteUrls.api}/openapi`, label: "OpenAPI" },
-    ],
-    opensource: [
-      { href: siteUrls.github, label: "GitHub" },
-      { href: "/community", label: "Community" },
-      { href: "/blog", label: "Blog" },
-      { href: "/changelog", label: "Changelog" },
-    ],
-    docs: [
-      { href: "/docs/quick-start", label: "Quick Start" },
-      { href: "/docs/sdk", label: "SDK Reference" },
-      { href: "/docs/server/self-hosting", label: "Deploy" },
-      { href: `${siteUrls.api}/openapi`, label: "Swagger UI" },
-    ],
-  }
+function FooterAnchor({ link }: { link: SiteFooterLink }): React.JSX.Element {
+  const external = link.external === true || isExternalHref(link.href)
+  return (
+    <Link
+      href={link.href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {link.label}
+    </Link>
+  )
 }
 
 /**
@@ -45,7 +36,14 @@ function getFooterLinks() {
  * @returns Footer element.
  */
 export function Footer(): React.JSX.Element {
-  const footerLinks = getFooterLinks()
+  const footerLinks = buildSiteFooterLinks({
+    ossWebOrigin: siteUrls.web,
+    cloudAppOrigin: siteUrls.app,
+    openApiHref: `${siteUrls.api}/openapi`,
+    githubUrl: siteUrls.github,
+    includeCloudLink: isLaunchOpen(),
+    ossLinksRelative: true,
+  })
 
   return (
     <>
@@ -58,7 +56,7 @@ export function Footer(): React.JSX.Element {
                 <Logo className="h-8 w-auto" />
               </Link>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                Agent action governance — evaluate, allow, deny, and audit tool calls before they land.
+                {footerLinks.blurb}
               </p>
               <div className="mt-4 flex gap-3">
                 <Link
@@ -86,16 +84,8 @@ export function Footer(): React.JSX.Element {
               <h3 className="text-sm font-semibold text-foreground">Product</h3>
               <ul className="mt-4 space-y-2">
                 {footerLinks.product.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      {...(isExternalHref(link.href)
-                        ? { target: "_blank", rel: "noopener noreferrer" }
-                        : {})}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </Link>
+                  <li key={`${link.label}-${link.href}`}>
+                    <FooterAnchor link={link} />
                   </li>
                 ))}
               </ul>
@@ -105,16 +95,8 @@ export function Footer(): React.JSX.Element {
               <h3 className="text-sm font-semibold text-foreground">Open Source</h3>
               <ul className="mt-4 space-y-2">
                 {footerLinks.opensource.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      {...(isExternalHref(link.href)
-                        ? { target: "_blank", rel: "noopener noreferrer" }
-                        : {})}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </Link>
+                  <li key={`${link.label}-${link.href}`}>
+                    <FooterAnchor link={link} />
                   </li>
                 ))}
               </ul>
@@ -124,16 +106,8 @@ export function Footer(): React.JSX.Element {
               <h3 className="text-sm font-semibold text-foreground">Docs</h3>
               <ul className="mt-4 space-y-2">
                 {footerLinks.docs.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      {...(isExternalHref(link.href)
-                        ? { target: "_blank", rel: "noopener noreferrer" }
-                        : {})}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </Link>
+                  <li key={`${link.label}-${link.href}`}>
+                    <FooterAnchor link={link} />
                   </li>
                 ))}
               </ul>
@@ -145,12 +119,8 @@ export function Footer(): React.JSX.Element {
               Copyright © {new Date().getFullYear()} Limetry
             </p>
             <div className="flex items-center gap-4">
-              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
-                Privacy
-              </Link>
-              <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
-                Terms
-              </Link>
+              <FooterAnchor link={footerLinks.legal.privacy} />
+              <FooterAnchor link={footerLinks.legal.terms} />
               <span className="text-sm text-muted-foreground" title="App version">
                 v{APP_VERSION}
               </span>
