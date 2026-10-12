@@ -3,7 +3,7 @@
  */
 
 import { APP_VERSION } from "@limetry/sdk"
-import { buildSiteFooterLinks, type SiteFooterLink } from "@limetry/ui"
+import { buildSiteFooterLinks, type SiteFooterLink } from "@limetry/ui/site-footer-links"
 import Link from "next/link"
 
 import { Logo } from "@/components/brand"

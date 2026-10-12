@@ -28,6 +28,11 @@
       "import": "./src/components/site-header.web.tsx",
       "default": "./src/components/site-header.web.tsx"
     },
+    "./site-footer-links": {
+      "types": "./src/lib/site-footer-links.ts",
+      "import": "./src/lib/site-footer-links.ts",
+      "default": "./src/lib/site-footer-links.ts"
+    },
     "./theme-toggle": {
       "types": "./src/components/theme-toggle.web.tsx",
       "react-native": "./src/components/theme-toggle.tsx",

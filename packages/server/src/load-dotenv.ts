@@ -15,8 +15,15 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..")
 /**
  * Loads the monorepo root `.env` via `@dotenvx/dotenvx` without logging.
  *
+ * Uses `overload: true` so repo `.env` wins over stale debugger / shell exports.
+ *
  * @returns Nothing.
  */
 export function loadDotenv(): void {
-  dotenvx.config({ path: repoRoot, convention: "nextjs", quiet: true })
+  dotenvx.config({
+    path: repoRoot,
+    convention: "nextjs",
+    quiet: true,
+    overload: true,
+  })
 }
