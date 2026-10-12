@@ -1,6 +1,6 @@
 {
   "name": "@limetry/preflight",
-  "version": "1.2.72",
+  "version": "1.2.74-dev.unified-infra-d735e0.1",
   "description": "Startup preflight checks with secret masking, connectivity probes, and formatted listen URLs",
   "license": "MIT",
   "type": "module",
