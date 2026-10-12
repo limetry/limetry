@@ -3,9 +3,10 @@
  *
  * Bumps the root package.json and every publishable workspace package.json to
  * the same semver, stamps `packages/sdk/src/app-version.ts`, runs a quality
- * gate, commits/tags, then deploys via AWS (Pulumi) or watches GitHub→Vercel.
+ * gate, commits/tags, then watches GitHub→Vercel. AWS Pulumi is not run here.
  *
- * CLI: `yarn release`, `yarn release:aws`, `yarn release:vercel`, `yarn sync-version`.
+ * CLI: `yarn release`, `yarn release:vercel`, `yarn sync-version`.
+ * AWS Pulumi deploys run from limetry-enterprise (`yarn release:aws`).
  * Exports version-stamping helpers for tests.
  */
 
@@ -19,7 +20,6 @@ import {
   branchDevelopmentVersion,
   canonicalizeVersion,
   type DeployTarget,
-  deployTargetFromChoice,
   formatAppVersionSource,
   isStableReleaseBranch,
   parseReleaseCliArgs,
@@ -114,7 +114,6 @@ const VERSION_FILES = [
 function printHelp(): void {
   console.log(`Usage:
   yarn release                 Interactive production release (main/master)
-  yarn release:aws             Release then deploy AWS (Pulumi), using dev on feature branches
   yarn release:vercel          Push release then watch GitHub→Vercel deploys
   yarn release --patch --yes   Non-interactive patch release
   yarn release --minor --yes
@@ -135,13 +134,10 @@ Then the release runs a quality gate, commits, and tags locally. Pushing the
 release tag triggers npm publishing for all public packages at the same
 version. Publishable packages keep ^semver @limetry/* ranges in git for npm.
 
-AWS and Vercel also release and deploy Limetry Cloud when that checkout is
-beside this repo. The Cloud script does its own stamp, commit, and prod
-deploy, then this repo pushes. --no-peer stays on this stack. A Cloud
-checkout already tagged at this version still gets a prod Pulumi update.
+Vercel also stamps Limetry Cloud when that checkout is beside this repo.
+AWS Pulumi (Core + Cloud) is deployed only from limetry-enterprise with
+yarn release:aws. --no-peer stays on this stack.
 
-AWS: runs Pulumi against the prod stack on main/master, or the dev stack on
-other branches, before push. Failed deploys roll back the local commit/tag.
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
 that commit SHA until READY. Failed Vercel builds cannot un-push; fix forward
 or revert. Use yarn deploy:vercel only as a CLI escape hatch.`)
@@ -563,16 +559,22 @@ async function promptDeployTarget(
   question: (query: string) => Promise<string>,
 ): Promise<DeployTarget> {
   console.log("Select deploy target:")
-  console.log("1. AWS (Pulumi) [default]")
-  console.log("2. Vercel")
-  console.log("3. Skip deploy")
+  console.log("1. Vercel [default]")
+  console.log("2. Skip deploy")
+  console.log("   AWS Pulumi deploys from limetry-enterprise (yarn release:aws)")
 
-  const choice = await question("Choice (1-3) [1]: ")
-  const deployTarget = deployTargetFromChoice(choice)
-  if (!deployTarget) {
-    throw new Error("Invalid deploy choice")
+  const choice = await question("Choice (1-2) [1]: ")
+  const normalized = choice.trim().toLowerCase()
+  if (normalized === "1" || normalized === "" || normalized === "vercel") {
+    return "vercel"
   }
-  return deployTarget
+  if (normalized === "2" || normalized === "skip") {
+    return "skip"
+  }
+  if (normalized === "aws" || normalized === "3") {
+    refuseAwsDeploy()
+  }
+  throw new Error("Invalid deploy choice")
 }
 
 /**
@@ -595,30 +597,10 @@ export function releasePulumiStack(branch: string): "prod" | "dev" {
  * @returns Nothing.
  * @throws Error When typecheck or `pulumi up` fails.
  */
-function runAwsDeploy(branch = getCurrentBranch()): void {
-  const stack = releasePulumiStack(branch)
-  console.log("")
-  console.log("▶ AWS deploy (Pulumi)")
-  console.log(`   Running yarn typecheck:infra && pulumi refresh && pulumi up --yes --stack ${stack}`)
-  runYarn(["typecheck:infra"])
-  const infraDir = join(ROOT_DIR, "packages/infra")
-  const refresh = spawnSync("pulumi", ["refresh", "--yes", "--stack", stack], {
-    cwd: infraDir,
-    stdio: "inherit",
-    env: process.env,
-  })
-  if (refresh.status !== 0) {
-    throw new Error(`pulumi refresh --stack ${stack} failed (exit ${refresh.status ?? 1})`)
-  }
-  const result = spawnSync("pulumi", ["up", "--yes", "--stack", stack], {
-    cwd: infraDir,
-    stdio: "inherit",
-    env: process.env,
-  })
-  if (result.status !== 0) {
-    throw new Error(`pulumi up --stack ${stack} failed (exit ${result.status ?? 1})`)
-  }
-  console.log("✨ AWS deploy succeeded.")
+function refuseAwsDeploy(): never {
+  throw new Error(
+    "AWS Pulumi deploys from limetry-enterprise. Run yarn release:aws there (core then cloud).",
+  )
 }
 
 /**
@@ -721,9 +703,8 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  if (args.deployOnly === "aws") {
-    runAwsDeploy()
-    return
+  if (args.deployOnly === "aws" || args.deploy === "aws") {
+    refuseAwsDeploy()
   }
 
   const rl = readline.createInterface({
@@ -819,7 +800,10 @@ async function main(): Promise<void> {
     let pushed = false
     let versionFiles: string[] = trackedPaths
     const deployTarget = args.deploy
-      ?? (args.yes ? "aws" : await promptDeployTarget(question))
+      ?? (args.yes ? "vercel" : await promptDeployTarget(question))
+    if (deployTarget === "aws") {
+      refuseAwsDeploy()
+    }
 
     closeReadline()
 
@@ -831,17 +815,7 @@ async function main(): Promise<void> {
         tagExistingCommit: plan.action === "adopt-peer",
       })
       committed = true
-      if (deployTarget === "aws") {
-        runAwsDeploy()
-        if (args.peer) {
-          runPeerFollowUp(deployTarget, newVersion, args.schemaBump)
-        }
-        pushRelease(currentBranch, newVersion)
-        pushed = true
-        console.log("")
-        console.log(`✨ Successfully released version ${newVersion}.`)
-        console.log("🚀 Release tag pushed after successful AWS (Pulumi) deploy.")
-      } else if (deployTarget === "vercel") {
+      if (deployTarget === "vercel") {
         if (args.peer) {
           runPeerFollowUp(deployTarget, newVersion, args.schemaBump)
         }

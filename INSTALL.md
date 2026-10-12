@@ -202,7 +202,9 @@ not require Rust or a separate native library. See [USAGE.md](USAGE.md),
 `.env.example`, and `.env.production.example` for production environment
 requirements (`USE_POSTGRES_STORE=true`, unique `JWT_SECRET` / `LIMETRY_BEARER_TOKEN` /
 `DECISION_HMAC_SECRET`, and a non-loopback `DATABASE_URL`). Pulumi injects those keys from stack
-secrets — see [packages/infra/README.md](packages/infra/README.md).
+secrets — see the Core Pulumi project in
+[limetry-enterprise/packages/infra](https://github.com/limetry/limetry-enterprise)
+(`projects/core`). AWS deploys run from that checkout with `yarn release:aws`.
 
 ## Distribution Roadmap
 

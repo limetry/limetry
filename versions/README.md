@@ -5,10 +5,11 @@ Limetry has two version lines.
 ## Product
 
 Packages, websites, and the Cloud checkout share one semver (`1.2.46`).
-`yarn release` and `yarn release:aws` from either checkout release and deploy
-both stacks when the other repo is checked out beside this one. The first
-stack bumps the version. The other stack adopts that version. `yarn sync-version`
-restamps every product file from the root `package.json` without bumping.
+`yarn release:aws` from **limetry-enterprise** stamps both checkouts, deploys
+Core then Cloud Pulumi surfaces, and tags both repos only after both succeed.
+`yarn release` / `yarn release:vercel` from this checkout still stamp product
+files and can watch Vercel. `yarn sync-version` restamps every product file
+from the root `package.json` without bumping.
 
 A release is compatible with other product versions on the same minor line,
 for example `>=1.2.0 <1.3.0`.

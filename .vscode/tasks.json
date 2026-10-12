@@ -38,19 +38,6 @@
       }
     },
     {
-      "label": "release:aws",
-      "type": "shell",
-      "command": "yarn release:aws",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-    {
       "label": "release:vercel",
       "type": "shell",
       "command": "yarn release:vercel",

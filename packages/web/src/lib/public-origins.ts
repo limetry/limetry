@@ -20,8 +20,9 @@ export type ResolvedOrigin = {
 }
 
 /**
- * Stable product origins. Keep aligned with `packages/infra` Pulumi defaults
- * (`domain`, `apiHostname`) and sibling portal/API hostnames when configured.
+ * Stable product origins. Keep aligned with Core Pulumi defaults
+ * (`limetry-enterprise/packages/infra/projects/core`) and sibling portal/API
+ * hostnames when configured.
  */
 export const CANONICAL_ORIGINS = {
   web: LIMETRY_OSS_ORIGINS.web,
