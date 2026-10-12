@@ -1,6 +1,6 @@
 {
   "name": "@limetry/mcp",
-  "version": "1.2.71",
+  "version": "1.2.72",
   "description": "MCP server for Limetry agent action governance and telemetry",
   "license": "MIT",
   "type": "module",
@@ -27,7 +27,7 @@
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@limetry/sdk": "^1.2.71",
+    "@limetry/sdk": "^1.2.72",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^4.5.4"
   },
