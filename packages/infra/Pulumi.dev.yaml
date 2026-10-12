@@ -21,6 +21,7 @@ config:
   limetry-oss:isGoogleSsoEnabled: "true"
   limetry-oss:isSsoEnabled: "false"
   limetry-oss:isCloudEnabled: "true"
+  limetry-oss:isHeaderSticky: "true"
   limetry-oss:launchingSoon: "false"
   limetry-oss:manageCloudflare: "true"
   limetry-oss:manageRoute53: "false"

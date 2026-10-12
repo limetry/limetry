@@ -34,6 +34,7 @@ export function SiteHeader({
   onNavigate,
   className,
   topOffset,
+  scrollHide: _scrollHide,
 }: SiteHeaderProps): React.JSX.Element {
   const [internalMenuOpen, setInternalMenuOpen] = useState(false)
   const isMenuOpen = menuOpen ?? internalMenuOpen

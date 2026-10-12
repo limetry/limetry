@@ -130,6 +130,17 @@
       background: hsl(var(--background) / 0.95);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
+      transition: transform 0.2s ease-out;
+      will-change: transform;
+    }
+
+    .site-header.is-glass {
+      border-bottom-color: hsl(var(--border) / 0.4);
+      background: hsl(var(--background) / 0.55);
+    }
+
+    .site-header.is-scroll-hidden {
+      transform: translateY(-100%);
     }
 
     .site-header-inner {
@@ -557,11 +568,11 @@
     <div class="mesh" aria-hidden="true"></div>
     <img class="accent" src="/limetry-icon.svg" alt="" aria-hidden="true" />
 
-    <header class="site-header">
+    <header class="site-header" data-header-sticky="__IS_HEADER_STICKY__">
       <div class="site-header-inner">
         <a class="brand" href="/" aria-label="Limetry API home">
-          <img class="brand-logo brand-logo-light" src="/limetry-logo-black.png" alt="Limetry" />
-          <img class="brand-logo brand-logo-dark" src="/limetry-logo-white.png" alt="Limetry" />
+          <img class="brand-logo brand-logo-light" src="/limetry-logo-black.svg" alt="Limetry" />
+          <img class="brand-logo brand-logo-dark" src="/limetry-logo-white.svg" alt="Limetry" />
         </a>
         <nav class="nav" aria-label="Primary">
           <a class="nav-link" href="/health">Health</a>
@@ -740,8 +751,8 @@ limetry audit tail --limit 5</pre>
         <div class="site-footer-grid">
           <div class="site-footer-brand">
             <a class="site-footer-logo" href="__WEB_ORIGIN__" aria-label="Limetry home">
-              <img class="logo-light" src="/limetry-logo-black.png" alt="Limetry" />
-              <img class="logo-dark" src="/limetry-logo-white.png" alt="" />
+              <img class="logo-light" src="/limetry-logo-black.svg" alt="Limetry" />
+              <img class="logo-dark" src="/limetry-logo-white.svg" alt="" />
             </a>
             <p class="site-footer-blurb">Agent action governance — evaluate, allow, deny, and audit tool calls before they land.</p>
             <div class="site-footer-social">
@@ -804,6 +815,23 @@ limetry audit tail --limit 5</pre>
         document.documentElement.classList.toggle("dark", nextDark);
         try { localStorage.setItem("limetry-theme", nextDark ? "dark" : "light"); } catch (e) {}
       });
+    })();
+
+    (function () {
+      var header = document.querySelector(".site-header");
+      if (!header || header.getAttribute("data-header-sticky") !== "true") return;
+      header.classList.add("is-glass");
+      var lastY = window.scrollY || 0;
+      var hidden = false;
+      window.addEventListener("scroll", function () {
+        var y = window.scrollY || 0;
+        if (y > lastY + 4 && y > 64) {
+          if (!hidden) { header.classList.add("is-scroll-hidden"); hidden = true; }
+        } else if (y < lastY - 2) {
+          if (hidden) { header.classList.remove("is-scroll-hidden"); hidden = false; }
+        }
+        lastY = y;
+      }, { passive: true });
     })();
   </script>
 </body>

@@ -5,7 +5,7 @@
  */
 
 import type { ComponentType, JSX } from "react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "../lib/cn"
 import { isNavItemActive } from "../navigation/types"
@@ -83,8 +83,11 @@ export function SiteHeader({
   className,
   drawerClassName,
   topOffset = 64,
+  scrollHide = false,
 }: SiteHeaderProps): JSX.Element {
   const [internalMenuOpen, setInternalMenuOpen] = useState(false)
+  const [scrollHidden, setScrollHidden] = useState(false)
+  const lastScrollY = useRef(0)
   const menuOpen = controlledMenuOpen ?? internalMenuOpen
   const setMenuOpen = useCallback(
     (open: boolean): void => {
@@ -114,11 +117,62 @@ export function SiteHeader({
     onMenuOpenChange?.(false)
   }, [pathname, onMenuOpenChange])
 
+  useEffect(() => {
+    if (!scrollHide) {
+      return
+    }
+
+    const host = globalThis as {
+      scrollY?: number
+      addEventListener?: (type: string, listener: () => void, options?: { passive?: boolean }) => void
+      removeEventListener?: (type: string, listener: () => void) => void
+      queueMicrotask?: (callback: () => void) => void
+    }
+    if (typeof host.addEventListener !== "function" || typeof host.removeEventListener !== "function") {
+      return
+    }
+
+    lastScrollY.current = typeof host.scrollY === "number" ? host.scrollY : 0
+
+    const onScroll = (): void => {
+      const y = typeof host.scrollY === "number" ? host.scrollY : 0
+      const previous = lastScrollY.current
+      if (y > previous + 4 && y > 64) {
+        setScrollHidden(true)
+      } else if (y < previous - 2) {
+        setScrollHidden(false)
+      }
+      lastScrollY.current = y
+    }
+
+    host.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      host.removeEventListener?.("scroll", onScroll)
+    }
+  }, [scrollHide])
+
+  useEffect(() => {
+    if (!scrollHide || !menuOpen) {
+      return
+    }
+    const schedule = (globalThis as { queueMicrotask?: (callback: () => void) => void }).queueMicrotask
+      ?? ((callback: () => void) => {
+        setTimeout(callback, 0)
+      })
+    schedule(() => {
+      setScrollHidden(false)
+    })
+  }, [menuOpen, scrollHide])
+
   return (
     <>
       <header
         className={cn(
-          "sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-xl",
+          "sticky top-0 z-50 w-full border-b transition-transform duration-200 ease-out will-change-transform",
+          scrollHide
+            ? "border-border/40 bg-background/55 backdrop-blur-xl supports-[backdrop-filter]:bg-background/45"
+            : "border-border/60 bg-background/95 backdrop-blur-xl",
+          scrollHide && scrollHidden && !menuOpen ? "-translate-y-full" : "translate-y-0",
           className,
         )}
       >

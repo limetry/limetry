@@ -2,8 +2,6 @@
  * Limetry logo and decorative icon accents for marketing chrome.
  */
 
-import Image from "next/image"
-
 /**
  * Shared className prop for brand mark components.
  */
@@ -12,21 +10,25 @@ interface BrandProps {
 }
 
 /**
- * Full Limetry wordmark (icon + text) rendered from the brand PNG.
+ * Limetry wordmark: brand icon plus gradient logo text (#21b263 → #27A1D2).
  *
- * @param props - Optional Tailwind `className` override.
- * @returns Logo image.
+ * @param props - Optional Tailwind `className` override on the outer span.
+ * @returns Wordmark mark.
  */
-export function Logo({ className = "h-8 w-auto shrink-0 object-contain" }: BrandProps): React.JSX.Element {
+export function Logo({ className = "h-8 shrink-0" }: BrandProps): React.JSX.Element {
   return (
-    <Image
-      src="/limetry-logo.png"
-      alt="Limetry"
-      width={280}
-      height={80}
-      priority
-      className={className}
-    />
+    <span className={`inline-flex items-center gap-2 ${className}`} role="img" aria-label="Limetry">
+      {/* eslint-disable-next-line @next/next/no-img-element -- intentional static SVG */}
+      <img
+        src="/limetry-icon.svg"
+        alt=""
+        aria-hidden="true"
+        className="h-8 w-8 shrink-0"
+      />
+      <span className="bg-linear-to-r from-[#21b263] to-[#27A1D2] bg-clip-text text-[1.35rem] font-bold tracking-tight text-transparent">
+        Limetry
+      </span>
+    </span>
   )
 }
 
@@ -38,7 +40,6 @@ export function Logo({ className = "h-8 w-auto shrink-0 object-contain" }: Brand
  */
 export function IconAccent({ className = "" }: BrandProps): React.JSX.Element {
   return (
-    // Decorative static SVG; next/image adds no benefit for aria-hidden accents.
     // eslint-disable-next-line @next/next/no-img-element -- intentional static SVG
     <img
       src="/limetry-icon.svg"

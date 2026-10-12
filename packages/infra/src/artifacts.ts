@@ -77,6 +77,10 @@ export type ArtifactBuildInputs = {
   isCloudEnabled?: string
   /** `"true"` enables public Cloud and auth links after launch. */
   launchingSoon?: string
+  /**
+   * `"true"` enables glass sticky headers (`NEXT_PUBLIC_IS_HEADER_STICKY`).
+   */
+  isHeaderSticky?: string
 }
 
 /**
@@ -161,6 +165,8 @@ export function webPublicEnv(inputs: ArtifactBuildInputs): NodeJS.ProcessEnv {
     NEXT_PUBLIC_IS_APPLE_SSO_ENABLED: inputs.isAppleSsoEnabled ?? "true",
     NEXT_PUBLIC_IS_CLOUD_ENABLED: inputs.isCloudEnabled ?? "false",
     NEXT_PUBLIC_LAUNCHING_SOON: inputs.launchingSoon ?? "false",
+    NEXT_PUBLIC_IS_HEADER_STICKY: inputs.isHeaderSticky ?? "true",
+    IS_HEADER_STICKY: inputs.isHeaderSticky ?? "true",
     EXPO_PUBLIC_IS_SSO_ENABLED: inputs.isSsoEnabled ?? "true",
     EXPO_PUBLIC_IS_GOOGLE_SSO_ENABLED: inputs.isGoogleSsoEnabled ?? "true",
     EXPO_PUBLIC_IS_APPLE_SSO_ENABLED: inputs.isAppleSsoEnabled ?? "true",

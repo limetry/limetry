@@ -44,4 +44,9 @@ export type SiteHeaderProps = {
   drawerClassName?: string
   /** Offset between the header and the drawer. */
   topOffset?: number
+  /**
+   * When true, use translucent glass chrome and hide the sticky header while
+   * scrolling down; show it again immediately when scrolling up.
+   */
+  scrollHide?: boolean
 }

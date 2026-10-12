@@ -37,6 +37,10 @@ export type ApiInputs = {
   /** `"true"` enables public Cloud and auth links after launch. */
   launchingSoon: string
   /**
+   * `"true"` enables glass sticky headers on the API landing page.
+   */
+  isHeaderSticky: string
+  /**
    * Relative path to the Lambda artifact directory.
    */
   serverArtifactPath: string
@@ -224,6 +228,8 @@ export function createApi(inputs: ApiInputs): ApiOutputs {
     NEXT_PUBLIC_WEB_URL: `https://${inputs.webHostname}`,
     NEXT_PUBLIC_IS_CLOUD_ENABLED: inputs.isCloudEnabled,
     NEXT_PUBLIC_LAUNCHING_SOON: inputs.launchingSoon,
+    NEXT_PUBLIC_IS_HEADER_STICKY: inputs.isHeaderSticky,
+    IS_HEADER_STICKY: inputs.isHeaderSticky,
   }
 
   if (inputs.loadTestPolicyJson !== undefined) {

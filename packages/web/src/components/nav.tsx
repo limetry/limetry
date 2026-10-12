@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 import { Logo } from "@/components/brand"
 import { SiteSearchDialog } from "@/components/site-search-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { isHeaderSticky } from "@/lib/header-sticky"
 import { isLaunchOpen } from "@/lib/launching-soon"
 import { siteUrls } from "@/lib/site-urls"
 
@@ -127,7 +128,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
   return (
     <>
       <SiteHeader
-        brand={<Logo className="h-8 w-auto max-w-none shrink-0 object-contain" />}
+        brand={<Logo className="h-8 shrink-0" />}
         brandHref="/"
         items={navItems}
         pathname={pathname}
@@ -135,6 +136,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
         menuOpen={menuOpen}
         onMenuOpenChange={setMenuOpen}
         onNavigate={dismissSearch}
+        scrollHide={isHeaderSticky()}
         desktopActions={
           <>
             <SearchButton

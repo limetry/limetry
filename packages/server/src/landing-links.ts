@@ -166,6 +166,19 @@ export function isLandingLaunchOpen(source: NodeJS.ProcessEnv = process.env): bo
 }
 
 /**
+ * True when API landing headers use glass sticky scroll-hide chrome.
+ *
+ * @param source - Process env. Defaults to `process.env`.
+ * @returns Whether `IS_HEADER_STICKY` or `NEXT_PUBLIC_IS_HEADER_STICKY` is `"true"`.
+ */
+export function isLandingHeaderSticky(source: NodeJS.ProcessEnv = process.env): boolean {
+  return (
+    source.NEXT_PUBLIC_IS_HEADER_STICKY === "true"
+    || source.IS_HEADER_STICKY === "true"
+  )
+}
+
+/**
  * Removes Cloud CTA and footer blocks while launch is closed.
  *
  * @param html - Landing HTML that may contain `launching-soon:cloud` markers.
@@ -205,5 +218,6 @@ export function renderLandingHtml(
     .replaceAll("__APP_ORIGIN__", escapeHtml(appOrigin))
     .replaceAll("__GITHUB_URL__", escapeHtml(resolveLandingGithubUrl(source)))
     .replaceAll("__YEAR__", String(new Date().getFullYear()))
+    .replaceAll("__IS_HEADER_STICKY__", isLandingHeaderSticky(source) ? "true" : "false")
   return rendered
 }

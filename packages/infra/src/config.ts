@@ -241,6 +241,10 @@ export type OssStackConfig = {
    * `"true"` enables public Cloud and auth links after launch.
    */
   launchingSoon: string
+  /**
+   * `"true"` enables glass sticky headers that hide on scroll down.
+   */
+  isHeaderSticky: string
 }
 
 /**
@@ -356,6 +360,7 @@ export function loadOssStackConfig(): OssStackConfig {
     isAppleSsoEnabled: String(config.getBoolean("isAppleSsoEnabled") ?? true),
     isCloudEnabled: String(config.getBoolean("isCloudEnabled") ?? false),
     launchingSoon: String(config.getBoolean("launchingSoon") ?? false),
+    isHeaderSticky: String(config.getBoolean("isHeaderSticky") ?? true),
     posthogHost: config.get("posthogHost")
       ?? process.env.POSTHOG_HOST
       ?? process.env.NEXT_PUBLIC_POSTHOG_HOST
