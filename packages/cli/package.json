@@ -1,6 +1,6 @@
 {
   "name": "@limetry/cli",
-  "version": "1.2.70",
+  "version": "1.2.71",
   "description": "CLI for Limetry agent action governance — setup, policy apply, eval, and audit",
   "license": "MIT",
   "type": "module",
@@ -28,7 +28,7 @@
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@limetry/sdk": "^1.2.70",
+    "@limetry/sdk": "^1.2.71",
     "chalk": "^6.0.0",
     "commander": "^15.0.0",
     "inquirer": "^14.0.2",

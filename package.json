@@ -1,6 +1,6 @@
 {
   "name": "limetry",
-  "version": "1.2.70",
+  "version": "1.2.71",
   "private": true,
   "type": "module",
   "packageManager": "yarn@4.13.0",
