@@ -15,6 +15,7 @@ import {
   canonicalizeVersion,
   computeNextVersion,
   formatAppVersionSource,
+  parseVersion,
   type ReleaseBump,
   setPackageVersionText,
 } from "./release-version.js"
@@ -181,14 +182,20 @@ export type SchemaPlan = {
 /**
  * Semver range of product releases on the same minor line.
  *
+ * Stable ranges omit prereleases under default semver matching, so when the
+ * stamped product is itself a prerelease the range unions that exact version.
+ *
  * @param version - Product version.
- * @returns Range such as `>=1.2.0 <1.3.0`.
+ * @returns Range such as `>=1.2.0 <1.3.0` or that range plus `|| <prerelease>`.
  */
 export function productCompatibleRange(version: string): string {
-  const parsed = canonicalizeVersion(version).split(".")
-  const major = parsed[0]
-  const minor = Number.parseInt(parsed[1] ?? "0", 10)
-  return `>=${major}.${minor}.0 <${major}.${minor + 1}.0`
+  const canonical = canonicalizeVersion(version)
+  const parsed = parseVersion(canonical)
+  const base = `>=${parsed.major}.${parsed.minor}.0 <${parsed.major}.${parsed.minor + 1}.0`
+  if (parsed.beta != null || parsed.branch != null) {
+    return `${base} || ${canonical}`
+  }
+  return base
 }
 
 /**

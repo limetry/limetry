@@ -114,4 +114,13 @@ jobs:
             exit 1
           fi
           node scripts/wait-for-npm-dependencies.mjs "packages/$package"
-          npm publish "./packages/$package" --access public
+          tag_flags=()
+          if [[ "$version" == *-* ]]; then
+            if [[ "$version" == *-beta.* ]]; then
+              tag_flags=(--tag beta)
+            else
+              tag_flags=(--tag next)
+            fi
+            echo "Publishing prerelease $name@$version with ${tag_flags[*]}"
+          fi
+          npm publish "./packages/$package" --access public "${tag_flags[@]}"
