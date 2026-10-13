@@ -15,6 +15,7 @@ import {
   planSharedRelease,
   releaseTypeFromChoice,
   setPackageVersionText,
+  setCloudLimetryDependencyRanges,
   setPublishedLimetryDependencyRanges,
   stripPrerelease,
 } from "./release-version.js"
@@ -169,6 +170,30 @@ describe("release-version", () => {
     expect(updated).toContain("\"@limetry/sdk\": \"^1.2.70\"")
     expect(updated).toContain("\"chalk\": \"^6.0.0\"")
     expect(setPublishedLimetryDependencyRanges(updated, "1.2.70")).toBe(updated)
+  })
+
+  it("stamps Cloud @limetry caret and npm ranges without rewriting link descriptors", () => {
+    const source = [
+      "{",
+      "  \"dependencies\": {",
+      "    \"@limetry/ui\": \"^1.2.79\",",
+      "    \"@limetry/preflight\": \"^1.0.0\",",
+      "    \"@limetry/shared\": \"workspace:*\"",
+      "  },",
+      "  \"resolutions\": {",
+      "    \"@limetry/ui\": \"npm:^1.2.79\",",
+      "    \"@limetry/sdk\": \"link:../limetry/packages/sdk\"",
+      "  }",
+      "}",
+      "",
+    ].join("\n")
+    const updated = setCloudLimetryDependencyRanges(source, "1.2.80")
+    expect(updated).toContain("\"@limetry/ui\": \"^1.2.80\"")
+    expect(updated).toContain("\"@limetry/preflight\": \"^1.2.80\"")
+    expect(updated).toContain("\"@limetry/shared\": \"workspace:*\"")
+    expect(updated).toContain("\"@limetry/ui\": \"npm:^1.2.80\"")
+    expect(updated).toContain("\"@limetry/sdk\": \"link:../limetry/packages/sdk\"")
+    expect(setCloudLimetryDependencyRanges(updated, "1.2.80")).toBe(updated)
   })
 
   it("parses CLI flags", () => {

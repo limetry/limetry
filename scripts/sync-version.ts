@@ -33,6 +33,7 @@ import {
 } from "./release-version.js"
 import {
   buildCompatibility,
+  CLOUD_LIMETRY_DEPENDENCY_MANIFESTS,
   publishCompatibility,
   type SchemaSpec,
   stampPeerProduct,
@@ -245,11 +246,10 @@ function collectVersionFilePaths(): string[] {
  */
 function collectPeerVersionFilePaths(): string[] {
   return [
-    join(PEER_ROOT, "package.json"),
-    join(PEER_ROOT, "packages/web/package.json"),
-    join(PEER_ROOT, "packages/portal/package.json"),
+    ...CLOUD_LIMETRY_DEPENDENCY_MANIFESTS.map((relativePath) => join(PEER_ROOT, relativePath)),
     join(PEER_ROOT, "packages/shared/src/app-version.ts"),
     join(PEER_ROOT, "packages/mobile/app.json"),
+    join(PEER_ROOT, "yarn.lock"),
   ].filter(existsSync)
 }
 
@@ -386,7 +386,9 @@ function applyReleaseVersion(version: string, schemaBump: ReleaseBump = "patch")
     { path: "packages/mobile/app.json", kind: "expo" },
   ])
   if (peer.length > 0) {
-    console.log(`Stamped Cloud product files to ${canonical}.`)
+    console.log(
+      `Stamped Cloud product files and @limetry/* dependency ranges to ${canonical}.`,
+    )
   }
   console.log(schemas.catalog.schemas.map((record) => `${record.id}@${record.version}`).join(", "))
   refreshYarnLock()

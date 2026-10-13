@@ -17,8 +17,22 @@ import {
   formatAppVersionSource,
   parseVersion,
   type ReleaseBump,
+  setCloudLimetryDependencyRanges,
   setPackageVersionText,
 } from "./release-version.js"
+
+/**
+ * Cloud manifests that pin published `@limetry/*` packages by caret / `npm:^`.
+ * Version sync rewrites those ranges; `link:` / `workspace:` / `file:` stay.
+ */
+export const CLOUD_LIMETRY_DEPENDENCY_MANIFESTS = [
+  "package.json",
+  "packages/web/package.json",
+  "packages/portal/package.json",
+  "packages/app/package.json",
+  "packages/mobile/package.json",
+  "packages/server/package.json",
+] as const
 
 /** Initial schema semver for a contract that has not been versioned before. */
 export const SCHEMA_BASELINE = "1.0.0"
@@ -518,6 +532,38 @@ export function stampPeerProduct(
       : stamp.kind === "app-version"
         ? formatAppVersionSource(canonical)
         : setExpoVersionText(source, canonical)
+    if (next !== source) {
+      writeFileSync(absolute, next)
+      written.push(absolute)
+    }
+  }
+  written.push(...stampCloudLimetryDependencyManifests(peerRoot, canonical))
+  return [...new Set(written)]
+}
+
+/**
+ * Rewrites Cloud `@limetry/*` caret / `npm:^` ranges to the product version.
+ *
+ * @param peerRoot - Absolute path to limetry-enterprise.
+ * @param version - Product semver.
+ * @returns Absolute paths written.
+ */
+export function stampCloudLimetryDependencyManifests(
+  peerRoot: string,
+  version: string,
+): string[] {
+  if (!existsSync(join(peerRoot, "package.json"))) {
+    return []
+  }
+  const canonical = canonicalizeVersion(version)
+  const written: string[] = []
+  for (const relativePath of CLOUD_LIMETRY_DEPENDENCY_MANIFESTS) {
+    const absolute = join(peerRoot, relativePath)
+    if (!existsSync(absolute)) {
+      continue
+    }
+    const source = readFileSync(absolute, "utf8")
+    const next = setCloudLimetryDependencyRanges(source, canonical)
     if (next !== source) {
       writeFileSync(absolute, next)
       written.push(absolute)

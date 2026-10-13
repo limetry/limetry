@@ -317,6 +317,43 @@ export function setPublishedLimetryDependencyRanges(source: string, version: str
 }
 
 /**
+ * Stamps Cloud `@limetry/*` caret / `npm:^` ranges to the product version.
+ *
+ * Leaves `link:`, `workspace:`, and `file:` descriptors alone so local and
+ * Vercel installs can keep resolving the sibling Core checkout.
+ *
+ * @param source - package.json text (Cloud root or workspace).
+ * @param version - Product version (padded patches are accepted).
+ * @returns Updated package.json text, or the original when nothing changed.
+ */
+export function setCloudLimetryDependencyRanges(source: string, version: string): string {
+  const canonical = canonicalizeVersion(version)
+  const caret = `^${canonical}`
+  const npmCaret = `npm:^${canonical}`
+  const updated = source.replace(
+    /("(@limetry\/[^"]+)"\s*:\s*")([^"]+)(")/g,
+    (full, prefix: string, _name: string, depRange: string, suffix: string) => {
+      if (
+        depRange.startsWith("link:")
+        || depRange.startsWith("workspace:")
+        || depRange.startsWith("file:")
+      ) {
+        return full
+      }
+      const next = depRange.startsWith("npm:") ? npmCaret : caret
+      if (depRange === next) {
+        return full
+      }
+      return `${prefix}${next}${suffix}`
+    },
+  )
+  if (updated !== source) {
+    JSON.parse(updated)
+  }
+  return updated
+}
+
+/**
  * Returns whether `branch` is a stable release branch (`main` / `master`).
  *
  * @param branch - Git branch name (whitespace trimmed).
