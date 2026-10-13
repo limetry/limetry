@@ -5,11 +5,16 @@ Limetry has two version lines.
 ## Product
 
 Packages, websites, and the Cloud checkout share one semver (`1.2.46`).
+Only `main` / `master` commits a product version. Feature-branch
+`yarn release:aws` (from **limetry-enterprise**) and `deploy-infra.yml` stamp
+an ephemeral `next-patch-beta.N` for the deploy, then restore version files
+so the PR keeps the last stable version.
+
 `yarn release:aws` from **limetry-enterprise** stamps both checkouts, deploys
-Core then Cloud Pulumi surfaces, and tags both repos only after both succeed.
-`yarn release` / `yarn release:vercel` from this checkout still stamp product
-files and can watch Vercel. `yarn sync-version` restamps every product file
-from the root `package.json` without bumping.
+Core then Cloud Pulumi surfaces, and tags both repos only after both succeed
+on `main`. `yarn release` / `yarn release:vercel` from this checkout still
+stamp product files and can watch Vercel. `yarn sync-version` restamps every
+product file from the root `package.json` without bumping.
 
 A release is compatible with other product versions on the same minor line,
 for example `>=1.2.0 <1.3.0`.

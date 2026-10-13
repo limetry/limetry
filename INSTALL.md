@@ -149,9 +149,11 @@ skipped; the workflow retries the remaining packages with the same version.
 The workflow builds and tests packages, then publishes them with GitHub OIDC.
 npm requires Node 22.14+ and npm 11.5.1+ for Trusted Publishing; the workflow
 uses Node 24 and npm 11.5.1. npm generates provenance automatically. Release
-versions are semver (`1.2.42`) in the root manifest and in every publishable
-package.json, with `@limetry/*` dependencies as `^semver` (updated by
-`yarn sync-version`). Local maintainer publish:
+versions are stable semver (`1.2.42`) in the root manifest and in every
+publishable package.json on `main`, with `@limetry/*` dependencies as `^semver`
+(updated by `yarn sync-version`). Feature-branch deploys use an ephemeral
+`next-patch-beta.N` and do not change those committed versions. Local
+maintainer publish:
 
 ```bash
 yarn publish:cli

@@ -17,11 +17,11 @@ import readline from "node:readline"
 import { fileURLToPath } from "node:url"
 
 import {
-  branchDevelopmentVersion,
   canonicalizeVersion,
   type DeployTarget,
   formatAppVersionSource,
   isStableReleaseBranch,
+  nextBetaVersion,
   parseReleaseCliArgs,
   planPeerFollowUp,
   planSharedRelease,
@@ -124,14 +124,18 @@ function printHelp(): void {
   yarn sync-version --schema-bump=minor
                                Use when a changed schema is not a patch
 
-Bumps the root package.json, the website package, and every publishable
-workspace package.json to the same semver, stamps packages/sdk APP_VERSION,
-and writes versions/compatibility.json. Schemas stay on their own semver
-starting at 1.0.0 and bump only when their contents change. When the Cloud
-checkout is beside this repo, its product version is stamped to match.
+On main/master, bumps the root package.json, the website package, and every
+publishable workspace package.json to the same semver, stamps packages/sdk
+APP_VERSION, and writes versions/compatibility.json. Feature-branch
+release:vercel stamps an ephemeral next-patch-beta.N for the quality gate,
+then restores version files so the PR keeps the last stable version.
 
-Then the release runs a quality gate, commits, and tags locally. Pushing the
-release tag triggers npm publishing for all public packages at the same
+Schemas stay on their own semver starting at 1.0.0 and bump only when their
+contents change. When the Cloud checkout is beside this repo, its product
+version is stamped to match on main releases only.
+
+Then a main release runs a quality gate, commits, and tags locally. Pushing
+the release tag triggers npm publishing for all public packages at the same
 version. Publishable packages keep ^semver @limetry/* ranges in git for npm.
 
 Vercel also stamps Limetry Cloud when that checkout is beside this repo.
@@ -435,6 +439,35 @@ function gitHasTag(cwd: string, version: string): boolean {
 }
 
 /**
+ * Lists local `v*` tags for beta increment planning.
+ *
+ * @param cwd - Repository root.
+ * @returns Tag names, possibly empty.
+ */
+function listLocalTags(cwd: string): string[] {
+  const listed = spawnSync("git", ["tag", "-l", "v*"], {
+    cwd,
+    encoding: "utf8",
+  })
+  return (listed.stdout ?? "").trim().split("\n").filter(Boolean)
+}
+
+/**
+ * Tags HEAD with `v{version}` when that tag is not already present.
+ *
+ * @param version - Product version without the `v` prefix.
+ * @returns Nothing.
+ */
+function tagBetaOnHead(version: string): void {
+  const tag = `v${version}`
+  if (gitHasTag(ROOT_DIR, version)) {
+    return
+  }
+  runGit(["tag", tag])
+  console.log(`Tagged HEAD ${tag} for deploy correlation (version files unchanged).`)
+}
+
+/**
  * Rolls back a local release: soft-reset last commit, delete tag, restore files.
  *
  * @param version - Version that was tagged.
@@ -697,14 +730,14 @@ async function main(): Promise<void> {
     return
   }
 
-  const isAwsDeploy = args.deploy === "aws" || args.deployOnly === "aws"
-  if (!isStableReleaseBranch(currentBranch) && !isAwsDeploy) {
-    console.error(`Release requires main or master unless deploying AWS to dev (current: ${currentBranch}).`)
-    process.exit(1)
-  }
-
   if (args.deployOnly === "aws" || args.deploy === "aws") {
     refuseAwsDeploy()
+  }
+
+  const featureBranch = !isStableReleaseBranch(currentBranch)
+  if (featureBranch && args.deployOnly) {
+    console.error("Feature-branch deploys stamp an ephemeral beta and do not run --deploy-only.")
+    process.exit(1)
   }
 
   const rl = readline.createInterface({
@@ -747,6 +780,51 @@ async function main(): Promise<void> {
     console.log(`Current version: ${currentVersion}`)
     console.log(`Current branch: ${currentBranch}`)
 
+    if (featureBranch) {
+      const newVersion = nextBetaVersion(currentVersion, listLocalTags(ROOT_DIR))
+      console.log(`Ephemeral feature deploy version: ${newVersion}`)
+      const deployTarget = args.deploy
+        ?? (args.yes ? "vercel" : await promptDeployTarget(question))
+      if (deployTarget === "aws") {
+        refuseAwsDeploy()
+      }
+      if (!args.yes) {
+        const confirm = await question("Confirm ephemeral beta deploy (no version commit)? (Y/n): ")
+        if (confirm.toLowerCase() === "n") {
+          console.log("Release cancelled.")
+          return
+        }
+      }
+      const trackedPaths = collectVersionFilePaths()
+      const snapshot = snapshotFiles(trackedPaths)
+      const peerSnapshot = snapshotFiles(collectPeerVersionFilePaths())
+      closeReadline()
+      try {
+        applyReleaseVersion(newVersion, args.schemaBump)
+        console.log("Stamped ephemeral beta versions (will restore after deploy).")
+        runQualityGate()
+        if (deployTarget === "vercel") {
+          const sha = runGit(["rev-parse", "HEAD"])
+          await watchVercelCommit({ sha })
+          console.log("")
+          console.log(`✨ Feature deploy ${newVersion} quality-gated. Vercel watches the committed SHA.`)
+        } else {
+          console.log("⏭️  Skipping deploy.")
+          console.log(`✨ Feature deploy ${newVersion} quality-gated (not committed).`)
+        }
+        restoreFiles(snapshot)
+        restoreFiles(peerSnapshot, PEER_ROOT)
+        tagBetaOnHead(newVersion)
+      } catch (error) {
+        restoreFiles(snapshot)
+        restoreFiles(peerSnapshot, PEER_ROOT)
+        console.error("❌ Feature deploy failed.")
+        console.error(error instanceof Error ? error.message : error)
+        process.exitCode = 1
+      }
+      return
+    }
+
     const peerVersion = readPackageVersion(join(PEER_ROOT, "package.json"))
     const localTagged = gitHasTag(ROOT_DIR, currentVersion)
     const peerTagged = peerVersion != null && gitHasTag(PEER_ROOT, peerVersion)
@@ -775,9 +853,7 @@ async function main(): Promise<void> {
         bump: releaseType,
       })
     }
-    const newVersion = isStableReleaseBranch(currentBranch)
-      ? plan.version
-      : branchDevelopmentVersion(plan.version, currentVersion, currentBranch)
+    const newVersion = plan.version
 
     if (plan.action === "adopt-peer") {
       console.log(`Using ${newVersion} already released on ${PEER_NAME}.`)
