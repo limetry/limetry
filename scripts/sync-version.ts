@@ -173,15 +173,31 @@ function runGit(args: string[]): string {
  * @returns Nothing.
  * @throws Error When the process exits non-zero.
  */
-function runYarn(args: string[]): void {
+function runYarn(args: string[], env: NodeJS.ProcessEnv = process.env): void {
   const result = spawnSync("yarn", args, {
     cwd: ROOT_DIR,
     stdio: "inherit",
-    env: process.env,
+    env,
   })
   if (result.status !== 0) {
     throw new Error(`yarn ${args.join(" ")} failed (exit ${result.status ?? 1})`)
   }
+}
+
+/**
+ * Rewrites `yarn.lock` after published `@limetry/*` ranges change.
+ *
+ * `yarn release` is often run with `CI` set by tooling. Yarn then treats a
+ * plain install as immutable and refuses to record the new ranges.
+ *
+ * @returns Nothing.
+ */
+function refreshYarnLock(): void {
+  console.log("Refreshing yarn.lock for published dependency ranges…")
+  runYarn(["install"], {
+    ...process.env,
+    YARN_ENABLE_IMMUTABLE_INSTALLS: "false",
+  })
 }
 
 /**
@@ -213,6 +229,7 @@ function collectVersionFilePaths(): string[] {
     join(ROOT_DIR, "packages/web/package.json"),
     ...PUBLISHABLE_WORKSPACES.map((workspace) => join(ROOT_DIR, workspace, "package.json")),
     APP_VERSION_PATH,
+    join(ROOT_DIR, "yarn.lock"),
     CATALOG_PATH,
     COMPATIBILITY_JSON,
     COMPATIBILITY_MODULE,
@@ -314,7 +331,7 @@ function isReleaseCommit(originalHead: string, version: string): boolean {
 
 /**
  * Writes one canonical semver into the root manifest and every publishable
- * workspace manifest, then stamps SDK `APP_VERSION`.
+ * workspace manifest, stamps SDK `APP_VERSION`, then refreshes `yarn.lock`.
  *
  * Side effects: writes the version files.
  *
@@ -372,6 +389,7 @@ function applyReleaseVersion(version: string, schemaBump: ReleaseBump = "patch")
     console.log(`Stamped Cloud product files to ${canonical}.`)
   }
   console.log(schemas.catalog.schemas.map((record) => `${record.id}@${record.version}`).join(", "))
+  refreshYarnLock()
   return collectVersionFilePaths()
 }
 

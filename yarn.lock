@@ -1626,7 +1626,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/ci@workspace:packages/ci"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.77"
+    "@limetry/sdk": "npm:^1.2.78"
     "@types/node": "npm:^26.4.1"
     "@vitest/coverage-v8": "npm:4.1.11"
     typescript: "npm:^5.8.2"
@@ -1642,7 +1642,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/cli@workspace:packages/cli"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.77"
+    "@limetry/sdk": "npm:^1.2.78"
     "@types/inquirer": "npm:^9.0.7"
     "@types/node": "npm:^26.4.1"
     chalk: "npm:^6.0.0"
@@ -1662,7 +1662,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/mcp@workspace:packages/mcp"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.77"
+    "@limetry/sdk": "npm:^1.2.78"
     "@modelcontextprotocol/sdk": "npm:^1.30.0"
     "@types/node": "npm:^22.20.2"
     typescript: "npm:^5.8.2"
@@ -1695,7 +1695,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@limetry/sdk@npm:^1.2.77, @limetry/sdk@workspace:*, @limetry/sdk@workspace:packages/sdk":
+"@limetry/sdk@npm:^1.2.78, @limetry/sdk@workspace:*, @limetry/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@limetry/sdk@workspace:packages/sdk"
   dependencies:
@@ -1744,7 +1744,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/shopify@workspace:packages/shopify"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.77"
+    "@limetry/sdk": "npm:^1.2.78"
     "@types/node": "npm:^26.4.1"
     "@vitest/coverage-v8": "npm:4.1.11"
     typescript: "npm:^5.8.2"
@@ -1767,7 +1767,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/sql@workspace:packages/sql"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.77"
+    "@limetry/sdk": "npm:^1.2.78"
     "@modelcontextprotocol/sdk": "npm:^1.30.0"
     "@types/node": "npm:^26.4.1"
     "@types/pg": "npm:^8.11.11"
