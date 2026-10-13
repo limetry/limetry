@@ -13,7 +13,7 @@ import { useEffect, useState } from "react"
 import { Logo } from "@/components/brand"
 import { SiteSearchDialog } from "@/components/site-search-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { isHeaderSticky } from "@/lib/header-sticky"
+import { shouldScrollHideHeader } from "@/lib/header-sticky"
 import { isLaunchOpen } from "@/lib/launching-soon"
 import { siteUrls } from "@/lib/site-urls"
 
@@ -135,7 +135,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
         menuOpen={menuOpen}
         onMenuOpenChange={setMenuOpen}
         onNavigate={dismissSearch}
-        scrollHide={isHeaderSticky()}
+        scrollHide={shouldScrollHideHeader(pathname)}
         desktopActions={
           <>
             <SearchButton

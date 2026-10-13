@@ -11,20 +11,21 @@ Source docs (this repo):
 
 ## Architecture
 
-```text
-Agent / SDK / CLI / MCP / adapter
-        │  ActionIntent
-        ▼
-┌──────────────────────────────────────────┐
-│  Auth → Policy registry → Evaluator      │
-│  Decision + signed outcome receipt         │
-│  Approval store (when approval_required) │
-│  Audit store (privacy-safe projection)   │
-└──────────────────────────────────────────┘
-        │
-        ▼ enforce in your middleware
-   Tool execution → POST /v1/actions/record
+```mermaid
+flowchart LR
+  client["Client<br/>Agent / SDK / CLI / MCP"]
+  evaluate["Evaluate<br/>Auth + policy + evaluator"]
+  decide["Decide<br/>allow / deny / approval_required"]
+  enforce["Enforce<br/>Your middleware + record"]
+
+  client --> evaluate --> decide --> enforce
+
+  evaluate --- policy["Policy registry"]
+  evaluate --- approval["Approval store"]
+  evaluate --- audit["Audit store"]
 ```
+
+Rendered docs: [Architecture and data dictionary](https://limetry.org/docs/server/architecture).
 
 | Path | Role |
 | --- | --- |

@@ -14,23 +14,7 @@ tracked under [`versions/`](https://github.com/limetry/limetry/tree/main/version
 
 ## System architecture
 
-```text
-Agent / SDK / CLI / MCP / adapter
-        │
-        │  ActionIntent (full payload for policy matching)
-        ▼
-┌──────────────────────────────────────────┐
-│  Limetry evaluation server                 │
-│  Auth (bearer / JWT / scoped API token)  │
-│  Policy registry  →  Action evaluator    │
-│  Decision + signed outcome receipt         │
-│  Approval store (when approval_required) │
-│  Audit store (privacy-safe projection)   │
-└──────────────────────────────────────────┘
-        │
-        ▼  enforce in your middleware / adapter
-   Tool execution  →  POST /v1/actions/record
-```
+<ArchitectureFlow />
 
 | Component | Role |
 |---|---|

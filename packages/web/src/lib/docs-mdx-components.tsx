@@ -7,6 +7,8 @@ import { Step as FumaStep, Steps } from "fumadocs-ui/components/steps"
 import defaultMdxComponents from "fumadocs-ui/mdx"
 import type { ComponentProps, ReactNode } from "react"
 
+import { ArchitectureFlow } from "@/components/docs-architecture-flow"
+
 type CalloutType = NonNullable<ComponentProps<typeof Callout>["type"]>
 
 /**
@@ -75,4 +77,5 @@ export const docsMdxComponents = {
   CardGroup: defaultMdxComponents.Cards,
   Steps,
   Step,
+  ArchitectureFlow,
 }

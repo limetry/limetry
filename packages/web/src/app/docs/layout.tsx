@@ -13,9 +13,10 @@ import { source } from "@/lib/source"
 /**
  * Sticky offset CSS vars so fumadocs sidebar/TOC clear the site header.
  *
- * SiteHeader is sticky and in document flow (64px). Keep fumadocs nav/search
- * disabled — SiteHeader owns those — so `#nd-subnav` never mounts and cannot
- * set `--fd-header-height` via the layout variant.
+ * SiteHeader stays pinned on `/docs` (no scroll-hide) so the sidebar remains
+ * attached to site chrome. Keep fumadocs nav/search disabled — SiteHeader owns
+ * those — so `#nd-subnav` never mounts and cannot set `--fd-header-height`
+ * via the layout variant.
  */
 const docsOffset: CSSProperties = {
   "--fd-banner-height": "4rem",

@@ -14,5 +14,6 @@ describe("docs MDX components", () => {
     assert.equal(docsMdxComponents.CardGroup, docsMdxComponents.Cards)
     assert.equal(typeof docsMdxComponents.Steps, "function")
     assert.equal(typeof docsMdxComponents.Step, "function")
+    assert.equal(typeof docsMdxComponents.ArchitectureFlow, "function")
   })
 })
