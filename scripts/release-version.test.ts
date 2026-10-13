@@ -8,6 +8,7 @@ import {
   deployTargetFromChoice,
   formatAppVersionSource,
   formatVersion,
+  nextBetaVersion,
   parseReleaseCliArgs,
   parseVersion,
   planPeerFollowUp,
@@ -15,6 +16,7 @@ import {
   releaseTypeFromChoice,
   setPackageVersionText,
   setPublishedLimetryDependencyRanges,
+  stripPrerelease,
 } from "./release-version.js"
 
 describe("release-version", () => {
@@ -126,6 +128,18 @@ describe("release-version", () => {
         "feature/cloud-agnostic-deployment",
       ),
     ).toBe("1.2.64-dev.cloud-agnostic-deploymen.2")
+  })
+
+  it("plans the next patch beta from a stable or leftover prerelease", () => {
+    expect(stripPrerelease("1.2.72")).toBe("1.2.72")
+    expect(stripPrerelease("1.2.75-dev.unified-infra-d735e0.1")).toBe("1.2.75")
+    expect(stripPrerelease("1.2.73-beta.2")).toBe("1.2.73")
+    expect(nextBetaVersion("1.2.72")).toBe("1.2.73-beta.1")
+    expect(nextBetaVersion("1.2.75-dev.unified-infra-d735e0.1", [
+      "v1.2.76-beta.2",
+      "v1.2.75-beta.9",
+    ])).toBe("1.2.76-beta.3")
+    expect(nextBetaVersion("1.2.72", [], 42)).toBe("1.2.73-beta.42")
   })
 
   it("writes a semver version into package.json text", () => {

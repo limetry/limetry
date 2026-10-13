@@ -81,6 +81,9 @@ describe("schema versions", () => {
 
   it("publishes product ranges separately from schema ranges", () => {
     expect(productCompatibleRange("1.2.46")).toBe(">=1.2.0 <1.3.0")
+    expect(productCompatibleRange("1.2.75-dev.unified-infra-d735e0.1")).toBe(
+      ">=1.2.0 <1.3.0 || 1.2.75-dev.unified-infra-d735e0.1",
+    )
     expect(schemaCompatibleRange("1.0.0")).toBe(">=1.0.0 <2.0.0")
     expect(setOpenApiYamlVersion(OPENAPI, "1.0.0")).toContain("version: 1.0.0")
 
@@ -99,6 +102,16 @@ describe("schema versions", () => {
     })
     expect(document.websites.cloud.version).toBe("1.2.46")
     expect(document.schemas["openapi.evaluate"].compatible).toBe(">=1.0.0 <2.0.0")
+
+    const prerelease = buildCompatibility({
+      product: "1.2.75-dev.unified-infra-d735e0.1",
+      packages: ["@limetry/sdk"],
+      websites: ["oss"],
+      schemas: [{ id: "openapi.evaluate", version: "1.0.0", fingerprint: "abc" }],
+    })
+    expect(prerelease.compatibleProduct).toBe(
+      ">=1.2.0 <1.3.0 || 1.2.75-dev.unified-infra-d735e0.1",
+    )
   })
 
   it("writes trailing commas into the compatibility module", () => {

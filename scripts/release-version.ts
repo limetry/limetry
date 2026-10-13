@@ -145,8 +145,8 @@ export function abbreviateBranch(branch: string): string {
 /**
  * Creates the next development version for a non-stable branch.
  *
- * The base version is supplied by normal release planning. Repeated releases
- * on the same branch retain that base and increment the branch build number.
+ * @deprecated Feature deploys use {@link nextBetaVersion} and do not commit
+ * branch-named prereleases.
  *
  * @param plannedVersion - Stable version selected by release planning.
  * @param currentVersion - Current package version.
@@ -174,6 +174,66 @@ export function branchDevelopmentVersion(
     branch: slug,
     branchIncrement: increment,
   }, true)
+}
+
+/**
+ * Drops `-beta.N` or legacy `-dev.branch.N` metadata.
+ *
+ * @param version - Product version, possibly a prerelease.
+ * @returns Canonical `major.minor.patch`.
+ */
+export function stripPrerelease(version: string): string {
+  return formatVersion(parseVersion(version), false)
+}
+
+/**
+ * Highest `N` among tags for `v{planned}-beta.N`.
+ *
+ * @param plannedStable - Next stable triple such as `1.2.73`.
+ * @param tags - Local or remote tag names, with or without a `v` prefix.
+ * @returns Highest increment, or `0` when none exist.
+ */
+export function highestBetaIncrement(
+  plannedStable: string,
+  tags: readonly string[],
+): number {
+  const suffix = `${plannedStable}-beta.`
+  let highest = 0
+  for (const raw of tags) {
+    const tag = raw.startsWith("v") ? raw.slice(1) : raw
+    if (!tag.startsWith(suffix)) {
+      continue
+    }
+    const increment = Number.parseInt(tag.slice(suffix.length), 10)
+    if (Number.isInteger(increment) && increment > highest) {
+      highest = increment
+    }
+  }
+  return highest
+}
+
+/**
+ * Next feature-branch deploy identity: next patch of the stable base, then `-beta.N`.
+ *
+ * `N` is `increment` when provided (CI `run_number`), otherwise one more than
+ * the highest matching tag.
+ *
+ * @param currentVersion - Version in git (stable or leftover prerelease).
+ * @param tags - Existing `v*` tags used to increment `N`.
+ * @param increment - Optional explicit beta number.
+ * @returns Version such as `1.2.73-beta.1`.
+ */
+export function nextBetaVersion(
+  currentVersion: string,
+  tags: readonly string[] = [],
+  increment?: number,
+): string {
+  const planned = computeNextVersion(stripPrerelease(currentVersion), "patch")
+  const beta = increment ?? highestBetaIncrement(planned, tags) + 1
+  if (!Number.isInteger(beta) || beta < 1) {
+    throw new Error(`Invalid beta increment: ${String(increment)}`)
+  }
+  return `${planned}-beta.${beta}`
 }
 
 /**

@@ -3,9 +3,10 @@
  *
  * Bumps the root package.json and every publishable workspace package.json to
  * the same semver, stamps `packages/sdk/src/app-version.ts`, runs a quality
- * gate, commits/tags, then deploys via AWS (Pulumi) or watches GitHub→Vercel.
+ * gate, commits/tags, then watches GitHub→Vercel. AWS Pulumi is not run here.
  *
- * CLI: `yarn release`, `yarn release:aws`, `yarn release:vercel`, `yarn sync-version`.
+ * CLI: `yarn release`, `yarn release:vercel`, `yarn sync-version`.
+ * AWS Pulumi deploys run from limetry-enterprise (`yarn release:aws`).
  * Exports version-stamping helpers for tests.
  */
 
@@ -16,12 +17,11 @@ import readline from "node:readline"
 import { fileURLToPath } from "node:url"
 
 import {
-  branchDevelopmentVersion,
   canonicalizeVersion,
   type DeployTarget,
-  deployTargetFromChoice,
   formatAppVersionSource,
   isStableReleaseBranch,
+  nextBetaVersion,
   parseReleaseCliArgs,
   planPeerFollowUp,
   planSharedRelease,
@@ -114,7 +114,6 @@ const VERSION_FILES = [
 function printHelp(): void {
   console.log(`Usage:
   yarn release                 Interactive production release (main/master)
-  yarn release:aws             Release then deploy AWS (Pulumi), using dev on feature branches
   yarn release:vercel          Push release then watch GitHub→Vercel deploys
   yarn release --patch --yes   Non-interactive patch release
   yarn release --minor --yes
@@ -125,23 +124,24 @@ function printHelp(): void {
   yarn sync-version --schema-bump=minor
                                Use when a changed schema is not a patch
 
-Bumps the root package.json, the website package, and every publishable
-workspace package.json to the same semver, stamps packages/sdk APP_VERSION,
-and writes versions/compatibility.json. Schemas stay on their own semver
-starting at 1.0.0 and bump only when their contents change. When the Cloud
-checkout is beside this repo, its product version is stamped to match.
+On main/master, bumps the root package.json, the website package, and every
+publishable workspace package.json to the same semver, stamps packages/sdk
+APP_VERSION, and writes versions/compatibility.json. Feature-branch
+release:vercel stamps an ephemeral next-patch-beta.N for the quality gate,
+then restores version files so the PR keeps the last stable version.
 
-Then the release runs a quality gate, commits, and tags locally. Pushing the
-release tag triggers npm publishing for all public packages at the same
+Schemas stay on their own semver starting at 1.0.0 and bump only when their
+contents change. When the Cloud checkout is beside this repo, its product
+version is stamped to match on main releases only.
+
+Then a main release runs a quality gate, commits, and tags locally. Pushing
+the release tag triggers npm publishing for all public packages at the same
 version. Publishable packages keep ^semver @limetry/* ranges in git for npm.
 
-AWS and Vercel also release and deploy Limetry Cloud when that checkout is
-beside this repo. The Cloud script does its own stamp, commit, and prod
-deploy, then this repo pushes. --no-peer stays on this stack. A Cloud
-checkout already tagged at this version still gets a prod Pulumi update.
+Vercel also stamps Limetry Cloud when that checkout is beside this repo.
+AWS Pulumi (Core + Cloud) is deployed only from limetry-enterprise with
+yarn release:aws. --no-peer stays on this stack.
 
-AWS: runs Pulumi against the prod stack on main/master, or the dev stack on
-other branches, before push. Failed deploys roll back the local commit/tag.
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
 that commit SHA until READY. Failed Vercel builds cannot un-push; fix forward
 or revert. Use yarn deploy:vercel only as a CLI escape hatch.`)
@@ -439,6 +439,35 @@ function gitHasTag(cwd: string, version: string): boolean {
 }
 
 /**
+ * Lists local `v*` tags for beta increment planning.
+ *
+ * @param cwd - Repository root.
+ * @returns Tag names, possibly empty.
+ */
+function listLocalTags(cwd: string): string[] {
+  const listed = spawnSync("git", ["tag", "-l", "v*"], {
+    cwd,
+    encoding: "utf8",
+  })
+  return (listed.stdout ?? "").trim().split("\n").filter(Boolean)
+}
+
+/**
+ * Tags HEAD with `v{version}` when that tag is not already present.
+ *
+ * @param version - Product version without the `v` prefix.
+ * @returns Nothing.
+ */
+function tagBetaOnHead(version: string): void {
+  const tag = `v${version}`
+  if (gitHasTag(ROOT_DIR, version)) {
+    return
+  }
+  runGit(["tag", tag])
+  console.log(`Tagged HEAD ${tag} for deploy correlation (version files unchanged).`)
+}
+
+/**
  * Rolls back a local release: soft-reset last commit, delete tag, restore files.
  *
  * @param version - Version that was tagged.
@@ -563,16 +592,22 @@ async function promptDeployTarget(
   question: (query: string) => Promise<string>,
 ): Promise<DeployTarget> {
   console.log("Select deploy target:")
-  console.log("1. AWS (Pulumi) [default]")
-  console.log("2. Vercel")
-  console.log("3. Skip deploy")
+  console.log("1. Vercel [default]")
+  console.log("2. Skip deploy")
+  console.log("   AWS Pulumi deploys from limetry-enterprise (yarn release:aws)")
 
-  const choice = await question("Choice (1-3) [1]: ")
-  const deployTarget = deployTargetFromChoice(choice)
-  if (!deployTarget) {
-    throw new Error("Invalid deploy choice")
+  const choice = await question("Choice (1-2) [1]: ")
+  const normalized = choice.trim().toLowerCase()
+  if (normalized === "1" || normalized === "" || normalized === "vercel") {
+    return "vercel"
   }
-  return deployTarget
+  if (normalized === "2" || normalized === "skip") {
+    return "skip"
+  }
+  if (normalized === "aws" || normalized === "3") {
+    refuseAwsDeploy()
+  }
+  throw new Error("Invalid deploy choice")
 }
 
 /**
@@ -595,30 +630,10 @@ export function releasePulumiStack(branch: string): "prod" | "dev" {
  * @returns Nothing.
  * @throws Error When typecheck or `pulumi up` fails.
  */
-function runAwsDeploy(branch = getCurrentBranch()): void {
-  const stack = releasePulumiStack(branch)
-  console.log("")
-  console.log("▶ AWS deploy (Pulumi)")
-  console.log(`   Running yarn typecheck:infra && pulumi refresh && pulumi up --yes --stack ${stack}`)
-  runYarn(["typecheck:infra"])
-  const infraDir = join(ROOT_DIR, "packages/infra")
-  const refresh = spawnSync("pulumi", ["refresh", "--yes", "--stack", stack], {
-    cwd: infraDir,
-    stdio: "inherit",
-    env: process.env,
-  })
-  if (refresh.status !== 0) {
-    throw new Error(`pulumi refresh --stack ${stack} failed (exit ${refresh.status ?? 1})`)
-  }
-  const result = spawnSync("pulumi", ["up", "--yes", "--stack", stack], {
-    cwd: infraDir,
-    stdio: "inherit",
-    env: process.env,
-  })
-  if (result.status !== 0) {
-    throw new Error(`pulumi up --stack ${stack} failed (exit ${result.status ?? 1})`)
-  }
-  console.log("✨ AWS deploy succeeded.")
+function refuseAwsDeploy(): never {
+  throw new Error(
+    "AWS Pulumi deploys from limetry-enterprise. Run yarn release:aws there (core then cloud).",
+  )
 }
 
 /**
@@ -715,15 +730,14 @@ async function main(): Promise<void> {
     return
   }
 
-  const isAwsDeploy = args.deploy === "aws" || args.deployOnly === "aws"
-  if (!isStableReleaseBranch(currentBranch) && !isAwsDeploy) {
-    console.error(`Release requires main or master unless deploying AWS to dev (current: ${currentBranch}).`)
-    process.exit(1)
+  if (args.deployOnly === "aws" || args.deploy === "aws") {
+    refuseAwsDeploy()
   }
 
-  if (args.deployOnly === "aws") {
-    runAwsDeploy()
-    return
+  const featureBranch = !isStableReleaseBranch(currentBranch)
+  if (featureBranch && args.deployOnly) {
+    console.error("Feature-branch deploys stamp an ephemeral beta and do not run --deploy-only.")
+    process.exit(1)
   }
 
   const rl = readline.createInterface({
@@ -766,6 +780,51 @@ async function main(): Promise<void> {
     console.log(`Current version: ${currentVersion}`)
     console.log(`Current branch: ${currentBranch}`)
 
+    if (featureBranch) {
+      const newVersion = nextBetaVersion(currentVersion, listLocalTags(ROOT_DIR))
+      console.log(`Ephemeral feature deploy version: ${newVersion}`)
+      const deployTarget = args.deploy
+        ?? (args.yes ? "vercel" : await promptDeployTarget(question))
+      if (deployTarget === "aws") {
+        refuseAwsDeploy()
+      }
+      if (!args.yes) {
+        const confirm = await question("Confirm ephemeral beta deploy (no version commit)? (Y/n): ")
+        if (confirm.toLowerCase() === "n") {
+          console.log("Release cancelled.")
+          return
+        }
+      }
+      const trackedPaths = collectVersionFilePaths()
+      const snapshot = snapshotFiles(trackedPaths)
+      const peerSnapshot = snapshotFiles(collectPeerVersionFilePaths())
+      closeReadline()
+      try {
+        applyReleaseVersion(newVersion, args.schemaBump)
+        console.log("Stamped ephemeral beta versions (will restore after deploy).")
+        runQualityGate()
+        if (deployTarget === "vercel") {
+          const sha = runGit(["rev-parse", "HEAD"])
+          await watchVercelCommit({ sha })
+          console.log("")
+          console.log(`✨ Feature deploy ${newVersion} quality-gated. Vercel watches the committed SHA.`)
+        } else {
+          console.log("⏭️  Skipping deploy.")
+          console.log(`✨ Feature deploy ${newVersion} quality-gated (not committed).`)
+        }
+        restoreFiles(snapshot)
+        restoreFiles(peerSnapshot, PEER_ROOT)
+        tagBetaOnHead(newVersion)
+      } catch (error) {
+        restoreFiles(snapshot)
+        restoreFiles(peerSnapshot, PEER_ROOT)
+        console.error("❌ Feature deploy failed.")
+        console.error(error instanceof Error ? error.message : error)
+        process.exitCode = 1
+      }
+      return
+    }
+
     const peerVersion = readPackageVersion(join(PEER_ROOT, "package.json"))
     const localTagged = gitHasTag(ROOT_DIR, currentVersion)
     const peerTagged = peerVersion != null && gitHasTag(PEER_ROOT, peerVersion)
@@ -794,9 +853,7 @@ async function main(): Promise<void> {
         bump: releaseType,
       })
     }
-    const newVersion = isStableReleaseBranch(currentBranch)
-      ? plan.version
-      : branchDevelopmentVersion(plan.version, currentVersion, currentBranch)
+    const newVersion = plan.version
 
     if (plan.action === "adopt-peer") {
       console.log(`Using ${newVersion} already released on ${PEER_NAME}.`)
@@ -819,7 +876,10 @@ async function main(): Promise<void> {
     let pushed = false
     let versionFiles: string[] = trackedPaths
     const deployTarget = args.deploy
-      ?? (args.yes ? "aws" : await promptDeployTarget(question))
+      ?? (args.yes ? "vercel" : await promptDeployTarget(question))
+    if (deployTarget === "aws") {
+      refuseAwsDeploy()
+    }
 
     closeReadline()
 
@@ -831,17 +891,7 @@ async function main(): Promise<void> {
         tagExistingCommit: plan.action === "adopt-peer",
       })
       committed = true
-      if (deployTarget === "aws") {
-        runAwsDeploy()
-        if (args.peer) {
-          runPeerFollowUp(deployTarget, newVersion, args.schemaBump)
-        }
-        pushRelease(currentBranch, newVersion)
-        pushed = true
-        console.log("")
-        console.log(`✨ Successfully released version ${newVersion}.`)
-        console.log("🚀 Release tag pushed after successful AWS (Pulumi) deploy.")
-      } else if (deployTarget === "vercel") {
+      if (deployTarget === "vercel") {
         if (args.peer) {
           runPeerFollowUp(deployTarget, newVersion, args.schemaBump)
         }

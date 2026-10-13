@@ -149,9 +149,11 @@ skipped; the workflow retries the remaining packages with the same version.
 The workflow builds and tests packages, then publishes them with GitHub OIDC.
 npm requires Node 22.14+ and npm 11.5.1+ for Trusted Publishing; the workflow
 uses Node 24 and npm 11.5.1. npm generates provenance automatically. Release
-versions are semver (`1.2.42`) in the root manifest and in every publishable
-package.json, with `@limetry/*` dependencies as `^semver` (updated by
-`yarn sync-version`). Local maintainer publish:
+versions are stable semver (`1.2.42`) in the root manifest and in every
+publishable package.json on `main`, with `@limetry/*` dependencies as `^semver`
+(updated by `yarn sync-version`). Feature-branch deploys use an ephemeral
+`next-patch-beta.N` and do not change those committed versions. Local
+maintainer publish:
 
 ```bash
 yarn publish:cli
@@ -202,7 +204,9 @@ not require Rust or a separate native library. See [USAGE.md](USAGE.md),
 `.env.example`, and `.env.production.example` for production environment
 requirements (`USE_POSTGRES_STORE=true`, unique `JWT_SECRET` / `LIMETRY_BEARER_TOKEN` /
 `DECISION_HMAC_SECRET`, and a non-loopback `DATABASE_URL`). Pulumi injects those keys from stack
-secrets — see [packages/infra/README.md](packages/infra/README.md).
+secrets — see the Core Pulumi project in
+[limetry-enterprise/packages/infra](https://github.com/limetry/limetry-enterprise)
+(`projects/core`). AWS deploys run from that checkout with `yarn release:aws`.
 
 ## Distribution Roadmap
 
