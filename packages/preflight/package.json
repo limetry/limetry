@@ -1,6 +1,6 @@
 {
   "name": "@limetry/preflight",
-  "version": "1.2.76",
+  "version": "1.2.77",
   "description": "Startup preflight checks with secret masking, connectivity probes, and formatted listen URLs",
   "license": "MIT",
   "type": "module",
