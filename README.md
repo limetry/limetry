@@ -149,7 +149,9 @@ limetry approvals list
 limetry audit tail
 ```
 
-Docs: [CI](packages/web/content/docs/ci/index.mdx) · [SQL](packages/web/content/docs/sql/index.mdx) ·
+Docs: [Architecture and data dictionary](packages/web/content/docs/server/architecture.mdx) ·
+[Server package](packages/server/README.md) ·
+[CI](packages/web/content/docs/ci/index.mdx) · [SQL](packages/web/content/docs/sql/index.mdx) ·
 [Shopify](packages/web/content/docs/shopify/index.mdx) · [USAGE.md](USAGE.md) · [SECURITY.md](SECURITY.md)
 
 ## Publishing npm packages

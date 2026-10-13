@@ -42,7 +42,9 @@ Agent (LLM + tools / MCP host)
 ```
 
 <Info>
-Policy matching uses the full intent. Audit stores a privacy-safe record. See
+Policy matching uses the full intent. Audit stores a privacy-safe record. Full
+component map, Postgres tables, and audit field dictionary:
+[Architecture and data dictionary](/docs/server/architecture). Scrubbing knobs:
 [Minimize audit data](/docs/server/data-minimization).
 </Info>
 
@@ -77,6 +79,9 @@ Open source (MIT license):
   </Card>
   <Card title="Connect an MCP host" href="/docs/mcp">
     Cursor, Claude Desktop, and other MCP hosts.
+  </Card>
+  <Card title="Architecture and data dictionary" href="/docs/server/architecture">
+    Request flow, durable tables, and audit field reference.
   </Card>
   <Card title="Self-run the server" href="/docs/server/self-hosting">
     Environment, containers, and production wiring.

@@ -1,6 +1,7 @@
 {
   "title": "Server",
   "pages": [
+    "architecture",
     "self-hosting",
     "operations",
     "data-minimization"

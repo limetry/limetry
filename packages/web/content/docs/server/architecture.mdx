@@ -1,0 +1,260 @@
+---
+title: Architecture and data dictionary
+description: Evaluation server components, request flow, durable tables, and privacy-safe audit field reference.
+---
+
+This page is the operator-facing map of a self-run Limetry evaluation server:
+how an action intent moves through evaluate → decision → audit (and optional
+approval), which Postgres tables hold durable state, and which fields belong
+in audit storage versus logs.
+
+Source of truth for the HTTP contracts is the OpenAPI document shipped with
+`@limetry/server` (`packages/server/public/openapi.yaml`). Schema versions are
+tracked under [`versions/`](https://github.com/limetry/limetry/tree/main/versions).
+
+## System architecture
+
+```text
+Agent / SDK / CLI / MCP / adapter
+        │
+        │  ActionIntent (full payload for policy matching)
+        ▼
+┌──────────────────────────────────────────┐
+│  Limetry evaluation server                 │
+│  Auth (bearer / JWT / scoped API token)  │
+│  Policy registry  →  Action evaluator    │
+│  Decision + signed outcome receipt         │
+│  Approval store (when approval_required) │
+│  Audit store (privacy-safe projection)   │
+└──────────────────────────────────────────┘
+        │
+        ▼  enforce in your middleware / adapter
+   Tool execution  →  POST /v1/actions/record
+```
+
+| Component | Role |
+|---|---|
+| Agent / adapter | Drafts `ActionIntent`, enforces `allow` / `deny` / `approval_required` |
+| Evaluation API | `POST /v1/policy/evaluate`, `POST /v1/actions/record`, `GET /v1/audit` |
+| Policy registry | Durable `ActionPolicy` documents per tenant |
+| Approval store | Pending rows bound to a payload hash until a reviewer resolves them |
+| Audit store | Append-only privacy-safe events (`policy.evaluated`, `action.recorded`, …) |
+| Optional Redis | Nonce / replay window, throttle helpers, JWT revocation across instances |
+
+Policy matching uses the **full** intent. Audit persists a **projected** intent
+after secret scrubbing. Default `audit_mode` is `minimal`. See
+[Minimize audit data](/docs/server/data-minimization).
+
+## Request flow
+
+1. **Authenticate** — static bearer, JWT, or scoped API token.
+2. **Evaluate** — load policy by `policy_id`, match action type / resource /
+   cost / approval knobs, return decision + reasons (+ signed receipt when
+   `DECISION_HMAC_SECRET` is set).
+3. **Approve (optional)** — if `approval_required`, persist a pending approval
+   keyed by `decision_id` and `payload_hash`; adapters resume only after an
+   approve that matches the hash.
+4. **Enforce** — your loop or middleware skips or executes the tool.
+5. **Record** — `POST /v1/actions/record` with `executed` / `skipped` / `blocked`.
+6. **Audit** — both evaluate and record append privacy-safe rows; operators
+   tail them with `limetry audit tail` or MCP.
+
+## Tenancy and identity
+
+| Concept | Meaning |
+|---|---|
+| `tenant_id` / `organization_id` | Isolation boundary for policies, tokens, audit, and users |
+| `agent_id` | Logical agent or automation identity the policy governs |
+| `policy_id` | Stable policy document id (UUID in most setups) |
+| `intent_id` | Caller correlation / idempotency key for one proposed action |
+| `decision_id` | Server-issued id tying evaluate → approval → record |
+
+Tokens are scoped (`policies:read`, `audit:read`, and related scopes). Prefer
+scoped API tokens over a shared admin bearer in production. See
+[Run production operations](/docs/server/operations).
+
+## Durable store (Postgres)
+
+When `USE_POSTGRES_STORE=true`, the server migrates these tables on startup
+(`packages/server/src/services/postgres-store.ts`).
+
+### `limetry_policies`
+
+| Column | Type | Description | Sensitive |
+|---|---|---|---|
+| `tenant_id` | text | Tenant scope | no |
+| `policy_id` | text | Policy document id | no |
+| `policy_json` | jsonb | Full `ActionPolicy` document | low |
+| `created_at` | timestamptz | Insert time | no |
+| `updated_at` | timestamptz | Last upsert | no |
+
+Primary key: `(tenant_id, policy_id)`.
+
+### `limetry_audit_log`
+
+| Column | Type | Description | Sensitive |
+|---|---|---|---|
+| `id` | bigserial | Monotonic event id | no |
+| `tenant_id` | text | Tenant scope | no |
+| `event_type` | text | e.g. `policy.evaluated`, `action.recorded` | no |
+| `subject_id` | text | Decision id, intent id, or related subject | no |
+| `details` | jsonb | Privacy-safe projection (see below) | maybe |
+| `created_at` | timestamptz | Event time | no |
+
+Retention: `LIMETRY_AUDIT_RETENTION_DAYS` (purge job when Postgres is enabled).
+
+### `limetry_governance_state`
+
+| Column | Type | Description | Sensitive |
+|---|---|---|---|
+| `tenant_id` | text | Tenant scope | no |
+| `agent_id` | text | Agent identity | no |
+| `policy_id` | text | Policy id | no |
+| `state_json` | jsonb | Per-agent governance counters / windows | low |
+| `updated_at` | timestamptz | Last write | no |
+
+### `limetry_users` / `limetry_access_tokens` / `limetry_rules`
+
+Operator accounts, hashed passwords, scoped API tokens, and legacy rule rows
+for self-hosted JWT setups. Treat `password_hash` and raw `token` values as
+secrets. Never log them.
+
+<Note>
+With `USE_POSTGRES_STORE=true`, pending approvals default to the in-memory
+approval store for that process. The SQLite file store persists approvals in
+`limetry_approvals` (see below). Plan multi-instance approval durability
+accordingly, or keep evaluate sticky to one instance until a Postgres approval
+table ships.
+</Note>
+
+## SQLite store extras
+
+When Postgres is off, the server uses a SQLite file (see
+[Self-run the server](/docs/server/self-hosting)). In addition to the same
+logical tables, SQLite persists approvals:
+
+### `limetry_approvals`
+
+| Column | Type | Description | Sensitive |
+|---|---|---|---|
+| `id` | text | Approval id | no |
+| `tenant_id` | text | Tenant scope | no |
+| `decision_id` | text | Evaluate decision id | no |
+| `policy_id` | text | Policy id | no |
+| `agent_id` | text | Agent identity | no |
+| `action_type` | text | Intent action type | no |
+| `resource` | text | Scrubbed resource string | maybe |
+| `payload_hash` | text | SHA-256 of original intent JSON | no |
+| `intent` | text/json | Intent snapshot for re-bind | maybe |
+| `reasons` | text/json | Why approval was required | low |
+| `status` | text | `pending` / `approved` / `denied` / `expired` | no |
+| `reviewer` | text | Reviewer identity when resolved | low |
+| `created_at` | text | Create time | no |
+| `expires_at` | text | Expiry | no |
+| `resolved_at` | text | Resolve time | no |
+
+## API contracts (evaluate path)
+
+### `ActionIntent` (evaluate input)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `intent_id` | string | yes | Correlation / idempotency |
+| `policy_id` | string | yes | Policy to load |
+| `agent_id` | string | yes | Must match policy agent |
+| `action_type` | string | yes | e.g. `http_post`, `shopify.refund` |
+| `resource` | string | yes | URL, ARN, table, Shopify gid, … |
+| `cost` | `{ amount_minor, currency }` | no | Cost caps / approval thresholds |
+| `metadata` | `Record<string, string>` | no | Do not put secrets or transcripts |
+| `issued_at` | string (ISO-8601) | yes | Issue time |
+| `nonce` | string \| number | no | Replay protection when enabled |
+
+### `ActionPolicy` (stored document)
+
+| Field | Type | Notes |
+|---|---|---|
+| `policy_id` | string | Stable id |
+| `version` | number | Monotonic policy revision |
+| `organization_id` | string | Tenant / org |
+| `agent_id` | string | Governed agent |
+| `allowed_action_types` | string[] | Allow-list |
+| `denied_action_types` | string[] | Always deny |
+| `allowed_resource_patterns` | string[] | Glob allow |
+| `blocked_resource_patterns` | string[] | Glob deny |
+| `max_cost_minor` / `currency` | number / string | Cost ceiling |
+| `require_approval_action_types` | string[] | Force approval by type |
+| `require_approval_resource_patterns` | string[] | Force approval by resource |
+| `approval_cost_minor` | number | Force approval by cost |
+| `audit_mode` | `minimal` \| `forensics` | Audit projection depth |
+| `status` | string | Lifecycle |
+| `effective_from` / `expires_at` | string \| null | Optional window |
+
+### Decision outcomes
+
+| Outcome | Meaning |
+|---|---|
+| `allow` | Adapter may execute (still enforce locally) |
+| `deny` | Adapter must not execute |
+| `approval_required` | Hold until approve with matching `payload_hash` |
+
+## Audit `details` dictionary
+
+Audit rows never intend to store raw credentials. Client helpers
+(`redactActionIntent`, `projectIntentForAudit`) and server-side scrubbing both
+run. Default mode omits open metadata bags.
+
+### `policy.evaluated` details
+
+| Field | `minimal` | `forensics` | Notes |
+|---|---|---|---|
+| `approved` | yes | yes | Boolean evaluation result |
+| `reasons` | yes | yes | Human-readable reasons |
+| `policy_id` | yes | yes | Policy id |
+| `agent_id` | yes | yes | From projected intent |
+| `action_type` | yes | yes | From projected intent |
+| `resource` | yes | yes | Scrubbed (no userinfo / query / hash) |
+| `audit_mode` | yes | yes | Mode used for this row |
+| `intent` | projected | projected + redacted `metadata` | See intent projection |
+| `legacy` | optional | optional | Compatibility flag |
+
+### `action.recorded` details
+
+| Field | `minimal` | `forensics` | Notes |
+|---|---|---|---|
+| `outcome` | yes | yes | `executed` \| `skipped` \| `blocked` |
+| `decision_id` | yes | yes | Correlated decision, if any |
+| `agent_id` / `action_type` / `resource` | yes | yes | From projected intent |
+| `audit_mode` | yes | yes | Mode used for this row |
+| `intent` | projected | projected + metadata | Same projection rules |
+| `details` | omitted | redacted object | Open bag only in forensics |
+
+### Intent projection fields
+
+| Field | `minimal` | `forensics` |
+|---|---|---|
+| `intent_id` | yes | yes |
+| `policy_id` | yes | yes |
+| `agent_id` | yes | yes |
+| `action_type` | yes | yes |
+| `resource` | scrubbed | scrubbed |
+| `cost` | yes | yes |
+| `issued_at` | yes | yes |
+| `metadata` | omitted | redacted |
+| `nonce` | omitted | omitted |
+
+## Logging rules
+
+Application logs should carry operational identifiers only:
+
+- Prefer: `tenant_id`, `agent_id`, `policy_id`, `intent_id`, `decision_id`, `event_type`
+- Avoid: passwords, API tokens, `Authorization` headers, full intent `metadata`, chat transcripts, raw webhook bodies
+
+Audit storage is the place for decision history. Process logs are for
+operations. Keep them separate.
+
+## Related docs
+
+- [Minimize audit data](/docs/server/data-minimization) — scrubbing and retention knobs
+- [Run production operations](/docs/server/operations) — durable store, secrets, multi-instance
+- [Self-run the server](/docs/server/self-hosting) — env template and deploy paths
+- GitHub package readme: [`packages/server/README.md`](https://github.com/limetry/limetry/blob/main/packages/server/README.md)
