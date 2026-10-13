@@ -1,6 +1,6 @@
 {
   "name": "@limetry/ci",
-  "version": "1.2.78",
+  "version": "1.2.79",
   "description": "Limetry GitHub Action and helpers for CI privilege and release gating",
   "license": "MIT",
   "type": "module",
@@ -36,7 +36,7 @@
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@limetry/sdk": "^1.2.78"
+    "@limetry/sdk": "^1.2.79"
   },
   "peerDependencies": {
     "@limetry/sdk": "*"
