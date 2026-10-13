@@ -39,7 +39,8 @@ jobs:
           yarn test:preflight && yarn test:sdk && yarn test:server && yarn test:cli &&
           yarn workspace @limetry/ci test &&
           yarn workspace @limetry/sql test &&
-          yarn workspace @limetry/shopify test
+          yarn workspace @limetry/shopify test &&
+          yarn test:ui
       - name: Run supported examples
         run: yarn test:examples
       - name: Smoke test CLI

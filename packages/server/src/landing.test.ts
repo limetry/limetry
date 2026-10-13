@@ -37,7 +37,9 @@ describe("landing page", () => {
   it("serves an HTML landing page at GET /", async () => {
     const publicDir = join(fileURLToPath(new URL("..", import.meta.url)), "public")
     const previousWebUrl = process.env.NEXT_PUBLIC_WEB_URL
+    const previousCloudEnabled = process.env.NEXT_PUBLIC_IS_CLOUD_ENABLED
     process.env.NEXT_PUBLIC_WEB_URL = "https://dev.limetry.org"
+    delete process.env.NEXT_PUBLIC_IS_CLOUD_ENABLED
     try {
       const app = createApp({ env: baseEnv, publicDir })
 
@@ -73,6 +75,11 @@ describe("landing page", () => {
         delete process.env.NEXT_PUBLIC_WEB_URL
       } else {
         process.env.NEXT_PUBLIC_WEB_URL = previousWebUrl
+      }
+      if (previousCloudEnabled === undefined) {
+        delete process.env.NEXT_PUBLIC_IS_CLOUD_ENABLED
+      } else {
+        process.env.NEXT_PUBLIC_IS_CLOUD_ENABLED = previousCloudEnabled
       }
     }
   })

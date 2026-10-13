@@ -6,6 +6,7 @@ import {
   LOCAL_WEB_ORIGIN,
   renderLandingHtml,
   resolveLandingWebOrigin,
+  stripHiddenLaunchBlocks,
 } from "./landing-links.js"
 
 describe("landing links", () => {
@@ -54,6 +55,22 @@ describe("landing links", () => {
     expect(html).toBe(
       "<a href=\"https://dev.limetry.org/docs/quick-start\">Docs</a> v1.2.3",
     )
+  })
+
+  it("strips Cloud blocks when launch is closed", () => {
+    const html = stripHiddenLaunchBlocks(
+      "<!-- launching-soon:cloud --><a>Try Limetry Cloud</a><!-- /launching-soon:cloud -->",
+      {},
+    )
+    expect(html).toBe("")
+  })
+
+  it("keeps Cloud blocks when launch is open", () => {
+    const html = stripHiddenLaunchBlocks(
+      "<!-- launching-soon:cloud --><a>Try Limetry Cloud</a><!-- /launching-soon:cloud -->",
+      { NEXT_PUBLIC_IS_CLOUD_ENABLED: "true" },
+    )
+    expect(html).toContain("Try Limetry Cloud")
   })
 
   it("escapes dynamic landing-page values before rendering HTML", () => {

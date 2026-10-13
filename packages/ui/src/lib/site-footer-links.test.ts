@@ -1,5 +1,4 @@
-import assert from "node:assert/strict"
-import { describe, it } from "node:test"
+import { describe, expect, it } from "vitest"
 
 import { buildSiteFooterLinks } from "./site-footer-links"
 
@@ -13,12 +12,11 @@ describe("buildSiteFooterLinks", () => {
       includeCloudLink: true,
       ossLinksRelative: true,
     })
-    assert.equal(links.product[0]?.href, "/docs/introduction")
-    assert.equal(links.opensource.find((l) => l.label === "Changelog")?.href, "/changelog")
-    assert.equal(links.legal.privacy.href, "/privacy")
-    assert.equal(links.legal.terms.href, "/terms")
-    assert.equal(
-      links.product.find((l) => l.label === "Limetry Cloud")?.href,
+    expect(links.product[0]?.href).toBe("/docs/introduction")
+    expect(links.opensource.find((l) => l.label === "Changelog")?.href).toBe("/changelog")
+    expect(links.legal.privacy.href).toBe("/privacy")
+    expect(links.legal.terms.href).toBe("/terms")
+    expect(links.product.find((l) => l.label === "Limetry Cloud")?.href).toBe(
       "https://app.limetry.com",
     )
   })
@@ -32,10 +30,10 @@ describe("buildSiteFooterLinks", () => {
       includeCloudLink: true,
       ossLinksRelative: false,
     })
-    assert.equal(links.opensource.find((l) => l.label === "Blog")?.href, "http://localhost:3800/blog")
-    assert.equal(links.legal.privacy.href, "http://localhost:3800/privacy")
-    assert.equal(links.docs.find((l) => l.label === "Swagger UI")?.href, "/openapi")
-    assert.equal(links.docs.find((l) => l.label === "Swagger UI")?.external, undefined)
+    expect(links.opensource.find((l) => l.label === "Blog")?.href).toBe("http://localhost:3800/blog")
+    expect(links.legal.privacy.href).toBe("http://localhost:3800/privacy")
+    expect(links.docs.find((l) => l.label === "Swagger UI")?.href).toBe("/openapi")
+    expect(links.docs.find((l) => l.label === "Swagger UI")?.external).toBeUndefined()
   })
 
   it("omits Limetry Cloud when includeCloudLink is false", () => {
@@ -47,6 +45,6 @@ describe("buildSiteFooterLinks", () => {
       includeCloudLink: false,
       ossLinksRelative: true,
     })
-    assert.equal(links.product.find((l) => l.label === "Limetry Cloud"), undefined)
+    expect(links.product.find((l) => l.label === "Limetry Cloud")).toBeUndefined()
   })
 })
