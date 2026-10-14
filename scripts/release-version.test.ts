@@ -8,14 +8,15 @@ import {
   deployTargetFromChoice,
   formatAppVersionSource,
   formatVersion,
+  lockfileRecordsPublishedSdkRange,
   nextBetaVersion,
   parseReleaseCliArgs,
   parseVersion,
   planPeerFollowUp,
   planSharedRelease,
   releaseTypeFromChoice,
-  setPackageVersionText,
   setCloudLimetryDependencyRanges,
+  setPackageVersionText,
   setPublishedLimetryDependencyRanges,
   stripPrerelease,
 } from "./release-version.js"
@@ -170,6 +171,14 @@ describe("release-version", () => {
     expect(updated).toContain("\"@limetry/sdk\": \"^1.2.70\"")
     expect(updated).toContain("\"chalk\": \"^6.0.0\"")
     expect(setPublishedLimetryDependencyRanges(updated, "1.2.70")).toBe(updated)
+  })
+
+  it("detects a stale published SDK range in the lockfile", () => {
+    const current = "\"@limetry/sdk\": \"npm:^1.2.80\""
+    const stale = "\"@limetry/sdk\": \"npm:^1.2.79\""
+    expect(lockfileRecordsPublishedSdkRange(current, "1.2.80")).toBe(true)
+    expect(lockfileRecordsPublishedSdkRange(stale, "1.2.80")).toBe(false)
+    expect(lockfileRecordsPublishedSdkRange(current, "1.2.080")).toBe(true)
   })
 
   it("stamps Cloud @limetry caret and npm ranges without rewriting link descriptors", () => {

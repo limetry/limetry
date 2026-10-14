@@ -317,6 +317,30 @@ export function setPublishedLimetryDependencyRanges(source: string, version: str
 }
 
 /**
+ * Lockfile dependency line Yarn writes for a published `@limetry/sdk` range.
+ *
+ * @param version - Product version (padded patches are accepted).
+ * @returns Descriptor text that must appear in `yarn.lock`.
+ */
+export function publishedSdkLockfileDescriptor(version: string): string {
+  return `"@limetry/sdk": "npm:^${canonicalizeVersion(version)}"`
+}
+
+/**
+ * Reports whether `yarn.lock` records the published `@limetry/sdk` range.
+ *
+ * GitHub Actions runs `yarn install --immutable`. A release that bumps
+ * package.json ranges without this descriptor fails that check.
+ *
+ * @param lockfile - `yarn.lock` text.
+ * @param version - Product version (padded patches are accepted).
+ * @returns True when the published SDK descriptor is present.
+ */
+export function lockfileRecordsPublishedSdkRange(lockfile: string, version: string): boolean {
+  return lockfile.includes(publishedSdkLockfileDescriptor(version))
+}
+
+/**
  * Stamps Cloud `@limetry/*` caret / `npm:^` ranges to the product version.
  *
  * Leaves `link:`, `workspace:`, and `file:` descriptors alone so local and

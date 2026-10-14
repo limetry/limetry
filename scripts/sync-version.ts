@@ -21,6 +21,7 @@ import {
   type DeployTarget,
   formatAppVersionSource,
   isStableReleaseBranch,
+  lockfileRecordsPublishedSdkRange,
   nextBetaVersion,
   parseReleaseCliArgs,
   planPeerFollowUp,
@@ -186,18 +187,66 @@ function runYarn(args: string[], env: NodeJS.ProcessEnv = process.env): void {
 }
 
 /**
- * Rewrites `yarn.lock` after published `@limetry/*` ranges change.
+ * Environment for a lockfile rewrite.
  *
- * `yarn release` is often run with `CI` set by tooling. Yarn then treats a
- * plain install as immutable and refuses to record the new ranges.
+ * Yarn treats installs as immutable when `CI` (or similar) is set, and a plain
+ * `yarn install` can also exit 0 without rewriting descriptor ranges. Strip
+ * those variables and force a mutable install.
  *
- * @returns Nothing.
+ * @returns Env for {@link refreshYarnLock}.
  */
-function refreshYarnLock(): void {
+function mutableInstallEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env }
+  for (const key of [
+    "CI",
+    "CONTINUOUS_INTEGRATION",
+    "GITHUB_ACTIONS",
+    "BUILD_ID",
+    "BUILD_NUMBER",
+    "CI_NAME",
+    "RUN_ID",
+  ]) {
+    delete env[key]
+  }
+  env.YARN_ENABLE_IMMUTABLE_INSTALLS = "false"
+  return env
+}
+
+/**
+ * Throws when `yarn.lock` does not record the published SDK range.
+ *
+ * @param version - Product version that package.json ranges were stamped to.
+ * @returns Nothing.
+ * @throws Error When the lockfile would fail `yarn install --immutable` on CI.
+ */
+function assertYarnLockMatchesSdk(version: string): void {
+  const lockfile = readFileSync(join(ROOT_DIR, "yarn.lock"), "utf8")
+  if (lockfileRecordsPublishedSdkRange(lockfile, version)) {
+    return
+  }
+  const descriptor = `"@limetry/sdk": "npm:^${canonicalizeVersion(version)}"`
+  throw new Error(
+    `yarn.lock is missing ${descriptor}. Refusing to release a lockfile that `
+    + "yarn install --immutable rejects on CI.",
+  )
+}
+
+/**
+ * Rewrites `yarn.lock` after published `@limetry/*` ranges change, then proves
+ * GitHub Actions' immutable install would accept it.
+ *
+ * @param version - Product version just stamped into publishable manifests.
+ * @returns Nothing.
+ * @throws Error When the lockfile still omits the published SDK range.
+ */
+function refreshYarnLock(version: string): void {
   console.log("Refreshing yarn.lock for published dependency ranges…")
-  runYarn(["install"], {
+  runYarn(["install", "--mode=update-lockfile"], mutableInstallEnv())
+  assertYarnLockMatchesSdk(version)
+  runYarn(["install", "--immutable"], {
     ...process.env,
-    YARN_ENABLE_IMMUTABLE_INSTALLS: "false",
+    CI: "true",
+    YARN_ENABLE_IMMUTABLE_INSTALLS: "true",
   })
 }
 
@@ -391,7 +440,7 @@ function applyReleaseVersion(version: string, schemaBump: ReleaseBump = "patch")
     )
   }
   console.log(schemas.catalog.schemas.map((record) => `${record.id}@${record.version}`).join(", "))
-  refreshYarnLock()
+  refreshYarnLock(canonical)
   return collectVersionFilePaths()
 }
 
@@ -907,6 +956,7 @@ async function main(): Promise<void> {
       versionFiles = applyReleaseVersion(newVersion, args.schemaBump)
       console.log("Updated root and publishable package.json versions and APP_VERSION.")
       runQualityGate()
+      refreshYarnLock(newVersion)
       commitAndTagRelease(newVersion, versionFiles, {
         tagExistingCommit: plan.action === "adopt-peer",
       })
