@@ -1,0 +1,18 @@
+{
+  "policy_id": "55555555-5555-4555-8555-555555555555",
+  "version": 1,
+  "organization_id": "default",
+  "agent_id": "sql_agent",
+  "allowed_action_types": [
+    "sql.read"
+  ],
+  "denied_action_types": [
+    "sql.write",
+    "sql.ddl"
+  ],
+  "audit_mode": "minimal",
+  "status": "active",
+  "updated_at": "2026-08-18T00:00:00.000Z",
+  "effective_from": "2026-01-01T00:00:00.000Z",
+  "expires_at": null
+}
