@@ -31,6 +31,7 @@ import { createRequestContextMiddleware, logger, metrics } from "./observability
 import { runOssPreflight } from "./preflight.js"
 import { createActionRoutes } from "./routes/actions.js"
 import { createAuthRoutes } from "./routes/auth.js"
+import { createCliSetupRoutes } from "./routes/cli-setup.js"
 import { createRuleRoutes } from "./routes/rules.js"
 import { createUserRoutes } from "./routes/users.js"
 import { actionPolicySchema } from "./schemas/action.js"
@@ -287,6 +288,7 @@ export function createApp(options: CreateAppOptions): Express {
   )
 
   createAuthRoutes(app, options.env, userService, jwtRevocationStore)
+  createCliSetupRoutes(app, userService)
   createUserRoutes(app, options.env, userService, jwtRevocationStore)
   createRuleRoutes(app, options.env, userService, jwtRevocationStore)
 

@@ -47,22 +47,25 @@ type CliTokenResponse = {
  */
 export type CliAuthProvider = {
   id: "clerk"
-  login(baseUrl?: string): Promise<CliConfig>
+  login(baseUrl?: string, portalUrl?: string): Promise<CliConfig>
 }
 
 /**
  * Opens Cloud sign-in and waits for the authenticated portal to return.
  *
  * @param baseUrl - Cloud BFF API origin.
+ * @param portalUrl - Portal origin that hosts `/cli/authorize`.
  * @returns Persisted Cloud CLI configuration.
  */
-export async function browserLoginCommand(baseUrl = resolveLimetryCloudBaseUrl()): Promise<CliConfig> {
+export async function browserLoginCommand(
+  baseUrl = resolveLimetryCloudBaseUrl(),
+  portalUrl = process.env.LIMETRY_CLOUD_APP_URL?.trim() || LIMETRY_CLOUD_APP_ORIGIN,
+): Promise<CliConfig> {
   const verifier = randomBytes(32).toString("base64url")
   const challenge = createHash("sha256").update(verifier).digest("base64url")
   const state = randomBytes(24).toString("base64url")
   const callback = await startCallbackServer(state)
-  const portalUrl = process.env.LIMETRY_CLOUD_APP_URL?.trim() || LIMETRY_CLOUD_APP_ORIGIN
-  const authorizeUrl = new URL(`${portalUrl}/cli/authorize`)
+  const authorizeUrl = new URL(`${portalUrl.replace(/\/$/, "")}/cli/authorize`)
   authorizeUrl.searchParams.set("client_id", CLIENT_ID)
   authorizeUrl.searchParams.set("redirect_uri", callback.redirectUri)
   authorizeUrl.searchParams.set("response_type", "code")
