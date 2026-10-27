@@ -28,7 +28,7 @@ export function CloudCtaBanner(): React.JSX.Element {
           </p>
         </div>
         <Link
-          href={siteUrls.app}
+          href={siteUrls.cloudWeb}
           className={`
             inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl
             bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold

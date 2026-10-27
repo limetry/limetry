@@ -11,6 +11,7 @@ describe("siteUrls client-safe env reads", () => {
     assert.match(source, /process\.env\.NEXT_PUBLIC_APP_URL/)
     assert.match(source, /process\.env\.NEXT_PUBLIC_WEB_URL/)
     assert.match(source, /process\.env\.NEXT_PUBLIC_API_URL/)
+    assert.match(source, /process\.env\.NEXT_PUBLIC_CLOUD_WEB_URL/)
     assert.doesNotMatch(source, /firstEnvUrl\(\s*process\.env\s*,/)
     assert.doesNotMatch(
       source,

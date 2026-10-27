@@ -158,7 +158,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             <ThemeToggle />
             {isLaunchOpen() ? (
               <Link
-                href={siteUrls.app}
+                href={siteUrls.cloudWeb}
                 onClick={dismissSearch}
                 className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-emerald-400 hover:to-cyan-400 hover:shadow-md"
               >
@@ -193,7 +193,7 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             </Link>
             {isLaunchOpen() ? (
               <Link
-                href={siteUrls.app}
+                href={siteUrls.cloudWeb}
                 onClick={() => setMenuOpen(false)}
                 className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center text-sm font-semibold text-white"
               >

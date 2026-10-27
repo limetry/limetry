@@ -38,7 +38,7 @@ function FooterAnchor({ link }: { link: SiteFooterLink }): React.JSX.Element {
 export function Footer(): React.JSX.Element {
   const footerLinks = buildSiteFooterLinks({
     ossWebOrigin: siteUrls.web,
-    cloudAppOrigin: siteUrls.app,
+    cloudAppOrigin: siteUrls.cloudWeb,
     openApiHref: `${siteUrls.api}/openapi`,
     githubUrl: siteUrls.github,
     includeCloudLink: isLaunchOpen(),

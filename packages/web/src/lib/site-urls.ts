@@ -58,7 +58,9 @@ export const siteUrls = {
   ),
   cloudWeb: clientSafeOrigin(
     process.env.NEXT_PUBLIC_CLOUD_WEB_URL,
-    LIMETRY_CLOUD_ORIGINS.web,
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3812"
+      : LIMETRY_CLOUD_ORIGINS.web,
   ),
   github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/limetry"),
   discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/VxUWz7cZP"),

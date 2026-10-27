@@ -26,7 +26,7 @@ export type BuildSiteFooterLinksInput = {
    */
   ossWebOrigin: string
   /**
-   * Cloud portal / app origin for the Limetry Cloud product link.
+   * Cloud marketing origin for the Limetry Cloud product link.
    */
   cloudAppOrigin: string
   /**

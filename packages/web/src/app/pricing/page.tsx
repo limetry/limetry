@@ -1,8 +1,8 @@
 /**
- * `/pricing` sends visitors to Limetry Cloud (`NEXT_PUBLIC_APP_URL`).
+ * `/pricing` sends visitors to the Limetry Cloud marketing site (`NEXT_PUBLIC_CLOUD_WEB_URL`).
  *
  * Implemented as a client redirect so static export (`LIMETRY_STATIC_EXPORT=1`)
- * can still open the portal hostname in a new navigation without a Next server.
+ * can still open the Cloud site in a new navigation without a Next server.
  */
 
 "use client"
@@ -13,7 +13,7 @@ import { isLaunchOpen } from "@/lib/launching-soon"
 import { siteUrls } from "@/lib/site-urls"
 
 /**
- * Redirects to the Cloud portal origin baked in as `NEXT_PUBLIC_APP_URL`.
+ * Redirects to the Cloud marketing origin baked in as `NEXT_PUBLIC_CLOUD_WEB_URL`.
  *
  * @returns Brief fallback link while the browser navigates away.
  */
