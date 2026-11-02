@@ -13,6 +13,15 @@ export {
   type DecisionReceiptInput,
   verifyDecisionReceipt,
 } from "./decision-receipt.js"
+export type {
+  ApprovalRecord,
+  ApprovalStatus,
+  AuditEvent,
+  AuditStore,
+  PolicyRegistry,
+  RegistryPolicy,
+  StoredPolicy,
+} from "./ports.js"
 export { matchesResourcePattern } from "./resource-match.js"
 export {
   actionIntentSchema,
@@ -23,12 +32,3 @@ export {
   recordActionBodySchema,
   upsertActionPolicyBodySchema,
 } from "./schemas.js"
-export type {
-  ApprovalRecord,
-  ApprovalStatus,
-  AuditEvent,
-  AuditStore,
-  PolicyRegistry,
-  RegistryPolicy,
-  StoredPolicy,
-} from "./ports.js"

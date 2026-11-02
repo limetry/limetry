@@ -1,5 +1,5 @@
 {
-  "name": "limetry-cloud-serverless",
+  "name": "@limetry/cloud",
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -24,7 +24,7 @@
     "@pulumi/cloudflare": "^6.20.0",
     "@pulumi/docker-build": "^0.0.22",
     "@pulumi/gcp": "^10.1.0",
-    "@pulumi/neon": "file:../../pulumi-neon",
+    "@pulumi/neon": "file:../pulumi-neon",
     "@pulumi/pulumi": "^3.268.0",
     "@pulumi/random": "^4.21.2"
   }

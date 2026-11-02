@@ -6,7 +6,6 @@
   "packageManager": "yarn@4.13.0",
   "workspaces": [
     "packages/*",
-    "!packages/cloud",
     "!packages/pulumi-neon",
     "examples/*"
   ],
