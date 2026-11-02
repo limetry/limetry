@@ -5,6 +5,7 @@
     "target": "es2020",
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "rootDir": "src",
     "sourceMap": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
