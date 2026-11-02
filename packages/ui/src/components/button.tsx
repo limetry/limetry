@@ -71,6 +71,32 @@ const textSizeStyles: Record<ButtonSize, string> = {
   lg: "text-lg",
 }
 
+function isTextish(value: ReactNode): value is string | number {
+  return typeof value === "string" || typeof value === "number"
+}
+
+/**
+ * Flattens JSX text/number children into one label string.
+ *
+ * JSX like `Use existing ({count})` becomes an array of strings and numbers.
+ * React Native cannot render those raw text nodes inside Pressable.
+ *
+ * @param children - Button children.
+ * @returns Joined label when every child is textish; otherwise null.
+ */
+function textishLabel(children: ReactNode): string | null {
+  if (isTextish(children)) {
+    return String(children)
+  }
+  if (!Array.isArray(children) || children.length === 0) {
+    return null
+  }
+  if (!children.every((child) => isTextish(child) || child === null || child === false || child === true || child === undefined)) {
+    return null
+  }
+  return children.filter(isTextish).join("")
+}
+
 /**
  * Accessible pressable button that wraps string children in styled `Text`.
  *
@@ -86,6 +112,8 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps): React.JSX.Element {
+  const label = textishLabel(children)
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -99,7 +127,7 @@ export function Button({
       disabled={disabled}
       {...props}
     >
-      {typeof children === "string" ? (
+      {label !== null ? (
         <Text
           className={cn(
             textVariantStyles[variant],
@@ -107,7 +135,7 @@ export function Button({
             textClassName,
           )}
         >
-          {children}
+          {label}
         </Text>
       ) : (
         children
