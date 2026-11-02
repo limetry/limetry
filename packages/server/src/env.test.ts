@@ -38,6 +38,18 @@ describe("server environment", () => {
     })
 
     expect(env.SQLITE_DATABASE_PATH).toBe("/var/lib/limetry/limetry.sqlite")
+    expect(env.DATABASE_SCHEMA_NAME).toBe("evaluate")
+  })
+
+  it("rejects an unsafe database schema name", () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: "development",
+        LIMETRY_BEARER_TOKEN: "test-bearer-token-at-least-16",
+        JWT_SECRET: "your-jwt-secret-change-in-production",
+        DATABASE_SCHEMA_NAME: "evaluate;drop",
+      }),
+    ).toThrow("DATABASE_SCHEMA_NAME")
   })
 
   it("requires a dedicated decision HMAC secret in production", () => {

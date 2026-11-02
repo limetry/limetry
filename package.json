@@ -13,6 +13,7 @@
   "scripts": {
     "build:ci": "yarn workspace @limetry/ci build",
     "build:cli": "yarn workspace @limetry/cli build",
+    "build:db": "yarn workspace @limetry/db build",
     "build:infra:artifacts": "yarn build:sdk && yarn build:preflight && yarn build:lambda && yarn build:web:static",
     "build:lambda": "yarn workspace @limetry/server build:lambda",
     "build:preflight": "yarn workspace @limetry/preflight build",
@@ -22,7 +23,9 @@
     "build:sql": "yarn workspace @limetry/sql build",
     "build:web:static": "LIMETRY_STATIC_EXPORT=1 yarn workspace @limetry/web build",
     "build:web": "yarn workspace @limetry/web build",
-    "build": "yarn build:sdk && yarn build:preflight && yarn build:server && yarn build:cli && yarn build:ci && yarn build:sql && yarn build:shopify && yarn build:web",
+    "db:destroy": "yarn workspace @limetry/db db:destroy",
+    "db:setup": "yarn workspace @limetry/db db:setup",
+    "build": "yarn build:sdk && yarn build:db && yarn build:preflight && yarn build:server && yarn build:cli && yarn build:ci && yarn build:sql && yarn build:shopify && yarn build:web",
     "deploy:vercel": "tsx scripts/deploy-vercel.ts",
     "dev:cli": "yarn workspace @limetry/cli dev",
     "dev:mcp": "yarn workspace @limetry/mcp build && node packages/mcp/dist/index.js",

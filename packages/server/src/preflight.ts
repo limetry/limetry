@@ -113,6 +113,7 @@ function ossConfigurationLines(env: ServerEnv, source: NodeJS.ProcessEnv): strin
     `LIMETRY_API_PORT: ${String(env.LIMETRY_API_PORT)}`,
     `DB Endpoint: ${database.endpoint}`,
     `DB Name:     ${database.name}`,
+    `DB Schema:   ${env.DATABASE_SCHEMA_NAME}`,
   ]
 }
 

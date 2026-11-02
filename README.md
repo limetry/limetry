@@ -106,7 +106,7 @@ yarn build:server
 yarn build:cli
 ```
 
-Start a locally built server with `yarn dev:server`.
+Start a locally built server with `yarn dev:server`. `yarn db:setup` creates the SQLite file or the Postgres schema named by `DATABASE_SCHEMA_NAME`. `yarn db:destroy` removes that local database.
 
 ## Deploy the serverless API
 

@@ -1,0 +1,51 @@
+{
+  "name": "@limetry/db",
+  "version": "1.2.80",
+  "private": true,
+  "description": "Drizzle schemas and setup commands for SQLite and Postgres",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./postgres": {
+      "types": "./dist/postgres/schema.d.ts",
+      "import": "./dist/postgres/schema.js"
+    },
+    "./sqlite": {
+      "types": "./dist/sqlite/schema.d.ts",
+      "import": "./dist/sqlite/schema.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "db:destroy": "tsx src/lifecycle.ts destroy",
+    "db:setup": "tsx src/lifecycle.ts setup",
+    "test": "vitest run",
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^2.23.0",
+    "better-sqlite3": "^12.4.1",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^26.4.1",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
