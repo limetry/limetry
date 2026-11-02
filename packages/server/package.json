@@ -17,6 +17,7 @@
   "dependencies": {
     "@codegenie/serverless-express": "^5.0.0",
     "@dotenvx/dotenvx": "^2.23.0",
+    "@limetry/evaluate": "workspace:*",
     "@limetry/preflight": "workspace:*",
     "@limetry/sdk": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
