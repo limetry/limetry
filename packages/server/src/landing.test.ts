@@ -97,21 +97,23 @@ describe("landing page", () => {
       Object.keys(item)
         .filter((method) => ["get", "post", "put", "patch", "delete", "options", "head"].includes(method))
         .map((method) => `${method.toUpperCase()} ${path}`),
-    ).sort((left, right) => {
+    )
+    const compareCatalogRows = (left: string, right: string): number => {
       const [, leftPath] = left.split(" ")
       const [, rightPath] = right.split(" ")
-      return leftPath === rightPath
-        ? left.localeCompare(right)
-        : leftPath.localeCompare(rightPath)
-    })
+      if (leftPath === rightPath) {
+        return left < right ? -1 : left > right ? 1 : 0
+      }
+      return leftPath < rightPath ? -1 : 1
+    }
 
     expect(rows).toEqual([
       "GET /",
-      "GET /openapi.yaml",
-      "GET /openapi.json",
       "GET /openapi",
+      "GET /openapi.json",
+      "GET /openapi.yaml",
       ...operations,
-    ])
+    ].sort(compareCatalogRows))
   })
 
   it("still serves health JSON after mounting the landing page", async () => {

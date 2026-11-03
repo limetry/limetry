@@ -63,27 +63,35 @@ function extractOpenApiPathRows(document) {
   })
 }
 
-function renderPathRowsHtml(rows) {
-  const fixedRows = [
-    ["GET", "/", "none", "This landing page"],
-    ["GET", "/openapi.yaml", "none", "OpenAPI YAML document"],
-    ["GET", "/openapi.json", "none", "OpenAPI JSON document"],
-    ["GET", "/openapi", "none", "Swagger UI"],
-  ]
-  const generatedRows = rows.map((row) => [
-    row.method,
-    row.path,
-    row.auth === "none" ? "none" : "bearer · API key",
-    row.summary,
-  ])
+function compareCatalogRows(left, right) {
+  if (left.path === right.path) {
+    return left.method < right.method ? -1 : left.method > right.method ? 1 : 0
+  }
+  return left.path < right.path ? -1 : 1
+}
 
-  return [...fixedRows, ...generatedRows].map(([method, path, auth, summary]) => [
-    "              <tr>",
-    `                <td><span class="method">${escapeHtml(method)}</span> <code>${escapeHtml(path)}</code></td>`,
-    `                <td>${escapeHtml(auth)}</td>`,
-    `                <td>${escapeHtml(summary)}</td>`,
-    "              </tr>",
-  ].join("\n")).join("\n")
+function renderPathRowsHtml(rows) {
+  const catalogRows = [
+    { method: "GET", path: "/", auth: "none", summary: "This landing page" },
+    { method: "GET", path: "/openapi.yaml", auth: "none", summary: "OpenAPI YAML document" },
+    { method: "GET", path: "/openapi.json", auth: "none", summary: "OpenAPI JSON document" },
+    { method: "GET", path: "/openapi", auth: "none", summary: "Swagger UI" },
+    ...rows,
+  ].sort(compareCatalogRows)
+
+  return catalogRows.map((row) => {
+    const method = row.method
+    const path = row.path
+    const auth = row.auth === "none" ? "none" : "bearer · API key"
+    const summary = row.summary
+    return [
+      "              <tr>",
+      `                <td><span class="method">${escapeHtml(method)}</span> <code>${escapeHtml(path)}</code></td>`,
+      `                <td>${escapeHtml(auth)}</td>`,
+      `                <td>${escapeHtml(summary)}</td>`,
+      "              </tr>",
+    ].join("\n")
+  }).join("\n")
 }
 
 mkdirSync(publicDir, { recursive: true })
