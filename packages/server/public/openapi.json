@@ -177,65 +177,6 @@
         }
       }
     },
-    "/v1/policy/evaluate": {
-      "post": {
-        "summary": "Evaluate an action intent",
-        "operationId": "evaluateAction",
-        "description": "Match an action intent against the registered action policy. Returns\nallow, deny, or approval_required with reasons and an optional signed receipt.\n",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EvaluateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Policy decision",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EvaluateResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request body",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing or invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient scope",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/actions/record": {
       "post": {
         "summary": "Record action outcome",
@@ -361,6 +302,65 @@
           },
           "401": {
             "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/policy/evaluate": {
+      "post": {
+        "summary": "Evaluate an action intent",
+        "operationId": "evaluateAction",
+        "description": "Match an action intent against the registered action policy. Returns\nallow, deny, or approval_required with reasons and an optional signed receipt.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Policy decision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope",
             "content": {
               "application/json": {
                 "schema": {

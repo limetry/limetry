@@ -29,9 +29,9 @@ Rendered docs: [Architecture and data dictionary](https://limetry.org/docs/serve
 
 | Path | Role |
 | --- | --- |
-| `POST /v1/policy/evaluate` | Match an `ActionIntent` against an `ActionPolicy` |
 | `POST /v1/actions/record` | Record `executed` / `skipped` / `blocked` |
 | `GET /v1/audit` | List privacy-safe audit events |
+| `POST /v1/policy/evaluate` | Match an `ActionIntent` against an `ActionPolicy` |
 | `PUT /v1/policies/:id` | Upsert a policy document |
 | Approvals API | Resolve `approval_required` rows bound to a payload hash |
 

@@ -73,9 +73,9 @@ Self-hosters must set `LIMETRY_BASE_URL` (default server `http://localhost:3810`
 ## API server endpoints
 
 - `GET /health` — service health
-- `POST /v1/policy/evaluate` — ActionIntent (or legacy spend) evaluation
 - `POST /v1/actions/record` — record executed / skipped / blocked
 - `GET /v1/audit` — list scrubbed audit events
+- `POST /v1/policy/evaluate` — ActionIntent (or legacy spend) evaluation
 - `PUT /v1/policies/:id` — upsert policy
 - Auth / tokens / rules routes as documented in the server package
 

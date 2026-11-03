@@ -112,6 +112,91 @@ paths:
                   version:
                     type: string
 
+  /v1/actions/record:
+    post:
+      summary: Record action outcome
+      operationId: recordAction
+      description: Record whether the tool ran after evaluate (executed, skipped, or blocked).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Outcome recorded
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /v1/audit:
+    get:
+      summary: List audit events
+      operationId: listAudit
+      description: Privacy-safe audit rows for this workspace (retention depends on deployment).
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Audit page
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /v1/policies/{policyId}:
+    put:
+      summary: Upsert an action policy
+      operationId: upsertPolicy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Policy stored
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /v1/policy/evaluate:
     post:
       summary: Evaluate an action intent
@@ -146,94 +231,6 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "403":
           description: Insufficient scope
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /v1/actions/record:
-    post:
-      summary: Record action outcome
-      operationId: recordAction
-      description: Record whether the tool ran after evaluate (executed, skipped, or blocked).
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        "200":
-          description: Outcome recorded
-        "400":
-          description: Invalid request body
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "401":
-          description: Missing or invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /v1/audit:
-    get:
-      summary: List audit events
-      operationId: listAudit
-      description: Privacy-safe audit rows for this workspace (retention depends on deployment).
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 50
-      responses:
-        "200":
-          description: Audit page
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-        "401":
-          description: Missing or invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /v1/policies/{policyId}:
-    put:
-      summary: Upsert an action policy
-      operationId: upsertPolicy
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        "200":
-          description: Policy stored
-        "400":
-          description: Invalid request body
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "401":
-          description: Missing or invalid credentials
           content:
             application/json:
               schema:
