@@ -55,10 +55,12 @@ function extractOpenApiPathRows(document) {
       })
     }
   }
-  return rows.sort((left, right) =>
-    left.path === right.path
-      ? left.method.localeCompare(right.method)
-      : left.path.localeCompare(right.path))
+  return rows.sort((left, right) => {
+    if (left.path === right.path) {
+      return left.method < right.method ? -1 : left.method > right.method ? 1 : 0
+    }
+    return left.path < right.path ? -1 : 1
+  })
 }
 
 function renderPathRowsHtml(rows) {
