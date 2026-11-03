@@ -319,7 +319,7 @@
         }
       }
     },
-    "/v1/policies/{id}": {
+    "/v1/policies/{policyId}": {
       "put": {
         "summary": "Upsert an action policy",
         "operationId": "upsertPolicy",

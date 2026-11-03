@@ -205,7 +205,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
-  /v1/policies/{id}:
+  /v1/policies/{policyId}:
     put:
       summary: Upsert an action policy
       operationId: upsertPolicy
