@@ -17,6 +17,11 @@ packages/web/out
 packages/infra/bin
 packages/wasm/pkg
 docs/api
+
+# Generated docs RAG corpus (rebuild with: yarn workspace @limetry/server rag:ingest)
+docs/ai-rag/corpus/rag-corpus.json
+docs/ai-rag/corpus/plain/
+
 .DS_Store
 .env*
 !.env.example
