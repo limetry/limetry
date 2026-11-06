@@ -23,6 +23,34 @@ const chatBodySchema = z.object({
 })
 
 /**
+ * Adds the `www.` / apex sibling for a marketing origin.
+ *
+ * Production serves the same site on both `limetry.org` and `www.limetry.org`;
+ * browsers send whichever host the user opened as `Origin`.
+ *
+ * @param origin - Absolute origin without a trailing slash.
+ * @returns Origin plus its www/apex twin when applicable.
+ */
+export function chatCorsOriginVariants(origin: string): string[] {
+  const trimmed = origin.replace(/\/$/, "")
+  try {
+    const url = new URL(trimmed)
+    const host = url.hostname
+    const variants = new Set<string>([url.origin])
+    if (host.startsWith("www.")) {
+      url.hostname = host.slice(4)
+      variants.add(url.origin)
+    } else if (host.includes(".")) {
+      url.hostname = `www.${host}`
+      variants.add(url.origin)
+    }
+    return [...variants]
+  } catch {
+    return [trimmed]
+  }
+}
+
+/**
  * Builds allowed browser origins for the docs chat UI.
  *
  * @param env - Server env (unused today; reserved for future allowlists).
@@ -30,16 +58,20 @@ const chatBodySchema = z.object({
  */
 function chatCorsOrigins(_env: ServerEnv): string[] {
   const origins = new Set<string>([
-    resolveLandingWebOrigin(),
+    ...chatCorsOriginVariants(resolveLandingWebOrigin()),
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3800",
+    "http://127.0.0.1:3800",
   ])
   const extra = process.env.LIMETRY_RAG_CORS_ORIGINS
   if (extra) {
     for (const origin of extra.split(",")) {
       const trimmed = origin.trim().replace(/\/$/, "")
       if (trimmed) {
-        origins.add(trimmed)
+        for (const variant of chatCorsOriginVariants(trimmed)) {
+          origins.add(variant)
+        }
       }
     }
   }

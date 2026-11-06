@@ -40,4 +40,46 @@ describe("docs RAG chat route", () => {
     expect(response.status).toBe(400)
     expect(response.body.error).toBe("invalid_chat_request")
   })
+
+  it("allows www and apex landing origins on OPTIONS preflight", async () => {
+    const previousWebUrl = process.env.NEXT_PUBLIC_WEB_URL
+    process.env.NEXT_PUBLIC_WEB_URL = "https://limetry.org"
+    try {
+      const app = createApp({ env: testServerEnv({ LIMETRY_RAG_CHAT_PUBLIC: true }) })
+      for (const origin of ["https://limetry.org", "https://www.limetry.org"]) {
+        const response = await request(app)
+          .options("/v1/chat")
+          .set("Origin", origin)
+          .set("Access-Control-Request-Method", "POST")
+          .set("Access-Control-Request-Headers", "content-type")
+        expect(response.status, origin).toBe(204)
+        expect(response.headers["access-control-allow-origin"]).toBe(origin)
+      }
+    } finally {
+      if (previousWebUrl === undefined) {
+        delete process.env.NEXT_PUBLIC_WEB_URL
+      } else {
+        process.env.NEXT_PUBLIC_WEB_URL = previousWebUrl
+      }
+    }
+  })
+
+  it("denies unknown Origins on OPTIONS preflight", async () => {
+    const previousWebUrl = process.env.NEXT_PUBLIC_WEB_URL
+    process.env.NEXT_PUBLIC_WEB_URL = "https://limetry.org"
+    try {
+      const app = createApp({ env: testServerEnv({ LIMETRY_RAG_CHAT_PUBLIC: true }) })
+      const response = await request(app)
+        .options("/v1/chat")
+        .set("Origin", "https://evil.example")
+        .set("Access-Control-Request-Method", "POST")
+      expect(response.status).toBe(403)
+    } finally {
+      if (previousWebUrl === undefined) {
+        delete process.env.NEXT_PUBLIC_WEB_URL
+      } else {
+        process.env.NEXT_PUBLIC_WEB_URL = previousWebUrl
+      }
+    }
+  })
 })
