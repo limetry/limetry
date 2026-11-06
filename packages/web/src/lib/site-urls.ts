@@ -25,9 +25,29 @@ function trimTrailingSlash(value: string): string {
 }
 
 /**
+ * Returns true when a URL hostname is loopback.
+ *
+ * @param value - Absolute URL string.
+ * @returns Whether the host is localhost / 127.0.0.1 / ::1.
+ */
+function isLoopbackOrigin(value: string): boolean {
+  try {
+    const host = new URL(value).hostname.toLowerCase()
+    return host === "localhost"
+      || host === "127.0.0.1"
+      || host === "::1"
+      || host === "[::1]"
+  } catch {
+    return false
+  }
+}
+
+/**
  * Picks env, canonical production, or local origin for client bundles.
  *
  * Dynamic `process.env[key]` lookups must not be used — Next will not inline them.
+ * Loopback env values are ignored outside development so static/prod builds cannot
+ * bake `http://localhost:…` from a local `.env` into the client bundle.
  *
  * @param envValue - Static `process.env.NEXT_PUBLIC_*` value.
  * @param canonical - Production canonical origin.
@@ -35,7 +55,11 @@ function trimTrailingSlash(value: string): string {
  */
 function clientSafeOrigin(envValue: string | undefined, canonical: string): string {
   if (envValue && envValue.trim().length > 0) {
-    return trimTrailingSlash(trimOrigin(envValue))
+    const trimmed = trimTrailingSlash(trimOrigin(envValue))
+    if (process.env.NODE_ENV !== "development" && isLoopbackOrigin(trimmed)) {
+      return trimTrailingSlash(canonical)
+    }
+    return trimmed
   }
   return trimTrailingSlash(canonical)
 }
@@ -57,10 +81,9 @@ export const siteUrls = {
     CANONICAL_ORIGINS.ossApi,
   ),
   cloudWeb: clientSafeOrigin(
-    process.env.NEXT_PUBLIC_CLOUD_WEB_URL,
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3812"
-      : LIMETRY_CLOUD_ORIGINS.web,
+    process.env.NEXT_PUBLIC_CLOUD_WEB_URL
+      ?? (process.env.NODE_ENV === "development" ? "http://localhost:3812" : undefined),
+    LIMETRY_CLOUD_ORIGINS.web,
   ),
   github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/limetry"),
   discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/VxUWz7cZP"),

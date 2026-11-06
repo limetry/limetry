@@ -97,6 +97,15 @@ export function collectWebEnvChecks(
       required: false,
       critical: false,
     }),
+    envCheck({
+      name: "NEXT_PUBLIC_CLOUD_WEB_URL",
+      value: env.NEXT_PUBLIC_CLOUD_WEB_URL ?? "(canonical https://limetry.com)",
+      ok: !env.NEXT_PUBLIC_CLOUD_WEB_URL
+        || !requirePublicOrigins
+        || !isLoopbackHostname(hostnameOf(env.NEXT_PUBLIC_CLOUD_WEB_URL)),
+      required: false,
+      critical: requirePublicOrigins,
+    }),
   ]
 }
 

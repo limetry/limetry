@@ -15,6 +15,7 @@ describe("Limetry web preflight", () => {
       "NEXT_PUBLIC_GITHUB_URL",
       "NEXT_PUBLIC_DISCORD_URL",
       "NEXT_PUBLIC_CONTACT_FORM_URL",
+      "NEXT_PUBLIC_CLOUD_WEB_URL",
     ])
     assert.equal(names.includes("CLERK_SECRET_KEY"), false)
     assert.equal(names.includes("DATABASE_URL"), false)

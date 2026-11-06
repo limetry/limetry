@@ -40,6 +40,10 @@ const envSchema = z.object({
     emptyStringToUndefined,
     z.string().url().default("https://app.limetry.com/contact"),
   ),
+  NEXT_PUBLIC_CLOUD_WEB_URL: z.preprocess(
+    emptyStringToUndefined,
+    z.string().url().optional(),
+  ),
 })
 
 /**

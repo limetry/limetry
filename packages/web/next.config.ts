@@ -22,6 +22,19 @@ if (!process.env.VERCEL) {
 }
 
 /**
+ * Static/prod builds often load the local `.env` (localhost Cloud URL). Never
+ * ship loopback `NEXT_PUBLIC_CLOUD_WEB_URL` outside development.
+ */
+if (
+  process.env.NODE_ENV !== "development"
+  && /^(https?:\/\/)?(localhost|127\.0\.0\.1|\[::1\])/i.test(
+    process.env.NEXT_PUBLIC_CLOUD_WEB_URL ?? "",
+  )
+) {
+  process.env.NEXT_PUBLIC_CLOUD_WEB_URL = "https://limetry.com"
+}
+
+/**
  * Runs package preflight in a child process unless skip/export/test flags apply.
  *
  * Inherits monorepo `.env` (including `NEXT_PUBLIC_SENTRY_DSN` / PostHog) so
