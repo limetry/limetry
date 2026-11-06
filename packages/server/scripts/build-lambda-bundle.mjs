@@ -48,6 +48,13 @@ await esbuild.build({
 
 cpSync(join(serverRoot, "public"), join(outDir, "public"), { recursive: true })
 
+const corpusSrc = join(serverRoot, "../../docs/ai-rag/corpus")
+try {
+  cpSync(corpusSrc, join(outDir, "docs/ai-rag/corpus"), { recursive: true })
+} catch {
+  console.warn("docs/ai-rag/corpus missing; run yarn workspace @limetry/server rag:ingest")
+}
+
 writeFileSync(
   join(outDir, "package.json"),
   JSON.stringify(

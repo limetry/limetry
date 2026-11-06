@@ -31,6 +31,7 @@ import { createRequestContextMiddleware, logger, metrics } from "./observability
 import { runOssPreflight } from "./preflight.js"
 import { createActionRoutes } from "./routes/actions.js"
 import { createAuthRoutes } from "./routes/auth.js"
+import { createChatRoutes } from "./routes/chat.js"
 import { createCliSetupRoutes } from "./routes/cli-setup.js"
 import { createRuleRoutes } from "./routes/rules.js"
 import { createUserRoutes } from "./routes/users.js"
@@ -299,6 +300,7 @@ export function createApp(options: CreateAppOptions): Express {
     approvalStore,
     userService,
   })
+  createChatRoutes(app, options.env, userService)
 
   app.use(jsonApiNotFoundHandler)
   app.use(jsonApiErrorHandler)

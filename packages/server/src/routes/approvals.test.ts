@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import { createApp } from "../create-app.js"
 import type { ServerEnv } from "../env.js"
+import { testServerEnv } from "../test-env.js"
 import { InMemoryApprovalStore } from "../services/approval-store.js"
 import { InMemoryAuditStore } from "../services/audit-store.js"
 import { InMemoryPolicyRegistry } from "../services/policy-registry.js"
@@ -11,18 +12,10 @@ import { InMemoryPolicyRegistry } from "../services/policy-registry.js"
 const bearerToken = "test-bearer-token-123456"
 
 const baseEnv: ServerEnv = {
-  LIMETRY_API_PORT: 3810,
-  LIMETRY_API_PATH_PREFIX: "",
-  LIMETRY_BEARER_TOKEN: bearerToken,
-  DATABASE_URL: "postgresql://localhost:5432/limetry",
-  JWT_SECRET: "test-jwt-secret-at-least-32-characters",
-  REPLAY_WINDOW_MS: 300_000,
-  THROTTLE_MAX_REQUESTS_PER_MINUTE: 50,
-  USE_POSTGRES_STORE: false,
-  LIMETRY_DEFAULT_AUDIT_MODE: "minimal",
-  LIMETRY_AUDIT_RETENTION_DAYS: 90,
-  LIMETRY_AUDIT_PURGE_INTERVAL_MS: 3_600_000,
-  DECISION_HMAC_SECRET: "test-decision-hmac-secret-at-least-32-chars",
+  ...testServerEnv({
+    LIMETRY_BEARER_TOKEN: bearerToken,
+    THROTTLE_MAX_REQUESTS_PER_MINUTE: 50,
+  }),
 }
 
 describe("approval required workflow", () => {

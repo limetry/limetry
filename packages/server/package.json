@@ -12,9 +12,16 @@
     "dev": "tsx watch src/index.ts",
     "test": "yarn sync:openapi && vitest run",
     "test:critical-coverage": "vitest run src/services/action-evaluator.test.ts src/services/decision-receipt.test.ts src/routes/actions.test.ts --coverage",
-    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit",
+    "rag:ingest": "node scripts/ingest-rag-corpus.mjs",
+    "rag:eval": "node scripts/eval-rag-smoke.mjs"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^5.0.133",
+    "@ai-sdk/anthropic": "^4.0.97",
+    "@ai-sdk/openai": "^4.0.109",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1163.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1163.0",
     "@codegenie/serverless-express": "^5.0.0",
     "@dotenvx/dotenvx": "^2.23.0",
     "@limetry/evaluate": "workspace:*",
@@ -22,6 +29,7 @@
     "@limetry/sdk": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@sentry/node": "^10.75.0",
+    "ai": "^7.0.163",
     "bcryptjs": "^3.0.3",
     "express": "^5.2.1",
     "ioredis": "^5.11.1",
