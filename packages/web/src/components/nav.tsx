@@ -43,6 +43,7 @@ function buildNavItems(docsChildren: NavItem[]): NavItem[] {
       label: "Docs",
       children: docsChildren.length > 0 ? docsChildren : undefined,
     },
+    { href: "/docs/ask", label: "Ask docs" },
     { href: "/examples", label: "Examples" },
     { href: "/signup", label: "Get started" },
     { href: `${siteUrls.api}/openapi`, label: "API" },
@@ -227,9 +228,8 @@ function SearchButton({
       onClick={onClick}
       aria-label={active ? "Close search" : "Open search"}
       aria-pressed={active}
-      className={`inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${
-        active ? "bg-muted text-foreground" : "text-muted-foreground"
-      }`}
+      className={`inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${active ? "bg-muted text-foreground" : "text-muted-foreground"
+        }`}
     >
       <SearchIcon />
       <span className="hidden xl:inline">Search</span>
