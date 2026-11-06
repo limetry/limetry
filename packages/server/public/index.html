@@ -15,7 +15,38 @@
   <script>
     (function () {
       try {
-        var stored = localStorage.getItem("limetry-theme");
+        var key = "limetry-theme";
+        var stored = null;
+        try {
+          var q = new URLSearchParams(window.location.search).get("theme");
+          if (q === "light" || q === "dark" || q === "system") {
+            stored = q;
+            try { window.localStorage.setItem(key, q); } catch (e) {}
+            try {
+              var host = window.location.hostname.toLowerCase();
+              var domain = "";
+              if (host === "limetry.com" || host.slice(-12) === ".limetry.com") domain = "; Domain=.limetry.com";
+              else if (host === "limetry.org" || host.slice(-12) === ".limetry.org") domain = "; Domain=.limetry.org";
+              var secure = window.location.protocol === "https:" ? "; Secure" : "";
+              document.cookie = key + "=" + encodeURIComponent(q) + "; Path=/; Max-Age=31536000; SameSite=Lax" + domain + secure;
+            } catch (e) {}
+          }
+        } catch (e) {}
+        if (!stored) {
+          try {
+            var parts = document.cookie.split("; ");
+            for (var i = 0; i < parts.length; i++) {
+              var eq = parts[i].indexOf("=");
+              if (eq < 0) continue;
+              if (parts[i].slice(0, eq) !== key) continue;
+              var cv = decodeURIComponent(parts[i].slice(eq + 1));
+              if (cv === "light" || cv === "dark" || cv === "system") { stored = cv; break; }
+            }
+          } catch (e) {}
+        }
+        if (!stored) {
+          try { stored = window.localStorage.getItem(key); } catch (e) {}
+        }
         var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         var useDark = stored === "dark" || (stored !== "light" && systemDark);
         document.documentElement.classList.toggle("dark", useDark);

@@ -94,6 +94,31 @@ export const siteUrls = {
 } as const
 
 /**
+ * Cloud marketing URL with `?theme=` so limetry.org → limetry.com keeps dark/light.
+ *
+ * @param path - Optional path under the Cloud web origin (e.g. `/pricing`).
+ * @returns Absolute Cloud URL, theme-tagged in the browser.
+ */
+export function cloudHref(path: string = ""): string {
+  const suffix = path === "" || path.startsWith("/") ? path : `/${path}`
+  const absolute = `${siteUrls.cloudWeb}${suffix}`
+  if (typeof window === "undefined") {
+    return absolute
+  }
+  try {
+    const theme = window.localStorage.getItem("limetry-theme")
+    if (theme !== "light" && theme !== "dark" && theme !== "system") {
+      return absolute
+    }
+    const url = new URL(absolute)
+    url.searchParams.set("theme", theme)
+    return url.toString()
+  } catch {
+    return absolute
+  }
+}
+
+/**
  * Returns whether an absolute HTTP link leaves Limetry's web surfaces.
  *
  * Limetry uses separate origins for the OSS site, Cloud, API, and local

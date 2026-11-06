@@ -93,7 +93,14 @@ export default function RootLayout({ children }: { children: ReactNode }): React
         <SentryInit />
         <ChunkLoadRecovery />
         <PostHogProvider>
-          <RootProvider search={{ enabled: false }}>
+          <RootProvider
+            search={{ enabled: false }}
+            theme={{
+              // Shared with limetry.com / API landings via cookie + ?theme=.
+              storageKey: "limetry-theme",
+              attribute: "class",
+            }}
+          >
             {children}
             <DocsAskChat />
           </RootProvider>

@@ -15,7 +15,7 @@ import { SiteSearchDialog } from "@/components/site-search-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { shouldScrollHideHeader } from "@/lib/header-sticky"
 import { isLaunchOpen } from "@/lib/launching-soon"
-import { siteUrls } from "@/lib/site-urls"
+import { cloudHref, siteUrls } from "@/lib/site-urls"
 
 /**
  * Props for {@link Nav}.
@@ -159,7 +159,11 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             {isLaunchOpen() ? (
               <Link
                 href={siteUrls.cloudWeb}
-                onClick={dismissSearch}
+                onClick={(event) => {
+                  event.preventDefault()
+                  dismissSearch()
+                  window.location.assign(cloudHref())
+                }}
                 className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-emerald-400 hover:to-cyan-400 hover:shadow-md"
               >
                 Cloud →
@@ -194,7 +198,11 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
             {isLaunchOpen() ? (
               <Link
                 href={siteUrls.cloudWeb}
-                onClick={() => setMenuOpen(false)}
+                onClick={(event) => {
+                  event.preventDefault()
+                  setMenuOpen(false)
+                  window.location.assign(cloudHref())
+                }}
                 className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center text-sm font-semibold text-white"
               >
                 Cloud →

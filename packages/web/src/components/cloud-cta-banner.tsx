@@ -2,9 +2,11 @@
  * Subtle Limetry Cloud CTA shown above the site footer on every marketing page.
  */
 
+"use client"
+
 import Link from "next/link"
 
-import { siteUrls } from "@/lib/site-urls"
+import { cloudHref, siteUrls } from "@/lib/site-urls"
 
 /**
  * Bottom-of-page banner linking OSS visitors to Limetry Cloud.
@@ -29,6 +31,10 @@ export function CloudCtaBanner(): React.JSX.Element {
         </div>
         <Link
           href={siteUrls.cloudWeb}
+          onClick={(event) => {
+            event.preventDefault()
+            window.location.assign(cloudHref())
+          }}
           className={`
             inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl
             bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold
