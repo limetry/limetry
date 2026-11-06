@@ -43,7 +43,6 @@ function buildNavItems(docsChildren: NavItem[]): NavItem[] {
       label: "Docs",
       children: docsChildren.length > 0 ? docsChildren : undefined,
     },
-    { href: "/docs/ask", label: "Ask docs" },
     { href: "/examples", label: "Examples" },
     { href: "/signup", label: "Get started" },
     { href: `${siteUrls.api}/openapi`, label: "API" },

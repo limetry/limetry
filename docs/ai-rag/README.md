@@ -15,7 +15,7 @@ Conversational Q&A over Limetry open-source documentation.
 ```bash
 yarn workspace @limetry/server rag:ingest
 yarn workspace @limetry/server dev
-# UI: yarn workspace @limetry/web dev → http://localhost:…/docs/ask
+# UI: yarn workspace @limetry/web dev → floating Ask button (lower right), or ?ask=1
 ```
 
 Generated artifacts under `corpus/` (`rag-corpus.json`, `plain/`) are gitignored —

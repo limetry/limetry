@@ -10,6 +10,7 @@ import { Inter, JetBrains_Mono } from "next/font/google"
 import type { ReactNode } from "react"
 
 import { ChunkLoadRecovery } from "@/components/chunk-load-recovery"
+import { DocsAskChat } from "@/components/docs-ask-chat"
 import { PostHogProvider } from "@/components/posthog-provider"
 import { SentryInit } from "@/components/sentry-init"
 import { siteUrls } from "@/lib/site-urls"
@@ -92,7 +93,10 @@ export default function RootLayout({ children }: { children: ReactNode }): React
         <SentryInit />
         <ChunkLoadRecovery />
         <PostHogProvider>
-          <RootProvider search={{ enabled: false }}>{children}</RootProvider>
+          <RootProvider search={{ enabled: false }}>
+            {children}
+            <DocsAskChat />
+          </RootProvider>
         </PostHogProvider>
       </body>
     </html>

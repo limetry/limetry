@@ -1,11 +1,17 @@
 "use client"
 
 /**
- * Interactive Limetry docs RAG chat (citations + teach-me prompts).
+ * Floating Limetry docs RAG assistant (FAB + glass chat panel).
  */
 
 import Link from "next/link"
-import { useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react"
 
 import {
   askDocs,
@@ -17,26 +23,128 @@ type Turn = {
   role: "user" | "assistant"
   content: string
   sources?: DocsChatSource[]
-  backend?: string
 }
 
 const STARTERS = [
-  "How do I get started with the Limetry SDK?",
-  "How do I self-host the Limetry server?",
-  "Explain Limetry architecture at a high level",
-  "What does data minimization mean for audit logs?",
+  "How do I get started?",
+  "How do I self-host?",
+  "Explain the architecture",
+  "What is data minimization?",
 ]
 
 /**
- * Docs assistant chat panel.
+ * Chat bubble icon for the launcher.
  *
- * @returns Chat UI.
+ * @returns SVG element.
+ */
+function ChatIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="size-6">
+      <path
+        d="M8.5 18.5 5 21v-3.5A7.5 7.5 0 1 1 12 19.5c-1.2 0-2.4-.3-3.5-1Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.75 11.25h6.5M8.75 14h4"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+/**
+ * Close (X) icon.
+ *
+ * @returns SVG element.
+ */
+function CloseIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="size-4">
+      <path
+        d="M6 6l12 12M18 6 6 18"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+/**
+ * Send arrow icon.
+ *
+ * @returns SVG element.
+ */
+function SendIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="size-4">
+      <path
+        d="M5 12h12M13 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/**
+ * Floating docs assistant: lower-right FAB that opens a translucent chat panel.
+ *
+ * @returns Chat launcher + panel portal content.
  */
 export function DocsAskChat(): React.JSX.Element {
+  const panelId = useId()
+  const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [turns, setTurns] = useState<Turn[]>([])
+  const listRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const close = useCallback(() => setOpen(false), [])
+  const toggle = useCallback(() => setOpen((value) => !value), [])
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        close()
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 80)
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      window.clearTimeout(timer)
+    }
+  }, [open, close])
+
+  useEffect(() => {
+    const node = listRef.current
+    if (!node) {
+      return
+    }
+    node.scrollTop = node.scrollHeight
+  }, [turns, busy, open])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("ask") === "1" || window.location.hash === "#ask-docs") {
+      setOpen(true)
+    }
+  }, [])
 
   async function send(message: string): Promise<void> {
     const trimmed = message.trim()
@@ -56,7 +164,6 @@ export function DocsAskChat(): React.JSX.Element {
           role: "assistant",
           content: result.answer,
           sources: result.sources,
-          backend: result.backend,
         },
       ])
     } catch (err) {
@@ -69,91 +176,153 @@ export function DocsAskChat(): React.JSX.Element {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <div className="flex flex-wrap gap-2">
-        {STARTERS.map((prompt) => (
-          <button
-            key={prompt}
-            type="button"
-            className="rounded-full border border-[var(--border-subtle)] bg-[var(--bg-raised)] px-3 py-1.5 text-left text-sm text-[var(--text-secondary)] hover:border-[var(--brand)] hover:text-[var(--text-main)]"
-            disabled={busy}
-            onClick={() => void send(prompt)}
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-end p-4 sm:p-5">
+      <div className="pointer-events-auto flex flex-col items-end gap-3">
+        {open ? (
+          <section
+            id={panelId}
+            role="dialog"
+            aria-modal="false"
+            aria-label="Ask Limetry docs"
+            className="docs-ask-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-border/60 shadow-2xl shadow-black/10 dark:shadow-black/40"
           >
-            {prompt}
-          </button>
-        ))}
-      </div>
+            <header className="flex items-center justify-between gap-3 border-b border-border/50 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold tracking-tight text-foreground">
+                  Ask Limetry
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  Docs assistant · cited answers
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={close}
+                className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
+                aria-label="Close chat"
+              >
+                <CloseIcon />
+              </button>
+            </header>
 
-      <div className="flex min-h-[22rem] flex-col gap-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-        {turns.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">
-            Ask how to use, deploy, or understand Limetry. Answers cite documentation sources.
-          </p>
-        ) : null}
-        {turns.map((turn, index) => (
-          <div
-            key={`${turn.role}-${index}`}
-            className={turn.role === "user" ? "ml-8" : "mr-4"}
-          >
             <div
-              className={`rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${turn.role === "user"
-                  ? "bg-[var(--brand-soft)] text-[var(--text-main)]"
-                  : "bg-[var(--bg-subtle)] text-[var(--text-main)]"
-                }`}
+              ref={listRef}
+              className="flex max-h-[min(28rem,55vh)] min-h-[16rem] flex-col gap-3 overflow-y-auto px-3 py-3"
             >
-              {turn.content}
-            </div>
-            {turn.sources && turn.sources.length > 0 ? (
-              <ul className="mt-2 space-y-1 text-xs text-[var(--text-muted)]">
-                {turn.sources.slice(0, 5).map((source) => {
-                  const href = docsHrefForSource(source.sourcePath)
-                  return (
-                    <li key={source.id}>
-                      {href ? (
-                        <Link className="text-[var(--brand-ink)] underline-offset-2 hover:underline" href={href}>
-                          {source.sourcePath}
-                        </Link>
-                      ) : (
-                        <span>{source.sourcePath}</span>
-                      )}
-                      {source.section ? ` · ${source.section}` : ""}
-                    </li>
-                  )
-                })}
-                {turn.backend ? (
-                  <li className="text-[var(--text-muted)]">backend: {turn.backend}</li>
-                ) : null}
-              </ul>
-            ) : null}
-          </div>
-        ))}
-        {busy ? <p className="text-sm text-[var(--text-muted)]">Searching docs…</p> : null}
-        {error ? <p className="text-sm text-[var(--danger-ink)]">{error}</p> : null}
-      </div>
+              {turns.length === 0 ? (
+                <div className="space-y-3 px-1 py-2">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Ask how to use, deploy, or understand Limetry. Answers stay grounded in the docs.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {STARTERS.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void send(prompt)}
+                        className="rounded-full border border-border/70 bg-background/40 px-2.5 py-1 text-left text-xs text-foreground/80 transition hover:border-primary/50 hover:bg-primary/10 hover:text-foreground disabled:opacity-50"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
-      <form
-        className="flex flex-col gap-2 sm:flex-row"
-        onSubmit={(event) => {
-          event.preventDefault()
-          void send(input)
-        }}
-      >
-        <input
-          className="min-w-0 flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--text-main)] outline-none focus:border-[var(--brand)]"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder="Ask about Limetry…"
-          disabled={busy}
-          aria-label="Ask Limetry docs"
-        />
+              {turns.map((turn, index) => (
+                <div
+                  key={`${turn.role}-${index}`}
+                  className={`flex ${turn.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                      turn.role === "user"
+                        ? "rounded-br-md bg-primary text-primary-foreground"
+                        : "rounded-bl-md border border-border/50 bg-background/55 text-foreground"
+                    }`}
+                  >
+                    {turn.content}
+                    {turn.sources && turn.sources.length > 0 ? (
+                      <ul className="mt-2 space-y-1 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
+                        {turn.sources.slice(0, 4).map((source) => {
+                          const href = docsHrefForSource(source.sourcePath)
+                          return (
+                            <li key={source.id} className="truncate">
+                              {href ? (
+                                <Link
+                                  href={href}
+                                  className="text-primary underline-offset-2 hover:underline"
+                                  onClick={close}
+                                >
+                                  {source.sourcePath}
+                                </Link>
+                              ) : (
+                                <span>{source.sourcePath}</span>
+                              )}
+                              {source.section ? ` · ${source.section}` : ""}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+
+              {busy ? (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl rounded-bl-md border border-border/50 bg-background/55 px-3 py-2 text-xs text-muted-foreground">
+                    Searching docs…
+                  </div>
+                </div>
+              ) : null}
+              {error ? (
+                <p className="px-1 text-xs text-destructive">{error}</p>
+              ) : null}
+            </div>
+
+            <form
+              className="border-t border-border/50 p-3"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void send(input)
+              }}
+            >
+              <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/50 px-2 py-1.5 focus-within:border-primary/50">
+                <input
+                  ref={inputRef}
+                  className="min-w-0 flex-1 bg-transparent px-1.5 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  placeholder="Ask about Limetry…"
+                  disabled={busy}
+                  aria-label="Ask Limetry docs"
+                />
+                <button
+                  type="submit"
+                  disabled={busy || !input.trim()}
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+                  aria-label="Send message"
+                >
+                  <SendIcon />
+                </button>
+              </div>
+            </form>
+          </section>
+        ) : null}
+
         <button
-          type="submit"
-          disabled={busy || !input.trim()}
-          className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand-fg)] disabled:opacity-50"
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-controls={open ? panelId : undefined}
+          aria-label={open ? "Close Ask Limetry" : "Ask Limetry docs"}
+          className="docs-ask-fab inline-flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
         >
-          Ask
+          {open ? <CloseIcon /> : <ChatIcon />}
         </button>
-      </form>
+      </div>
     </div>
   )
 }
