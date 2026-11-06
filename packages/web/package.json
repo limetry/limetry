@@ -1,6 +1,6 @@
 {
   "name": "@limetry/web",
-  "version": "1.2.81",
+  "version": "1.2.82",
   "private": true,
   "packageManager": "yarn@4.13.0",
   "type": "module",
