@@ -2,9 +2,15 @@
 
 /**
  * Controlled sun/moon toggle used by every Limetry web header.
+ *
+ * Icon and chrome follow {@link ThemeToggleProps.resolvedTheme} directly so Expo
+ * web (where `bg-card` is a light-only token and `dark:` icon swaps look inverted)
+ * matches the native toggle: sun in dark mode, moon in light mode.
  */
 
 import type { JSX } from "react"
+
+import { cn } from "../lib/cn"
 
 export type ThemeToggleProps = {
   /** Current resolved theme. */
@@ -33,10 +39,19 @@ export function ThemeToggle({
       type="button"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       onClick={onToggle}
-      className={`flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground ${className}`}
+      className={cn(
+        "flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
+        isDark
+          ? "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
+          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-900",
+        className,
+      )}
     >
-      <SunIcon className="h-[1.1rem] w-[1.1rem] dark:hidden" />
-      <MoonIcon className="hidden h-[1.1rem] w-[1.1rem] dark:block" />
+      {isDark ? (
+        <SunIcon className="h-[1.1rem] w-[1.1rem]" />
+      ) : (
+        <MoonIcon className="h-[1.1rem] w-[1.1rem]" />
+      )}
     </button>
   )
 }
