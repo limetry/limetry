@@ -184,9 +184,9 @@ export function DocsAskChat(): React.JSX.Element {
             role="dialog"
             aria-modal="false"
             aria-label="Ask Limetry docs"
-            className="docs-ask-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-border/60 shadow-2xl shadow-black/10 dark:shadow-black/40"
+            className="docs-ask-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10 dark:shadow-black/40"
           >
-            <header className="flex items-center justify-between gap-3 border-b border-border/50 px-4 py-3">
+            <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold tracking-tight text-foreground">
                   Ask Limetry
@@ -221,7 +221,7 @@ export function DocsAskChat(): React.JSX.Element {
                         type="button"
                         disabled={busy}
                         onClick={() => void send(prompt)}
-                        className="rounded-full border border-border/70 bg-background/40 px-2.5 py-1 text-left text-xs text-foreground/80 transition hover:border-primary/50 hover:bg-primary/10 hover:text-foreground disabled:opacity-50"
+                        className="rounded-full border border-border bg-muted px-2.5 py-1 text-left text-xs text-foreground/80 transition hover:border-primary/50 hover:bg-primary/10 hover:text-foreground disabled:opacity-50"
                       >
                         {prompt}
                       </button>
@@ -236,11 +236,10 @@ export function DocsAskChat(): React.JSX.Element {
                   className={`flex ${turn.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
-                      turn.role === "user"
+                    className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${turn.role === "user"
                         ? "rounded-br-md bg-primary text-primary-foreground"
-                        : "rounded-bl-md border border-border/50 bg-background/55 text-foreground"
-                    }`}
+                        : "rounded-bl-md border border-border bg-muted text-foreground"
+                      }`}
                   >
                     {turn.content}
                     {turn.sources && turn.sources.length > 0 ? (
@@ -272,7 +271,7 @@ export function DocsAskChat(): React.JSX.Element {
 
               {busy ? (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl rounded-bl-md border border-border/50 bg-background/55 px-3 py-2 text-xs text-muted-foreground">
+                  <div className="rounded-2xl rounded-bl-md border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
                     Searching docs…
                   </div>
                 </div>
@@ -283,13 +282,13 @@ export function DocsAskChat(): React.JSX.Element {
             </div>
 
             <form
-              className="border-t border-border/50 p-3"
+              className="border-t border-border p-3"
               onSubmit={(event) => {
                 event.preventDefault()
                 void send(input)
               }}
             >
-              <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/50 px-2 py-1.5 focus-within:border-primary/50">
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-2 py-1.5 focus-within:border-primary/50">
                 <input
                   ref={inputRef}
                   className="min-w-0 flex-1 bg-transparent px-1.5 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
@@ -318,7 +317,7 @@ export function DocsAskChat(): React.JSX.Element {
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
           aria-label={open ? "Close Ask Limetry" : "Ask Limetry docs"}
-          className="docs-ask-fab inline-flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
+          className="docs-ask-fab inline-flex size-12 items-center justify-center rounded-full hover:scale-[1.03] active:scale-[0.98]"
         >
           {open ? <CloseIcon /> : <ChatIcon />}
         </button>
