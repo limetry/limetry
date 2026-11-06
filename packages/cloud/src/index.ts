@@ -98,12 +98,36 @@ const neonApiKey = serverlessConfig.databaseProvider === "neon"
   ? config.getSecret("neonApiKey")
   : undefined
 
+/** Optional docs RAG secrets / Bedrock Knowledge Base ids (Pulumi config). */
+const ragOpenAiKey = config.getSecret("openaiApiKey")
+const ragAnthropicKey = config.getSecret("anthropicApiKey")
+const ragBedrockKbId = config.get("bedrockKbId")
+const ragBedrockModelId = config.get("bedrockModelId")
+const ragBedrockEmbedModelId = config.get("bedrockEmbedModelId")
+const ragBedrockGuardrailId = config.get("bedrockGuardrailId")
+const ragBackend = config.get("ragBackend")
+const ragChatPublic = config.getBoolean("ragChatPublic")
+
 /** Environment variables shared by all serverless provider adapters. */
-const environment = buildServerEnvironment(serverlessConfig, {
-  bearerToken,
-  decisionHmacSecret,
-  jwtSecret,
-})
+const environment = buildServerEnvironment(
+  serverlessConfig,
+  {
+    bearerToken,
+    decisionHmacSecret,
+    jwtSecret,
+  },
+  {
+    backend: ragBackend,
+    chatPublic: ragChatPublic,
+    bedrockKbId: ragBedrockKbId,
+    bedrockModelId: ragBedrockModelId,
+    bedrockEmbedModelId: ragBedrockEmbedModelId,
+    bedrockGuardrailId: ragBedrockGuardrailId,
+    bedrockRegion: config.get("bedrockRegion"),
+    openaiApiKey: ragOpenAiKey,
+    anthropicApiKey: ragAnthropicKey,
+  },
+)
 
 /** Inputs passed to the selected serverless provider adapter. */
 const usesCloudflareDns = serverlessConfig.manageDns

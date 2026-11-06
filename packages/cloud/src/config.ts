@@ -146,7 +146,9 @@ export function buildServerlessConfig(values: {
   const minInstances = values.minInstances ?? 0
   const maxInstances = values.maxInstances ?? 1
   const memoryMb = values.memoryMb ?? defaults.memoryMb
-  const timeoutSeconds = values.timeoutSeconds ?? 30
+  // AWS default 60s leaves headroom for Bedrock RetrieveAndGenerate / embeddings.
+  const timeoutSeconds = values.timeoutSeconds
+    ?? (cloudProvider === "aws" ? 60 : 30)
 
   if (!Number.isInteger(minInstances) || minInstances < 0) {
     throw new Error("minInstances must be a non-negative integer")
@@ -303,8 +305,20 @@ export function buildServerEnvironment(
     decisionHmacSecret: pulumi.Input<string>
     jwtSecret: pulumi.Input<string>
   },
+  rag?: {
+    backend?: string
+    corpusPath?: string
+    chatPublic?: boolean
+    bedrockKbId?: pulumi.Input<string>
+    bedrockModelId?: pulumi.Input<string>
+    bedrockEmbedModelId?: pulumi.Input<string>
+    bedrockGuardrailId?: pulumi.Input<string>
+    bedrockRegion?: string
+    openaiApiKey?: pulumi.Input<string>
+    anthropicApiKey?: pulumi.Input<string>
+  },
 ): ServerEnvironment {
-  return {
+  const environment: ServerEnvironment = {
     DECISION_HMAC_SECRET: secrets.decisionHmacSecret,
     JWT_SECRET: secrets.jwtSecret,
     LIMETRY_API_PATH_PREFIX: config.apiPathPrefix,
@@ -313,7 +327,33 @@ export function buildServerEnvironment(
     NODE_ENV: "serverless",
     SQLITE_DATABASE_PATH: config.sqliteDatabasePath,
     USE_POSTGRES_STORE: String(config.databaseProvider !== "sqlite"),
+    LIMETRY_RAG_BACKEND: rag?.backend
+      ?? (config.databaseProvider === "sqlite" ? "memory" : "pgvector"),
+    LIMETRY_RAG_CORPUS_PATH: rag?.corpusPath ?? "docs/ai-rag/corpus/rag-corpus.json",
+    LIMETRY_RAG_CHAT_PUBLIC: String(rag?.chatPublic ?? true),
   }
+  if (rag?.bedrockKbId) {
+    environment.LIMETRY_BEDROCK_KB_ID = rag.bedrockKbId
+  }
+  if (rag?.bedrockModelId) {
+    environment.LIMETRY_BEDROCK_MODEL_ID = rag.bedrockModelId
+  }
+  if (rag?.bedrockEmbedModelId) {
+    environment.LIMETRY_BEDROCK_EMBED_MODEL_ID = rag.bedrockEmbedModelId
+  }
+  if (rag?.bedrockGuardrailId) {
+    environment.LIMETRY_BEDROCK_GUARDRAIL_ID = rag.bedrockGuardrailId
+  }
+  if (rag?.bedrockRegion) {
+    environment.LIMETRY_BEDROCK_REGION = rag.bedrockRegion
+  }
+  if (rag?.openaiApiKey) {
+    environment.OPENAI_API_KEY = rag.openaiApiKey
+  }
+  if (rag?.anthropicApiKey) {
+    environment.ANTHROPIC_API_KEY = rag.anthropicApiKey
+  }
+  return environment
 }
 
 /**
