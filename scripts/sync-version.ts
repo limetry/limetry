@@ -11,7 +11,14 @@
  */
 
 import { spawnSync } from "node:child_process"
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import {
+  existsSync,
+  lstatSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs"
 import { dirname, join, relative, resolve } from "node:path"
 import readline from "node:readline"
 import { fileURLToPath } from "node:url"
@@ -239,8 +246,46 @@ function assertYarnLockMatchesSdk(version: string): void {
  * @returns Nothing.
  * @throws Error When the lockfile still omits the published SDK range.
  */
+/**
+ * Removes stale physical copies of workspace packages under `node_modules/@limetry`.
+ *
+ * Yarn's node-modules linker can leave directory copies that stop tracking
+ * `packages/*` after a version stamp, so Lambda/web builds keep baking an old
+ * `APP_VERSION` into production.
+ *
+ * @returns Names of packages that were removed.
+ */
+function purgeStaleWorkspaceCopies(): string[] {
+  const scoped = join(ROOT_DIR, "node_modules/@limetry")
+  if (!existsSync(scoped)) {
+    return []
+  }
+  const removed: string[] = []
+  for (const name of readdirSync(scoped)) {
+    const linked = join(scoped, name)
+    const workspace = join(ROOT_DIR, "packages", name)
+    if (!existsSync(workspace)) {
+      continue
+    }
+    try {
+      if (lstatSync(linked).isSymbolicLink()) {
+        continue
+      }
+    } catch {
+      continue
+    }
+    rmSync(linked, { recursive: true, force: true })
+    removed.push(name)
+  }
+  return removed
+}
+
 function refreshYarnLock(version: string): void {
   console.log("Refreshing yarn.lock for published dependency ranges…")
+  const purged = purgeStaleWorkspaceCopies()
+  if (purged.length > 0) {
+    console.log(`Removed stale node_modules/@limetry copies: ${purged.join(", ")}`)
+  }
   runYarn(["install", "--mode=update-lockfile"], mutableInstallEnv())
   assertYarnLockMatchesSdk(version)
   runYarn(["install", "--immutable"], {
