@@ -28,6 +28,20 @@
       "import": "./src/components/site-header.web.tsx",
       "default": "./src/components/site-header.web.tsx"
     },
+    "./logo": {
+      "types": "./src/components/logo.web.tsx",
+      "react-native": "./src/components/logo.tsx",
+      "browser": "./src/components/logo.web.tsx",
+      "import": "./src/components/logo.web.tsx",
+      "default": "./src/components/logo.web.tsx"
+    },
+    "./site-footer": {
+      "types": "./src/components/site-footer.web.tsx",
+      "react-native": "./src/components/site-footer.tsx",
+      "browser": "./src/components/site-footer.web.tsx",
+      "import": "./src/components/site-footer.web.tsx",
+      "default": "./src/components/site-footer.web.tsx"
+    },
     "./site-footer-links": {
       "types": "./src/lib/site-footer-links.ts",
       "import": "./src/lib/site-footer-links.ts",
