@@ -101,6 +101,11 @@ export type CreateAppOptions = {
    * Explicit path to the static `public/` directory containing `index.html`.
    */
   publicDir?: string
+  /**
+   * Whether this process owns the root landing page. API Gateway Lambdas
+   * disable it because the edge static origin owns `/`.
+   */
+  serveLanding?: boolean
 }
 
 /**
@@ -207,7 +212,7 @@ export function createApp(options: CreateAppOptions): Express {
   })
 
   const publicDir = resolvePublicDir(options.publicDir)
-  if (publicDir) {
+  if (publicDir && options.serveLanding !== false) {
     app.get("/", (request, response) => {
       const html = renderLandingHtml(
         readFileSync(join(publicDir, "index.html"), "utf8"),
@@ -316,7 +321,10 @@ export function createApp(options: CreateAppOptions): Express {
  * @returns Express app and optional Postgres pool for retention purge.
  * @throws When preflight fails hard, Postgres migrate fails, or Redis ping fails.
  */
-export async function prepareApp(env: ServerEnv): Promise<{
+export async function prepareApp(
+  env: ServerEnv,
+  appOptions: Pick<CreateAppOptions, "serveLanding"> = {},
+): Promise<{
   app: Express
   postgresPool?: Pool
   sqliteStore?: SqliteStore
@@ -354,7 +362,7 @@ export async function prepareApp(env: ServerEnv): Promise<{
     options.jwtRevocationStore = new RedisJwtRevocationStore(redis)
   }
 
-  return { app: createApp(options), postgresPool, sqliteStore }
+  return { app: createApp({ ...options, ...appOptions }), postgresPool, sqliteStore }
 }
 
 /**
