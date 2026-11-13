@@ -60,7 +60,8 @@ export type ReleaseCliArgs = {
   help: boolean
   /**
    * When true, this release also releases and deploys the sibling checkout.
-   * `--no-peer` sets this false so the sibling does not call back.
+   * Defaults false (OSS single-stack). Opt in with `--with-peer`.
+   * `--no-peer` remains accepted; parent orchestration sets RELEASEKIT_PARENT=1.
    */
   peer: boolean
   /** True when `--sync-only` (re-stamp without bumping). */
@@ -661,7 +662,7 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
       syncOnly: false,
       adoptCurrent: false,
       help: true,
-      peer: true,
+      peer: false,
       schemaBump: "patch",
     }
   }
@@ -671,7 +672,15 @@ export function parseReleaseCliArgs(argv: string[]): ReleaseCliArgs {
   const adoptCurrent = argv.includes("--adopt-current")
   const deploy = parseDeployFlag(argv)
   const deployOnly = parseDeployOnly(argv)
-  const peer = !argv.includes("--no-peer")
+  /**
+   * Dual-stack peer orchestration defaults off so public OSS clones stay
+   * single-stack. Opt in with `--with-peer`, or run from limetry-workspace.
+   * `--no-peer` remains accepted for compatibility.
+   */
+  const peer =
+    argv.includes("--with-peer")
+    && !argv.includes("--no-peer")
+    && process.env.RELEASEKIT_PARENT !== "1"
   const bumpFlags = [
     argv.includes("--major") ? "major" : null,
     argv.includes("--minor") ? "minor" : null,
