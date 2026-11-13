@@ -196,7 +196,7 @@ export function SiteHeader({
                       }}
                       ariaCurrent={active ? "page" : undefined}
                       className={cn(
-                        "whitespace-nowrap text-sm transition-colors hover:text-foreground",
+                        "font-sans whitespace-nowrap text-sm transition-colors hover:text-foreground",
                         active
                           ? "font-semibold text-emerald-600 dark:text-emerald-400"
                           : "font-medium text-muted-foreground",

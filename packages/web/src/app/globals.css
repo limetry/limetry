@@ -62,8 +62,8 @@
   --color-ring: hsl(var(--ring));
   --color-surface: hsl(var(--surface));
 
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), Menlo, monospace;
+  --font-sans: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, Menlo, monospace;
 
   --animate-fade-in: fade-in 0.5s ease-in-out;
   --animate-slide-up: slide-up 0.5s ease-out;
@@ -93,6 +93,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }

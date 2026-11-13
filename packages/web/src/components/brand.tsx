@@ -25,7 +25,7 @@ export function Logo({ className = "h-8 shrink-0" }: BrandProps): React.JSX.Elem
         aria-hidden="true"
         className="h-8 w-8 shrink-0"
       />
-      <span className="bg-linear-to-r from-[#21b263] to-[#27A1D2] bg-clip-text text-[1.35rem] font-bold tracking-tight text-transparent">
+      <span className="font-sans bg-linear-to-r from-[#21b263] to-[#27A1D2] bg-clip-text text-[1.35rem] font-bold tracking-tight text-transparent">
         Limetry
       </span>
     </span>
