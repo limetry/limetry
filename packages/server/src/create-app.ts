@@ -158,6 +158,21 @@ function resolveRequestOrigin(request: express.Request): string | undefined {
   }
 }
 
+function sendApiRoot(response: express.Response, origin: string | undefined, path = "/"): void {
+  const base = origin ?? ""
+  response.json({
+    service: "limetry-api",
+    version: APP_VERSION,
+    _links: {
+      self: { href: `${base}${path}` },
+      health: { href: `${base}/health` },
+      openapi: { href: `${base}/openapi.json` },
+      swagger: { href: `${base}/openapi` },
+      api: { href: `${base}/v1` },
+    },
+  })
+}
+
 /**
  * Reads the Swagger UI document and points it at the requested OpenAPI spec.
  *
@@ -212,8 +227,20 @@ export function createApp(options: CreateAppOptions): Express {
   })
 
   const publicDir = resolvePublicDir(options.publicDir)
+  app.get(["/api-root", "/__api-root"], (request, response) => {
+    sendApiRoot(response, resolveRequestOrigin(request), "/api-root")
+  })
+  if (!publicDir || options.serveLanding === false) {
+    app.get("/", (request, response) => {
+      sendApiRoot(response, resolveRequestOrigin(request))
+    })
+  }
   if (publicDir && options.serveLanding !== false) {
     app.get("/", (request, response) => {
+      if (request.query.format === "json" || request.accepts(["html", "json"]) === "json") {
+        sendApiRoot(response, resolveRequestOrigin(request))
+        return
+      }
       const html = renderLandingHtml(
         readFileSync(join(publicDir, "index.html"), "utf8"),
         {
