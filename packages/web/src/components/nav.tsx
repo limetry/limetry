@@ -36,6 +36,7 @@ type NavProps = {
 function buildNavItems(docsChildren: NavItem[]): NavItem[] {
   return [
     { href: "/", label: "Home" },
+    { href: `${siteUrls.api}`, label: "API" },
     { href: "/blog", label: "Blog" },
     { href: "/community", label: "Community" },
     {
@@ -45,7 +46,6 @@ function buildNavItems(docsChildren: NavItem[]): NavItem[] {
     },
     { href: "/examples", label: "Examples" },
     { href: "/signup", label: "Get started" },
-    { href: `${siteUrls.api}/openapi`, label: "API" },
   ]
 }
 
