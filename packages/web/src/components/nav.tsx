@@ -235,8 +235,10 @@ function SearchButton({
       onClick={onClick}
       aria-label={active ? "Close search" : "Open search"}
       aria-pressed={active}
-      className={`inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${active ? "bg-muted text-foreground" : "text-muted-foreground"
-        }`}
+      className={`
+        inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground ${active ? "bg-muted text-foreground" : "text-muted-foreground"
+        }`
+      }
     >
       <SearchIcon />
       <span className="hidden xl:inline">Search</span>
