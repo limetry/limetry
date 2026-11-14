@@ -68,12 +68,12 @@
     "test:web": "yarn workspace @limetry/web test",
     "test": "tsx scripts/run-workspaces.ts test --exclude limetry --exclude @limetry/skill",
     "typecheck": "tsx scripts/run-workspaces.ts typecheck --exclude limetry --exclude @limetry/skill",
-    "watch:vercel": "tsx scripts/watch-vercel.ts"
+    "watch:vercel": "tsx scripts/watch-vercel.ts",
+    "releasekit:status": "tsx scripts/run-releasekit.ts status --soft"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^2.23.0",
     "@eslint/js": "^9.39.5",
-    "@jeremydavidson/releasekit": "file:vendor/jeremydavidson-releasekit-0.1.0.tgz",
     "@next/eslint-plugin-next": "16.3.4",
     "@types/jsonwebtoken": "^9.0.10",
     "@typescript/native-preview": "^7.0.0-dev.20260707.2",
