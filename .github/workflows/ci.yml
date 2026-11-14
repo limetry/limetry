@@ -25,7 +25,7 @@ jobs:
         run: yarn lint
       - name: Build packages needed for typecheck
         run: >-
-          yarn build:sdk && yarn build:preflight &&
+          yarn build:sdk && yarn build:evaluate && yarn build:preflight &&
           yarn build:sql && yarn build:shopify && yarn build:ci
       - name: Typecheck TypeScript packages
         run: yarn typecheck
