@@ -5,6 +5,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { ApiLanding } from "@/components/api-landing"
 import { ExamplesGrid } from "@/components/examples-grid"
 import { FeatureTabs } from "@/components/feature-tabs"
 import { Footer } from "@/components/footer"
@@ -29,6 +30,10 @@ export const metadata: Metadata = {
  * @returns Home page layout.
  */
 export default function HomePage(): React.JSX.Element {
+  if (process.env.NEXT_PUBLIC_API_LANDING === "1") {
+    return <ApiLanding />
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />

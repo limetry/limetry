@@ -6,7 +6,7 @@ import "./globals.css"
 
 import { RootProvider } from "fumadocs-ui/provider/next"
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import type { ReactNode } from "react"
 
 import { ChunkLoadRecovery } from "@/components/chunk-load-recovery"
@@ -15,13 +15,13 @@ import { PostHogProvider } from "@/components/posthog-provider"
 import { SentryInit } from "@/components/sentry-init"
 import { siteUrls } from "@/lib/site-urls"
 
-const inter = Inter({
+const geistSans = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-geist-sans",
   display: "swap",
 })
 
-const jetBrainsMono = JetBrains_Mono({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
   display: "swap",
@@ -88,8 +88,8 @@ export const metadata: Metadata = {
  */
 export default function RootLayout({ children }: { children: ReactNode }): React.JSX.Element {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetBrainsMono.variable}`}>
-      <body>
+    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="font-sans antialiased">
         <SentryInit />
         <ChunkLoadRecovery />
         <PostHogProvider>

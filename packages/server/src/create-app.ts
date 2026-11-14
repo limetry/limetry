@@ -101,6 +101,11 @@ export type CreateAppOptions = {
    * Explicit path to the static `public/` directory containing `index.html`.
    */
   publicDir?: string
+  /**
+   * Whether this process owns the root landing page. API Gateway Lambdas
+   * disable it because the edge static origin owns `/`.
+   */
+  serveLanding?: boolean
 }
 
 /**
@@ -151,6 +156,21 @@ function resolveRequestOrigin(request: express.Request): string | undefined {
   } catch {
     return undefined
   }
+}
+
+function sendApiRoot(response: express.Response, origin: string | undefined, path = "/"): void {
+  const base = origin ?? ""
+  response.json({
+    service: "limetry-api",
+    version: APP_VERSION,
+    _links: {
+      self: { href: `${base}${path}` },
+      health: { href: `${base}/health` },
+      openapi: { href: `${base}/openapi.json` },
+      swagger: { href: `${base}/openapi` },
+      api: { href: `${base}/v1` },
+    },
+  })
 }
 
 /**
@@ -207,8 +227,15 @@ export function createApp(options: CreateAppOptions): Express {
   })
 
   const publicDir = resolvePublicDir(options.publicDir)
-  if (publicDir) {
+  app.get(["/api-root", "/__api-root"], (request, response) => {
+    sendApiRoot(response, resolveRequestOrigin(request), "/api-root")
+  })
+  if (publicDir && options.serveLanding !== false) {
     app.get("/", (request, response) => {
+      if (request.query.format === "json" || request.accepts(["html", "json"]) === "json") {
+        sendApiRoot(response, resolveRequestOrigin(request))
+        return
+      }
       const html = renderLandingHtml(
         readFileSync(join(publicDir, "index.html"), "utf8"),
         {
@@ -220,7 +247,13 @@ export function createApp(options: CreateAppOptions): Express {
       )
       response.type("html").send(html)
     })
+  } else {
+    app.get("/", (request, response) => {
+      sendApiRoot(response, resolveRequestOrigin(request))
+    })
+  }
 
+  if (publicDir) {
     const serveSwaggerPage = (specPath: string, response: express.Response) => {
       const html = readSwaggerPage(publicDir, specPath)
       if (!html) {
@@ -316,7 +349,10 @@ export function createApp(options: CreateAppOptions): Express {
  * @returns Express app and optional Postgres pool for retention purge.
  * @throws When preflight fails hard, Postgres migrate fails, or Redis ping fails.
  */
-export async function prepareApp(env: ServerEnv): Promise<{
+export async function prepareApp(
+  env: ServerEnv,
+  appOptions: Pick<CreateAppOptions, "serveLanding"> = {},
+): Promise<{
   app: Express
   postgresPool?: Pool
   sqliteStore?: SqliteStore
@@ -354,7 +390,7 @@ export async function prepareApp(env: ServerEnv): Promise<{
     options.jwtRevocationStore = new RedisJwtRevocationStore(redis)
   }
 
-  return { app: createApp(options), postgresPool, sqliteStore }
+  return { app: createApp({ ...options, ...appOptions }), postgresPool, sqliteStore }
 }
 
 /**

@@ -11,10 +11,11 @@ COPY tsconfig.json ./
 COPY .yarn ./.yarn
 COPY packages ./packages
 COPY examples ./examples
+COPY vendor ./vendor
 
 RUN yarn install --immutable
 
-RUN yarn build:sdk && yarn build:preflight && yarn build:server
+RUN yarn build:sdk && yarn build:evaluate && yarn build:preflight && yarn build:server
 
 EXPOSE 3810
 

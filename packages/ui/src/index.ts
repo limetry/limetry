@@ -25,7 +25,9 @@ export {
   XIcon,
 } from "./components/icons"
 export { FormSection, Input, TextArea } from "./components/input"
+export { Logo } from "./components/logo"
 export { AlertBanner, EmptyState, PageHeader } from "./components/page-header"
+export { SiteFooter } from "./components/site-footer"
 export { StatCard } from "./components/stat-card"
 export { cn } from "./lib/cn"
 export {

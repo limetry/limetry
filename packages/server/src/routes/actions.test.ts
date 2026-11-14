@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest"
 
 import { createApp } from "../create-app.js"
 import type { ServerEnv } from "../env.js"
-import { testServerEnv } from "../test-env.js"
 import { InMemoryAuditStore } from "../services/audit-store.js"
 import { InMemoryPolicyRegistry } from "../services/policy-registry.js"
+import { testServerEnv } from "../test-env.js"
 
 const bearerToken = "test-bearer-token-123456"
 

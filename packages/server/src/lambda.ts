@@ -41,7 +41,7 @@ async function resolveHandler(): Promise<ProxyHandler> {
   const env = loadEnv()
   apiPathPrefix = env.LIMETRY_API_PATH_PREFIX.replace(/\/$/, "")
   initServerTelemetry()
-  const { app } = await prepareApp(env)
+  const { app } = await prepareApp(env, { serveLanding: false })
   cachedHandler = serverlessExpress({ app }) as unknown as ProxyHandler
   return cachedHandler
 }

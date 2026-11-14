@@ -215,7 +215,7 @@ describe("release-version", () => {
       syncOnly: false,
       adoptCurrent: false,
       help: false,
-      peer: true,
+      peer: false,
       schemaBump: "patch",
     })
     expect(parseReleaseCliArgs(["--deploy=aws", "--schema-bump=minor"])).toEqual({
@@ -226,10 +226,10 @@ describe("release-version", () => {
       syncOnly: false,
       adoptCurrent: false,
       help: false,
-      peer: true,
+      peer: false,
       schemaBump: "minor",
     })
-    expect(parseReleaseCliArgs(["--vercel", "--yes", "--no-peer"])).toEqual({
+    expect(parseReleaseCliArgs(["--vercel", "--yes", "--with-peer"])).toEqual({
       bump: null,
       deploy: "vercel",
       deployOnly: null,
@@ -237,7 +237,7 @@ describe("release-version", () => {
       syncOnly: false,
       adoptCurrent: false,
       help: false,
-      peer: false,
+      peer: true,
       schemaBump: "patch",
     })
     expect(parseReleaseCliArgs(["--deploy", "skip"])).toEqual({
@@ -248,7 +248,7 @@ describe("release-version", () => {
       syncOnly: false,
       adoptCurrent: false,
       help: false,
-      peer: true,
+      peer: false,
       schemaBump: "patch",
     })
     expect(parseReleaseCliArgs(["--deploy-only=aws"])).toEqual({
@@ -259,11 +259,14 @@ describe("release-version", () => {
       syncOnly: false,
       adoptCurrent: false,
       help: false,
-      peer: true,
+      peer: false,
       schemaBump: "patch",
     })
     expect(parseReleaseCliArgs(["--adopt-current", "--no-peer"])).toMatchObject({
       adoptCurrent: true,
+      peer: false,
+    })
+    expect(parseReleaseCliArgs(["--with-peer", "--no-peer"])).toMatchObject({
       peer: false,
     })
   })

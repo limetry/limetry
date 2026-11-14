@@ -121,10 +121,16 @@ function printHelp(): void {
   yarn release --minor --yes
   yarn release --major --yes
   yarn release --deploy=skip   Skip post-release deploy
-  yarn release --no-peer       Release and deploy this stack only
+  yarn release --with-peer     Also release limetry-enterprise (legacy dual-stack)
+  yarn release --no-peer       Explicit single-stack (default)
   yarn sync-version            Re-stamp product versions from root (no product bump)
   yarn sync-version --schema-bump=minor
                                Use when a changed schema is not a patch
+
+Default is OSS single-stack. Dual-stack maintainer releases run from
+limetry-workspace (sets RELEASEKIT_PARENT=1). Opt into the legacy in-repo
+peer follow-up with --with-peer when enterprise is checked out beside this
+repo.
 
 On main/master, bumps the root package.json, the website package, and every
 publishable workspace package.json to the same semver, stamps packages/sdk
@@ -133,16 +139,14 @@ release:vercel stamps an ephemeral next-patch-beta.N for the quality gate,
 then restores version files so the PR keeps the last stable version.
 
 Schemas stay on their own semver starting at 1.0.0 and bump only when their
-contents change. When the Cloud checkout is beside this repo, its product
-version is stamped to match on main releases only.
+contents change.
 
 Then a main release runs a quality gate, commits, and tags locally. Pushing
 the release tag triggers npm publishing for all public packages at the same
 version. Publishable packages keep ^semver @limetry/* ranges in git for npm.
 
-Vercel also stamps Limetry Cloud when that checkout is beside this repo.
 AWS Pulumi (Core + Cloud) is deployed only from limetry-enterprise with
-yarn release:aws. --no-peer stays on this stack.
+yarn release:aws (or limetry-workspace yarn release:aws).
 
 Vercel: pushes to origin (GitHub webhook), then watches production deploys for
 that commit SHA until READY. Failed Vercel builds cannot un-push; fix forward

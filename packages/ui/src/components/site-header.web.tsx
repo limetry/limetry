@@ -170,7 +170,7 @@ export function SiteHeader({
         className={cn(
           "sticky top-0 z-50 w-full border-b transition-transform duration-200 ease-out will-change-transform",
           scrollHide
-            ? "border-border/40 bg-background/55 backdrop-blur-xl supports-[backdrop-filter]:bg-background/45"
+            ? "border-border/40 bg-background/55 backdrop-blur-xl supports-backdrop-filter:bg-background/45"
             : "border-border/60 bg-background/95 backdrop-blur-xl",
           scrollHide && scrollHidden && !menuOpen ? "-translate-y-full" : "translate-y-0",
           className,
@@ -196,7 +196,7 @@ export function SiteHeader({
                       }}
                       ariaCurrent={active ? "page" : undefined}
                       className={cn(
-                        "whitespace-nowrap text-sm transition-colors hover:text-foreground",
+                        "font-sans whitespace-nowrap text-sm transition-colors hover:text-foreground",
                         active
                           ? "font-semibold text-emerald-600 dark:text-emerald-400"
                           : "font-medium text-muted-foreground",
