@@ -3851,12 +3851,12 @@ __metadata:
 
 "@pulumi/neon@file:../pulumi-neon::locator=%40limetry%2Fcloud%40workspace%3Apackages%2Fcloud":
   version: 0.18.0
-  resolution: "@pulumi/neon@file:../pulumi-neon#../pulumi-neon::hash=f5f03d&locator=%40limetry%2Fcloud%40workspace%3Apackages%2Fcloud"
+  resolution: "@pulumi/neon@file:../pulumi-neon#../pulumi-neon::hash=6802e4&locator=%40limetry%2Fcloud%40workspace%3Apackages%2Fcloud"
   dependencies:
     "@pulumi/pulumi": "npm:^3.238.0"
     "@types/node": "npm:^20"
     typescript: "npm:^4.7.0"
-  checksum: 10c0/ace67844dc231c2fde2cc9c24afad661620dd041149a452b6c1cdcdbd29ec29662b9c670278a993ae7ba82e93e45f12486020d73e5440059cf7ea312505949bf
+  checksum: 10c0/c085578304c1e340292c328e8b98dc0a76c11626630dfa639f9c126ee5504fccaf42502a850d47f7d9fc22fbfb5d74e66a549ab29f6271df627f5bdb48c95226
   languageName: node
   linkType: hard
 
