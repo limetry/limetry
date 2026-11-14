@@ -1,14 +1,28 @@
 import Link from "next/link"
 
 import { Footer } from "@/components/footer"
-import { SiteHeader } from "@/components/site-header"
 import { siteUrls } from "@/lib/site-urls"
 
 /** Compact, static landing page used at the API edge root. */
 export function ApiLanding(): React.JSX.Element {
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+      <header className="border-b border-border">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link
+            href={siteUrls.web}
+            className="text-sm font-semibold tracking-tight text-foreground"
+          >
+            Limetry
+          </Link>
+          <Link
+            href={`${siteUrls.web}/docs`}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Docs
+          </Link>
+        </div>
+      </header>
       <main className="flex-1">
         <section className="mx-auto max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
           <p className="font-mono text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
@@ -51,7 +65,7 @@ export function ApiLanding(): React.JSX.Element {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer ossLinksRelative={false} />
     </div>
   )
 }

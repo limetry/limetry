@@ -230,11 +230,6 @@ export function createApp(options: CreateAppOptions): Express {
   app.get(["/api-root", "/__api-root"], (request, response) => {
     sendApiRoot(response, resolveRequestOrigin(request), "/api-root")
   })
-  if (!publicDir || options.serveLanding === false) {
-    app.get("/", (request, response) => {
-      sendApiRoot(response, resolveRequestOrigin(request))
-    })
-  }
   if (publicDir && options.serveLanding !== false) {
     app.get("/", (request, response) => {
       if (request.query.format === "json" || request.accepts(["html", "json"]) === "json") {
@@ -252,7 +247,13 @@ export function createApp(options: CreateAppOptions): Express {
       )
       response.type("html").send(html)
     })
+  } else {
+    app.get("/", (request, response) => {
+      sendApiRoot(response, resolveRequestOrigin(request))
+    })
+  }
 
+  if (publicDir) {
     const serveSwaggerPage = (specPath: string, response: express.Response) => {
       const html = readSwaggerPage(publicDir, specPath)
       if (!html) {

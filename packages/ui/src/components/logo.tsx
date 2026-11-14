@@ -1,4 +1,4 @@
-import { Image, Text, View, type ImageSourcePropType } from "react-native"
+import { Image, type ImageSourcePropType, Text, View } from "react-native"
 
 import type { LogoVariant } from "./logo.web"
 

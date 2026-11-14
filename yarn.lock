@@ -2557,9 +2557,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jeremydavidson/releasekit@file:../../../tools-releasekit/releasekit::locator=limetry%40workspace%3A.":
+"@jeremydavidson/releasekit@file:vendor/jeremydavidson-releasekit-0.1.0.tgz::locator=limetry%40workspace%3A.":
   version: 0.1.0
-  resolution: "@jeremydavidson/releasekit@file:../../../tools-releasekit/releasekit#../../../tools-releasekit/releasekit::hash=6b5124&locator=limetry%40workspace%3A."
+  resolution: "@jeremydavidson/releasekit@file:vendor/jeremydavidson-releasekit-0.1.0.tgz#vendor/jeremydavidson-releasekit-0.1.0.tgz::hash=84099c&locator=limetry%40workspace%3A."
   dependencies:
     "@clack/prompts": "npm:^0.10.1"
     commander: "npm:^13.1.0"
@@ -2568,7 +2568,7 @@ __metadata:
     zod: "npm:^3.24.4"
   bin:
     releasekit: ./dist/cli.js
-  checksum: 10c0/de31bb96b11252700ea15211ce1162d49fa0c904d00fd28a113ce89627c5cc0e638fc34a5bcbfaa435b83b9b463f575c746590953d48be2f228e41a85dcab0cd
+  checksum: 10c0/f547544e0228795d2a6491f343afc158be57d539e796980f58fda402a0de9f53a6ab5c1225e5e530fe1df4b89e32124373a9efb0434ed496a8dde353af96eac4
   languageName: node
   linkType: hard
 
@@ -11894,7 +11894,7 @@ __metadata:
   dependencies:
     "@dotenvx/dotenvx": "npm:^2.23.0"
     "@eslint/js": "npm:^9.39.5"
-    "@jeremydavidson/releasekit": "file:../../../tools-releasekit/releasekit"
+    "@jeremydavidson/releasekit": "file:vendor/jeremydavidson-releasekit-0.1.0.tgz"
     "@next/eslint-plugin-next": "npm:16.3.4"
     "@types/jsonwebtoken": "npm:^9.0.10"
     "@typescript/native-preview": "npm:^7.0.0-dev.20260707.2"

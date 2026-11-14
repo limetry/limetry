@@ -5,8 +5,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { ExamplesGrid } from "@/components/examples-grid"
 import { ApiLanding } from "@/components/api-landing"
+import { ExamplesGrid } from "@/components/examples-grid"
 import { FeatureTabs } from "@/components/feature-tabs"
 import { Footer } from "@/components/footer"
 import { Hero } from "@/components/hero"

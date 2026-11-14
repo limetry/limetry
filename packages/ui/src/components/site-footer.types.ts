@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode } from "react"
 
+import type { SiteFooterLink,SiteFooterLinks } from "../lib/site-footer-links"
 import type { DrawerLinkProps } from "./drawer-menu.types"
-import type { SiteFooterLinks, SiteFooterLink } from "../lib/site-footer-links"
 
 export type { SiteFooterLink, SiteFooterLinks }
 

@@ -237,9 +237,9 @@ export function DocsAskChat(): React.JSX.Element {
                 >
                   <div
                     className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${turn.role === "user"
-                        ? "rounded-br-md bg-primary text-primary-foreground"
-                        : "rounded-bl-md border border-border bg-muted text-foreground"
-                      }`}
+                      ? "rounded-br-md bg-primary text-primary-foreground"
+                      : "rounded-bl-md border border-border bg-muted text-foreground"
+                    }`}
                   >
                     {turn.content}
                     {turn.sources && turn.sources.length > 0 ? (
