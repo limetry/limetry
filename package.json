@@ -51,10 +51,10 @@
     "publish:shopify": "yarn build:shopify && npm publish ./packages/shopify --access public",
     "publish:sql": "yarn build:sql && npm publish ./packages/sql --access public",
     "publish:ui": "yarn workspace @limetry/ui build && npm publish ./packages/ui --access public",
-    "release:vercel": "tsx scripts/sync-version.ts --deploy=vercel",
-    "release": "tsx scripts/sync-version.ts",
+    "release:vercel": "releasekit release -y --vercel",
+    "release": "releasekit release -y",
     "start": "yarn workspace @limetry/web start",
-    "sync-version": "tsx scripts/sync-version.ts --sync-only",
+    "sync-version": "releasekit sync",
     "test:ci": "yarn workspace @limetry/ci test",
     "test:cli": "yarn workspace @limetry/cli test",
     "test:e2e": "tsx scripts/run-workspaces.ts test:e2e --exclude limetry --exclude @limetry/skill",
@@ -69,7 +69,7 @@
     "test": "tsx scripts/run-workspaces.ts test --exclude limetry --exclude @limetry/skill",
     "typecheck": "tsx scripts/run-workspaces.ts typecheck --exclude limetry --exclude @limetry/skill",
     "watch:vercel": "tsx scripts/watch-vercel.ts",
-    "releasekit:status": "tsx scripts/run-releasekit.ts status --soft"
+    "releasekit:status": "releasekit status"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^2.23.0",
