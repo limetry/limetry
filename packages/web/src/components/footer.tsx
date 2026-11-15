@@ -2,7 +2,7 @@
  * Site footer with product, open-source, and docs link columns.
  */
 
-import { APP_VERSION } from "@limetry/sdk"
+import { AppVersion } from "@limetry/sdk"
 import type { DrawerLinkProps } from "@limetry/ui/drawer"
 import { SiteFooter } from "@limetry/ui/site-footer"
 import { buildSiteFooterLinks } from "@limetry/ui/site-footer-links"
@@ -56,7 +56,7 @@ export function Footer(props: FooterProps = {}): React.JSX.Element {
         links={footerLinks}
         brand={<Logo className="h-8 w-auto" />}
         LinkComponent={FooterLink}
-        version={APP_VERSION}
+        version={AppVersion()}
         discordHref={siteUrls.discord}
       />
     </>

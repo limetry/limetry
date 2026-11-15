@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { APP_VERSION } from "@limetry/sdk"
+import { AppVersion } from "@limetry/sdk"
 import request from "supertest"
 import { describe, expect, it } from "vitest"
 import { parse } from "yaml"
@@ -54,7 +54,7 @@ describe("landing page", () => {
       expect(response.text).toContain("limetry policy apply")
       expect(response.text).toContain("invalid_json")
       expect(response.text).not.toContain("http://localhost:3810")
-      expect(response.text).toContain(`v${APP_VERSION}`)
+      expect(response.text).toContain(`${AppVersion()}`)
       expect(response.text).not.toContain("__APP_VERSION__")
       expect(response.text).not.toContain("__WEB_ORIGIN__")
       expect(response.text).toContain("https://dev.limetry.org/docs/quick-start")
@@ -119,7 +119,7 @@ describe("landing page", () => {
     expect(response.body).toEqual({
       ok: true,
       service: "limetry-server",
-      version: APP_VERSION,
+      version: AppVersion(),
     })
   })
 

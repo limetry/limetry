@@ -46,14 +46,14 @@ describe("landing links", () => {
 
   it("substitutes version and web origin placeholders", () => {
     const html = renderLandingHtml(
-      "<a href=\"__WEB_ORIGIN__/docs/quick-start\">Docs</a> v__APP_VERSION__",
+      "<a href=\"__WEB_ORIGIN__/docs/quick-start\">Docs</a> __APP_VERSION__",
       {
         appVersion: "1.2.3",
         webOrigin: "https://dev.limetry.org/",
       },
     )
     expect(html).toBe(
-      "<a href=\"https://dev.limetry.org/docs/quick-start\">Docs</a> v1.2.3",
+      "<a href=\"https://dev.limetry.org/docs/quick-start\">Docs</a> 1.2.3",
     )
   })
 

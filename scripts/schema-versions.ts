@@ -14,7 +14,6 @@ import { dirname, join } from "node:path"
 import {
   canonicalizeVersion,
   computeNextVersion,
-  formatAppVersionSource,
   parseVersion,
   type ReleaseBump,
   setCloudLimetryDependencyRanges,
@@ -164,7 +163,7 @@ export type PeerStamp = {
   /**
    * File shape to update.
    */
-  kind: "package" | "app-version" | "expo"
+  kind: "package" | "expo"
 }
 
 /**
@@ -529,9 +528,7 @@ export function stampPeerProduct(
     const source = readFileSync(absolute, "utf8")
     const next = stamp.kind === "package"
       ? setPackageVersionText(source, canonical)
-      : stamp.kind === "app-version"
-        ? formatAppVersionSource(canonical)
-        : setExpoVersionText(source, canonical)
+      : setExpoVersionText(source, canonical)
     if (next !== source) {
       writeFileSync(absolute, next)
       written.push(absolute)

@@ -19,7 +19,7 @@ import {
   resolvePublicListenUrl,
   runPreflight,
 } from "@limetry/preflight"
-import { APP_VERSION } from "@limetry/sdk"
+import { AppVersion } from "@limetry/sdk"
 
 import type { ServerEnv } from "./env.js"
 
@@ -147,7 +147,7 @@ export async function runOssPreflight(env: ServerEnv): Promise<PreflightCheck[]>
 
   return runPreflight({
     product: "Limetry",
-    appVersion: APP_VERSION,
+    appVersion: AppVersion(),
     env: source,
     envChecks: [...collectOssEnvChecks(env, source.NODE_ENV), ...telemetry.envChecks],
     configuration: [...ossConfigurationLines(env, source), ...telemetry.configuration],

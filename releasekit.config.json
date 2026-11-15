@@ -9,9 +9,8 @@
       "path": "package.json"
     },
     {
-      "type": "tsConst",
-      "path": "packages/sdk/src/app-version.ts",
-      "exportName": "APP_VERSION"
+      "type": "packageJson",
+      "path": "packages/sdk/package.json"
     }
   ],
   "channels": {

@@ -6,7 +6,6 @@ import {
   canonicalizeVersion,
   computeNextVersion,
   deployTargetFromChoice,
-  formatAppVersionSource,
   formatVersion,
   lockfileRecordsPublishedSdkRange,
   nextBetaVersion,
@@ -100,8 +99,7 @@ describe("release-version", () => {
     })).toEqual({ version: "1.2.48", bumped: true, action: "bump" })
   })
 
-  it("formats APP_VERSION source", () => {
-    expect(formatAppVersionSource("1.0.1")).toBe("export const APP_VERSION = \"1.0.1\"\n")
+  it("formats canonical versions", () => {
     expect(formatVersion({ major: 1, minor: 0, patch: 1, beta: null }, false)).toBe("1.0.1")
     expect(
       formatVersion(

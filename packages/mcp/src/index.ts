@@ -11,7 +11,7 @@
 
 import { randomUUID } from "node:crypto"
 
-import { APP_VERSION, redactDetails, resolveLimetryBaseUrl } from "@limetry/sdk"
+import { AppVersion, redactDetails, resolveLimetryBaseUrl } from "@limetry/sdk"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
@@ -92,7 +92,7 @@ const actionIntentSchema = z.object({
  */
 const server = new McpServer({
   name: "limetry",
-  version: APP_VERSION,
+  version: AppVersion(),
 })
 
 server.tool(

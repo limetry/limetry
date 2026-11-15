@@ -14,7 +14,7 @@ import {
   isTestEnv,
   resolveDevListenPort,
 } from "@limetry/preflight"
-import { APP_VERSION } from "@limetry/sdk"
+import { AppVersion } from "@limetry/sdk"
 import express, { type Express } from "express"
 import { Redis } from "ioredis"
 import { Pool } from "pg"
@@ -162,7 +162,7 @@ function sendApiRoot(response: express.Response, origin: string | undefined, pat
   const base = origin ?? ""
   response.json({
     service: "limetry-api",
-    version: APP_VERSION,
+    version: AppVersion(),
     _links: {
       self: { href: `${base}${path}` },
       health: { href: `${base}/health` },
@@ -239,7 +239,7 @@ export function createApp(options: CreateAppOptions): Express {
       const html = renderLandingHtml(
         readFileSync(join(publicDir, "index.html"), "utf8"),
         {
-          appVersion: APP_VERSION,
+          appVersion: AppVersion(),
           appOrigin: resolveLandingAppOrigin(),
           apiOrigin: resolveRequestOrigin(request),
           webOrigin: resolveLandingWebOrigin(),
@@ -308,7 +308,7 @@ export function createApp(options: CreateAppOptions): Express {
     response.status(200).json({
       ok: true,
       service: "limetry-server",
-      version: APP_VERSION,
+      version: AppVersion(),
     })
   })
 
@@ -429,7 +429,7 @@ export async function startServer(env: ServerEnv) {
   }
 
   const server = app.listen(env.LIMETRY_API_PORT, () => {
-    logger.info({ port: env.LIMETRY_API_PORT, version: APP_VERSION }, "server.listening")
+    logger.info({ port: env.LIMETRY_API_PORT, version: AppVersion() }, "server.listening")
   })
   server.once("close", () => sqliteStore?.close())
   return server

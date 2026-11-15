@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import { APP_VERSION } from "@limetry/sdk"
+import { AppVersion } from "@limetry/sdk"
 import { Command } from "commander"
 
 import { clerkAuthProvider } from "./commands/auth/browser.js"
@@ -40,7 +40,7 @@ const program = new Command()
 program
   .name("limetry")
   .description("Limetry CLI — agent action governance and telemetry")
-  .version(APP_VERSION)
+  .version(AppVersion())
 
 program
   .command("setup")

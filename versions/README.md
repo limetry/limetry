@@ -10,11 +10,10 @@ Only `main` / `master` commits a product version. Feature-branch
 an ephemeral `next-patch-beta.N` for the deploy, then restore version files
 so the PR keeps the last stable version.
 
-`yarn release:aws` from **limetry-enterprise** stamps both checkouts, deploys
-Core then Cloud Pulumi surfaces, and tags both repos only after both succeed
-on `main`. `yarn release` / `yarn release:vercel` from this checkout still
-stamp product files and can watch Vercel. `yarn sync-version` restamps every
-product file from the root `package.json` without bumping.
+Product versioning is driven by **releasekit** (`yarn release`,
+`yarn release:vercel`, `yarn sync-version` → `releasekit sync`). The runtime
+`AppVersion()` helper reads the monorepo root `package.json` (no stamped
+`app-version.ts`).
 
 A release is compatible with other product versions on the same minor line,
 for example `>=1.2.0 <1.3.0`.
@@ -22,9 +21,8 @@ for example `>=1.2.0 <1.3.0`.
 ## Schemas
 
 OpenAPI documents, JSON contracts, and the Cloud database schema start at
-`1.0.0`. They do not move when the product version moves. `yarn sync-version`
-bumps a schema only when its contents change (patch by default). Pass
-`--schema-bump=minor` or `--schema-bump=major` when that change is not a patch.
+`1.0.0`. They do not move when the product version moves. Schema helpers under
+`scripts/schema-versions.ts` bump a schema only when its contents change.
 
 Policy documents still use their own integer `version` field. That number is a
 policy revision, not this schema semver.

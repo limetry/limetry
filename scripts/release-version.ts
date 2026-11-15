@@ -3,7 +3,7 @@
  * `x.y.z[-beta.N|-dev.branch.N]` strings, compute bumps, and parse
  * `yarn release` CLI flags.
  *
- * Used by `sync-version.ts` (interactive release) and unit tests. No I/O.
+ * Used by release helpers, CI beta stamps, and unit tests. No I/O.
  */
 
 /** Semver-style bump selected for a release. */
@@ -45,7 +45,7 @@ export type ParsedVersion = {
   patch: number
 }
 
-/** Parsed argv for the release CLI (`yarn release` / `sync-version.ts`). */
+/** Parsed argv for legacy release CLI helpers / tests. */
 export type ReleaseCliArgs = {
   /** Explicit bump from `--patch` / `--minor` / `--major`, else `null`. */
   bump: ReleaseBump | null
@@ -743,15 +743,4 @@ function parseSchemaBump(argv: string[]): ReleaseBump {
     return value
   }
   throw new Error("Pass --schema-bump=patch, --schema-bump=minor, or --schema-bump=major.")
-}
-
-/**
- * Builds the TypeScript source for `packages/sdk` `APP_VERSION` export.
- *
- * @param version - Version string to embed (must parse via {@link parseVersion}).
- * @returns File contents ending with a trailing newline.
- * @throws Error When `version` is unsupported (via {@link parseVersion}).
- */
-export function formatAppVersionSource(version: string): string {
-  return `export const APP_VERSION = "${canonicalizeVersion(version)}"\n`
 }

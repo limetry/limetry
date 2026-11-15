@@ -42,7 +42,7 @@ export function SiteFooter({
             <FooterLinkRow link={links.legal.terms} LinkComponent={LinkComponent} />
             {version ? (
               <Text className="text-sm text-slate-500 dark:text-slate-400" accessibilityLabel="App version">
-                {`v${version}`}
+                {version.startsWith("v") ? version : `v${version}`}
               </Text>
             ) : null}
           </View>

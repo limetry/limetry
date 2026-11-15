@@ -4,7 +4,7 @@
  * Requires: yarn build:sdk (for types) and esbuild.
  */
 import { execFileSync } from "node:child_process"
-import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -12,7 +12,12 @@ import * as esbuild from "esbuild"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const serverRoot = join(__dirname, "..")
+const repoRoot = join(serverRoot, "../..")
 const outDir = join(serverRoot, "lambda-bundle")
+const productVersion = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")).version
+if (typeof productVersion !== "string" || !productVersion.trim()) {
+  throw new Error("limetry/package.json is missing version")
+}
 
 execFileSync(process.execPath, [join(serverRoot, "scripts/sync-openapi.mjs")], {
   cwd: serverRoot,
@@ -39,6 +44,7 @@ await esbuild.build({
   },
   define: {
     "import.meta.url": "__import_meta_url",
+    __LIMETRY_PRODUCT_VERSION__: JSON.stringify(productVersion.trim()),
   },
   external: [
     "@aws-sdk/*",
