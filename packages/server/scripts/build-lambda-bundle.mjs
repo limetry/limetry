@@ -40,7 +40,7 @@ await esbuild.build({
    * (and any other import.meta.url uses) keep working without empty-import-meta warnings.
    */
   banner: {
-    js: "var __import_meta_url=require(\"url\").pathToFileURL(__filename).href;",
+    js: `var __LIMETRY_PRODUCT_VERSION__=${JSON.stringify(productVersion.trim())};var __import_meta_url=require("url").pathToFileURL(__filename).href;`,
   },
   define: {
     "import.meta.url": "__import_meta_url",
