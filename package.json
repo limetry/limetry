@@ -26,7 +26,6 @@
     "db:destroy": "yarn workspace @limetry/db db:destroy",
     "db:setup": "yarn workspace @limetry/db db:setup",
     "build": "yarn build:sdk && yarn build:db && yarn build:preflight && yarn build:server && yarn build:cli && yarn build:ci && yarn build:sql && yarn build:shopify && yarn build:web",
-    "deploy:vercel": "tsx scripts/deploy-vercel.ts",
     "dev:cli": "yarn workspace @limetry/cli dev",
     "dev:mcp": "yarn workspace @limetry/mcp build && node packages/mcp/dist/index.js",
     "dev:server": "yarn workspace @limetry/server dev",
@@ -51,7 +50,6 @@
     "publish:shopify": "yarn build:shopify && npm publish ./packages/shopify --access public",
     "publish:sql": "yarn build:sql && npm publish ./packages/sql --access public",
     "publish:ui": "yarn workspace @limetry/ui build && npm publish ./packages/ui --access public",
-    "release:vercel": "releasekit release -y --vercel",
     "release": "releasekit release -y",
     "start": "yarn workspace @limetry/web start",
     "sync-version": "releasekit sync",
@@ -68,7 +66,6 @@
     "test:web": "yarn workspace @limetry/web test",
     "test": "tsx scripts/run-workspaces.ts test --exclude limetry --exclude @limetry/skill",
     "typecheck": "tsx scripts/run-workspaces.ts typecheck --exclude limetry --exclude @limetry/skill",
-    "watch:vercel": "tsx scripts/watch-vercel.ts",
     "releasekit:status": "releasekit status"
   },
   "devDependencies": {
