@@ -308,11 +308,15 @@ export function buildServerEnvironment(
   rag?: {
     backend?: string
     corpusPath?: string
+    extraRoots?: string
     chatPublic?: boolean
+    chatModel?: string
     bedrockKbId?: pulumi.Input<string>
     bedrockModelId?: pulumi.Input<string>
+    bedrockModelArn?: pulumi.Input<string>
     bedrockEmbedModelId?: pulumi.Input<string>
     bedrockGuardrailId?: pulumi.Input<string>
+    bedrockGuardrailVersion?: string
     bedrockRegion?: string
     openaiApiKey?: pulumi.Input<string>
     anthropicApiKey?: pulumi.Input<string>
@@ -330,28 +334,19 @@ export function buildServerEnvironment(
     LIMETRY_RAG_BACKEND: rag?.backend
       ?? (config.databaseProvider === "sqlite" ? "memory" : "pgvector"),
     LIMETRY_RAG_CORPUS_PATH: rag?.corpusPath ?? "docs/ai-rag/corpus/rag-corpus.json",
+    LIMETRY_RAG_EXTRA_ROOTS: rag?.extraRoots ?? "",
     LIMETRY_RAG_CHAT_PUBLIC: String(rag?.chatPublic ?? true),
-  }
-  if (rag?.bedrockKbId) {
-    environment.LIMETRY_BEDROCK_KB_ID = rag.bedrockKbId
-  }
-  if (rag?.bedrockModelId) {
-    environment.LIMETRY_BEDROCK_MODEL_ID = rag.bedrockModelId
-  }
-  if (rag?.bedrockEmbedModelId) {
-    environment.LIMETRY_BEDROCK_EMBED_MODEL_ID = rag.bedrockEmbedModelId
-  }
-  if (rag?.bedrockGuardrailId) {
-    environment.LIMETRY_BEDROCK_GUARDRAIL_ID = rag.bedrockGuardrailId
-  }
-  if (rag?.bedrockRegion) {
-    environment.LIMETRY_BEDROCK_REGION = rag.bedrockRegion
-  }
-  if (rag?.openaiApiKey) {
-    environment.OPENAI_API_KEY = rag.openaiApiKey
-  }
-  if (rag?.anthropicApiKey) {
-    environment.ANTHROPIC_API_KEY = rag.anthropicApiKey
+    LIMETRY_RAG_CHAT_MODEL: rag?.chatModel ?? "",
+    LIMETRY_BEDROCK_REGION: rag?.bedrockRegion ?? "us-west-2",
+    LIMETRY_BEDROCK_MODEL_ID: rag?.bedrockModelId
+      ?? "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    LIMETRY_BEDROCK_MODEL_ARN: rag?.bedrockModelArn ?? "",
+    LIMETRY_BEDROCK_KB_ID: rag?.bedrockKbId ?? "",
+    LIMETRY_BEDROCK_EMBED_MODEL_ID: rag?.bedrockEmbedModelId ?? "",
+    LIMETRY_BEDROCK_GUARDRAIL_ID: rag?.bedrockGuardrailId ?? "",
+    LIMETRY_BEDROCK_GUARDRAIL_VERSION: rag?.bedrockGuardrailVersion ?? "",
+    OPENAI_API_KEY: rag?.openaiApiKey ?? "",
+    ANTHROPIC_API_KEY: rag?.anthropicApiKey ?? "",
   }
   return environment
 }

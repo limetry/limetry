@@ -98,13 +98,10 @@ const neonApiKey = serverlessConfig.databaseProvider === "neon"
   ? config.getSecret("neonApiKey")
   : undefined
 
-/** Optional docs RAG secrets / Bedrock Knowledge Base ids (Pulumi config). */
-const ragOpenAiKey = config.getSecret("openaiApiKey")
-const ragAnthropicKey = config.getSecret("anthropicApiKey")
-const ragBedrockKbId = config.get("bedrockKbId")
-const ragBedrockModelId = config.get("bedrockModelId")
-const ragBedrockEmbedModelId = config.get("bedrockEmbedModelId")
-const ragBedrockGuardrailId = config.get("bedrockGuardrailId")
+/**
+ * Ask Limetry / docs RAG (plain Pulumi config — not secrets).
+ * Default synthesis is Bedrock; Anthropic/OpenAI keys are optional alternates.
+ */
 const ragBackend = config.get("ragBackend")
 const ragChatPublic = config.getBoolean("ragChatPublic")
 
@@ -118,14 +115,20 @@ const environment = buildServerEnvironment(
   },
   {
     backend: ragBackend,
+    corpusPath: config.get("ragCorpusPath") ?? undefined,
+    extraRoots: config.get("ragExtraRoots") ?? "",
     chatPublic: ragChatPublic,
-    bedrockKbId: ragBedrockKbId,
-    bedrockModelId: ragBedrockModelId,
-    bedrockEmbedModelId: ragBedrockEmbedModelId,
-    bedrockGuardrailId: ragBedrockGuardrailId,
-    bedrockRegion: config.get("bedrockRegion"),
-    openaiApiKey: ragOpenAiKey,
-    anthropicApiKey: ragAnthropicKey,
+    chatModel: config.get("ragChatModel") ?? "",
+    bedrockKbId: config.get("bedrockKbId") ?? "",
+    bedrockModelId: config.get("bedrockModelId")
+      ?? "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    bedrockModelArn: config.get("bedrockModelArn") ?? "",
+    bedrockEmbedModelId: config.get("bedrockEmbedModelId") ?? "",
+    bedrockGuardrailId: config.get("bedrockGuardrailId") ?? "",
+    bedrockGuardrailVersion: config.get("bedrockGuardrailVersion") ?? "",
+    bedrockRegion: config.get("bedrockRegion") ?? "us-west-2",
+    openaiApiKey: config.get("openaiApiKey") ?? "",
+    anthropicApiKey: config.get("anthropicApiKey") ?? "",
   },
 )
 
