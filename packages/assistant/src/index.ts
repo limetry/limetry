@@ -3,25 +3,25 @@
  */
 
 export {
+  canUseBedrockConverse,
+  generateWithBedrockConverse,
+  streamWithBedrockConverse,
+} from "./bedrock-converse.js"
+export {
   hasLlmProvider,
   prepareAssistantChatStream,
   resolveAssistantBackend,
   retrieveSources,
   runAssistantChat,
 } from "./chat.js"
-export {
-  canUseBedrockConverse,
-  generateWithBedrockConverse,
-  streamWithBedrockConverse,
-} from "./bedrock-converse.js"
 export { createAssistantApp } from "./create-app.js"
 export {
+  type AssistantEnv,
   assistantEnvSchema,
   hasAwsCredentials,
   loadAssistantEnv,
-  type AssistantEnv,
 } from "./env.js"
-export { createChatRoutes, chatCorsOriginVariants } from "./http-routes.js"
+export { chatCorsOriginVariants,createChatRoutes } from "./http-routes.js"
 export type {
   AssistantBackendName,
   AssistantChatRequest,

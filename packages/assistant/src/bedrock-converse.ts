@@ -5,8 +5,8 @@
 import type { AssistantEnv } from "./env.js"
 import { hasAwsCredentials } from "./env.js"
 import { ASSISTANT_SYSTEM_PROMPT } from "./prompt.js"
-import type { AssistantChatRequest, AssistantSource } from "./types.js"
 import { formatContext } from "./prompt.js"
+import type { AssistantChatRequest, AssistantSource } from "./types.js"
 
 /**
  * Resolves Bedrock region for Runtime clients.

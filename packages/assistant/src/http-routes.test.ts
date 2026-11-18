@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url"
 import request from "supertest"
 import { describe, expect, it } from "vitest"
 
-import { createAssistantApp } from "./create-app.js"
 import { clearCorpusCache } from "./corpus.js"
+import { createAssistantApp } from "./create-app.js"
 import { loadAssistantEnv } from "./env.js"
 
 const corpusPath = resolve(

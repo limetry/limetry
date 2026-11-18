@@ -7,13 +7,13 @@
 
 import { Pool } from "pg"
 
-import type { AssistantEnv } from "./env.js"
 import { bedrockRegion } from "./bedrock-converse.js"
 import {
   bedrockTitanEmbedding,
   localHashEmbedding,
   openAiEmbedding,
 } from "./embeddings.js"
+import type { AssistantEnv } from "./env.js"
 import type { AssistantChunk, AssistantSource } from "./types.js"
 
 /**

@@ -4,8 +4,8 @@
  * Optional AWS showcase path (`LIMETRY_ASSISTANT_BACKEND=bedrock-kb`).
  */
 
-import type { AssistantEnv } from "./env.js"
 import { bedrockRegion } from "./bedrock-converse.js"
+import type { AssistantEnv } from "./env.js"
 import type { AssistantChatResponse, AssistantSource } from "./types.js"
 
 /**
