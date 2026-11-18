@@ -4,13 +4,6 @@
 
 import type { ServerEnv } from "./env.js"
 
-/** Product assistant defaults for hand-built ServerEnv objects in unit tests. */
-export const assistantTestEnvDefaults = {
-  LIMETRY_ASSISTANT_BACKEND: "memory",
-  LIMETRY_ASSISTANT_CORPUS_PATH: "docs/assistant/corpus/assistant-corpus.json",
-  LIMETRY_ASSISTANT_PUBLIC: true,
-} as const satisfies Partial<ServerEnv>
-
 /**
  * Builds a complete non-Postgres test env.
  *
@@ -33,7 +26,6 @@ export function testServerEnv(overrides: Partial<ServerEnv> = {}): ServerEnv {
     LIMETRY_AUDIT_RETENTION_DAYS: 90,
     LIMETRY_AUDIT_PURGE_INTERVAL_MS: 3_600_000,
     DECISION_HMAC_SECRET: "test-decision-hmac-secret-at-least-32-chars",
-    ...assistantTestEnvDefaults,
     ...overrides,
   }
 }

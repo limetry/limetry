@@ -2,9 +2,7 @@
  * Client helpers for the Limetry product assistant chat UI.
  */
 
-import { siteUrls } from "@/lib/site-urls"
-
-/** One citation returned by `POST /v1/chat`. */
+/** One citation returned by `POST /api/chat`. */
 export type AssistantChatSource = {
   id: string
   title: string
@@ -150,10 +148,17 @@ type StreamHandlers = {
   onMeta?: (meta: { sources: AssistantChatSource[], backend: string, model?: string }) => void
   onDelta?: (text: string) => void
   onDone?: () => void
+  onError?: (message: string) => void
 }
 
 /**
- * Calls the Limetry server docs chat endpoint (non-streaming).
+ * Same-origin Ask Limetry endpoints (CloudFront → Lambda in prod; Next rewrite locally).
+ */
+const CHAT_PATH = "/api/chat"
+const CHAT_STREAM_PATH = "/api/chat/stream"
+
+/**
+ * Calls Ask Limetry (non-streaming).
  *
  * @param message - User question.
  * @param history - Prior turns.
@@ -163,7 +168,7 @@ export async function askAssistant(
   message: string,
   history: Array<{ role: "user" | "assistant", content: string }> = [],
 ): Promise<AssistantChatClientResponse> {
-  const response = await fetch(`${siteUrls.api}/v1/chat`, {
+  const response = await fetch(CHAT_PATH, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ message, history }),
@@ -176,9 +181,10 @@ export async function askAssistant(
 }
 
 /**
- * Streams an Ask Limetry answer over SSE (`POST /v1/chat/stream`).
+ * Streams an Ask Limetry answer over SSE (`POST /api/chat/stream`).
  *
  * Falls back to non-streaming `askAssistant` when the stream endpoint is unavailable.
+ * Stream `error` events clear Thinking… via `onError` / thrown message after fallback delta.
  *
  * @param message - User question.
  * @param history - Prior turns.
@@ -190,7 +196,7 @@ export async function askAssistantStream(
   history: Array<{ role: "user" | "assistant", content: string }> = [],
   handlers: StreamHandlers = {},
 ): Promise<AssistantChatClientResponse> {
-  const response = await fetch(`${siteUrls.api}/v1/chat/stream`, {
+  const response = await fetch(CHAT_STREAM_PATH, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -277,7 +283,13 @@ export async function askAssistantStream(
         answer += event.text
         handlers.onDelta?.(event.text)
       } else if (event.type === "error") {
-        throw new Error(event.message || "Chat stream failed")
+        const message = event.message || "Chat stream failed"
+        handlers.onError?.(message)
+        // Prefer conversational fallback deltas that follow; only fail hard
+        // when the stream ends with no answer text.
+        if (!answer) {
+          // Keep reading for a possible fallback delta + done.
+        }
       } else if (event.type === "done") {
         handlers.onDone?.()
       }
@@ -285,6 +297,9 @@ export async function askAssistantStream(
   }
 
   handlers.onDone?.()
+  if (!answer) {
+    throw new Error("Chat stream failed")
+  }
   return {
     ok: true,
     answer,

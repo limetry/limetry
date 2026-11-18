@@ -4,18 +4,19 @@
  * Optional AWS showcase path (`LIMETRY_ASSISTANT_BACKEND=bedrock-kb`).
  */
 
-import type { ServerEnv } from "../../env.js"
+import { bedrockRegion } from "./bedrock-converse.js"
+import type { AssistantEnv } from "./env.js"
 import type { AssistantChatResponse, AssistantSource } from "./types.js"
 
 /**
  * Retrieves passages from a Bedrock Knowledge Base.
  *
- * @param env - Server env with KB id.
+ * @param env - Assistant env with KB id.
  * @param query - User question.
  * @returns Citation sources.
  */
 export async function retrieveBedrockKnowledgeBase(
-  env: ServerEnv,
+  env: AssistantEnv,
   query: string,
 ): Promise<AssistantSource[]> {
   if (!env.LIMETRY_BEDROCK_KB_ID) {
@@ -24,7 +25,7 @@ export async function retrieveBedrockKnowledgeBase(
   const { BedrockAgentRuntimeClient, RetrieveCommand } = await import(
     "@aws-sdk/client-bedrock-agent-runtime"
   )
-  const region = env.LIMETRY_BEDROCK_REGION || process.env.AWS_REGION || "us-east-1"
+  const region = bedrockRegion(env)
   const client = new BedrockAgentRuntimeClient({ region })
   const result = await client.send(new RetrieveCommand({
     knowledgeBaseId: env.LIMETRY_BEDROCK_KB_ID,
@@ -51,12 +52,12 @@ export async function retrieveBedrockKnowledgeBase(
 /**
  * Uses Bedrock RetrieveAndGenerate for a grounded answer + citations.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @param query - User question.
  * @returns Chat response or null when KB/model not configured.
  */
 export async function retrieveAndGenerateBedrock(
-  env: ServerEnv,
+  env: AssistantEnv,
   query: string,
 ): Promise<AssistantChatResponse | null> {
   if (!env.LIMETRY_BEDROCK_KB_ID) {
@@ -70,7 +71,7 @@ export async function retrieveAndGenerateBedrock(
   const { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } = await import(
     "@aws-sdk/client-bedrock-agent-runtime"
   )
-  const region = env.LIMETRY_BEDROCK_REGION || process.env.AWS_REGION || "us-east-1"
+  const region = bedrockRegion(env)
   const client = new BedrockAgentRuntimeClient({ region })
   const modelArnResolved = modelArn.includes("arn:")
     ? modelArn

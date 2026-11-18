@@ -98,13 +98,6 @@ const neonApiKey = serverlessConfig.databaseProvider === "neon"
   ? config.getSecret("neonApiKey")
   : undefined
 
-/**
- * Ask Limetry / product assistant (plain Pulumi config — not secrets).
- * Default synthesis is Bedrock; Anthropic/OpenAI keys are optional alternates.
- */
-const assistantBackend = config.get("assistantBackend")
-const assistantPublic = config.getBoolean("assistantPublic")
-
 /** Environment variables shared by all serverless provider adapters. */
 const environment = buildServerEnvironment(
   serverlessConfig,
@@ -112,23 +105,6 @@ const environment = buildServerEnvironment(
     bearerToken,
     decisionHmacSecret,
     jwtSecret,
-  },
-  {
-    backend: assistantBackend,
-    corpusPath: config.get("assistantCorpusPath") ?? undefined,
-    extraRoots: config.get("assistantExtraRoots") ?? "",
-    chatPublic: assistantPublic,
-    chatModel: config.get("assistantModel") ?? "",
-    bedrockKbId: config.get("bedrockKbId") ?? "",
-    bedrockModelId: config.get("bedrockModelId")
-      ?? "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    bedrockModelArn: config.get("bedrockModelArn") ?? "",
-    bedrockEmbedModelId: config.get("bedrockEmbedModelId") ?? "",
-    bedrockGuardrailId: config.get("bedrockGuardrailId") ?? "",
-    bedrockGuardrailVersion: config.get("bedrockGuardrailVersion") ?? "",
-    bedrockRegion: config.get("bedrockRegion") ?? "us-west-2",
-    openaiApiKey: config.get("openaiApiKey") ?? "",
-    anthropicApiKey: config.get("anthropicApiKey") ?? "",
   },
 )
 

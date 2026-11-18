@@ -54,13 +54,6 @@ await esbuild.build({
 
 cpSync(join(serverRoot, "public"), join(outDir, "public"), { recursive: true })
 
-const corpusSrc = join(serverRoot, "../../docs/assistant/corpus")
-try {
-  cpSync(corpusSrc, join(outDir, "docs/assistant/corpus"), { recursive: true })
-} catch {
-  console.warn("docs/assistant/corpus missing; run yarn workspace @limetry/server assistant:ingest")
-}
-
 writeFileSync(
   join(outDir, "package.json"),
   JSON.stringify(

@@ -93,16 +93,13 @@ describe("serverless configuration", () => {
     expect(buildServerEnvironment(sqliteConfig, secrets)).toMatchObject({
       SQLITE_DATABASE_PATH: "/tmp/limetry.sqlite",
       USE_POSTGRES_STORE: "false",
-      LIMETRY_ASSISTANT_BACKEND: "memory",
     })
     expect(buildServerEnvironment(managedConfig, secrets)).toMatchObject({
       USE_POSTGRES_STORE: "true",
-      LIMETRY_ASSISTANT_BACKEND: "pgvector",
     })
-    expect(buildServerEnvironment(managedConfig, secrets, {
-      backend: "bedrock-kb",
-      bedrockKbId: "KB123",
-    }).LIMETRY_BEDROCK_KB_ID).toBe("KB123")
+    expect(buildServerEnvironment(managedConfig, secrets)).not.toHaveProperty(
+      "LIMETRY_ASSISTANT_BACKEND",
+    )
   })
 
   /** Verifies DNS provider defaults and Cloudflare selection. */

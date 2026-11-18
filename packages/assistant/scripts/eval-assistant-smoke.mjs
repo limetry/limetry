@@ -1,10 +1,11 @@
 /**
- * Citation + conversational-quality smoke checks against a running Limetry API.
+ * Citation + conversational-quality smoke checks against Ask Limetry.
  *
  * Usage: node scripts/eval-assistant-smoke.mjs [baseUrl]
+ * Default baseUrl is the local assistant HTTP server (port 3815).
  */
 
-const baseUrl = (process.argv[2] || "http://127.0.0.1:3810").replace(/\/$/, "")
+const baseUrl = (process.argv[2] || "http://127.0.0.1:3815").replace(/\/$/, "")
 
 const questions = [
   "How do I get started with the Limetry SDK?",
@@ -24,7 +25,7 @@ const banned = [
 let failures = 0
 
 for (const message of questions) {
-  const response = await fetch(`${baseUrl}/v1/chat`, {
+  const response = await fetch(`${baseUrl}/api/chat`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ message }),

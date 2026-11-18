@@ -6,7 +6,7 @@
  *   yarn workspace @limetry/server assistant:ingest
  *
  * Optional Cloud/enterprise docs:
- *   LIMETRY_ASSISTANT_EXTRA_ROOTS=../limetry-enterprise yarn workspace @limetry/server assistant:ingest
+ *   LIMETRY_ASSISTANT_EXTRA_ROOTS=../limetry-enterprise yarn workspace @limetry/assistant assistant:ingest
  */
 
 import { createHash } from "node:crypto"

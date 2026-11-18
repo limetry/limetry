@@ -5,24 +5,7 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@ai-sdk/amazon-bedrock@npm:^5.0.133":
-  version: 5.0.133
-  resolution: "@ai-sdk/amazon-bedrock@npm:5.0.133"
-  dependencies:
-    "@ai-sdk/anthropic": "npm:4.0.97"
-    "@ai-sdk/openai": "npm:4.0.109"
-    "@ai-sdk/provider": "npm:4.0.36"
-    "@ai-sdk/provider-utils": "npm:5.0.75"
-    "@smithy/eventstream-codec": "npm:^4.3.3"
-    "@smithy/util-utf8": "npm:^4.3.3"
-    aws4fetch: "npm:^1.0.20"
-  peerDependencies:
-    zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/b5aeafbb839f0f5b4785baf668a03c54a2faec70d9379288051cae7e851ee706d2afd7b7af692a7fe44d44e905ca9cdd9fef7aec7622c6a9b4b29c2991f4ba65
-  languageName: node
-  linkType: hard
-
-"@ai-sdk/anthropic@npm:4.0.97, @ai-sdk/anthropic@npm:^4.0.97":
+"@ai-sdk/anthropic@npm:^4.0.97":
   version: 4.0.97
   resolution: "@ai-sdk/anthropic@npm:4.0.97"
   dependencies:
@@ -47,7 +30,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ai-sdk/openai@npm:4.0.109, @ai-sdk/openai@npm:^4.0.109":
+"@ai-sdk/openai@npm:^4.0.109":
   version: 4.0.109
   resolution: "@ai-sdk/openai@npm:4.0.109"
   dependencies:
@@ -2627,6 +2610,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@limetry/assistant@workspace:packages/assistant":
+  version: 0.0.0-use.local
+  resolution: "@limetry/assistant@workspace:packages/assistant"
+  dependencies:
+    "@ai-sdk/anthropic": "npm:^4.0.97"
+    "@ai-sdk/openai": "npm:^4.0.109"
+    "@aws-sdk/client-bedrock-agent-runtime": "npm:^3.1163.0"
+    "@aws-sdk/client-bedrock-runtime": "npm:^3.1163.0"
+    "@codegenie/serverless-express": "npm:^5.0.0"
+    "@types/aws-lambda": "npm:^8.10.163"
+    "@types/express": "npm:^5.0.0"
+    "@types/node": "npm:^26.4.1"
+    "@types/pg": "npm:^8.23.1"
+    "@types/supertest": "npm:^7.2.1"
+    ai: "npm:^7.0.163"
+    esbuild: "npm:^0.28.2"
+    express: "npm:^5.2.1"
+    pg: "npm:^8.23.0"
+    supertest: "npm:^7.0.0"
+    tsx: "npm:^4.20.0"
+    typescript: "npm:^5.8.2"
+    vitest: "npm:4.1.11"
+    zod: "npm:^4.5.4"
+  languageName: unknown
+  linkType: soft
+
 "@limetry/ci@workspace:*, @limetry/ci@workspace:packages/ci":
   version: 0.0.0-use.local
   resolution: "@limetry/ci@workspace:packages/ci"
@@ -2765,11 +2774,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/server@workspace:packages/server"
   dependencies:
-    "@ai-sdk/amazon-bedrock": "npm:^5.0.133"
-    "@ai-sdk/anthropic": "npm:^4.0.97"
-    "@ai-sdk/openai": "npm:^4.0.109"
-    "@aws-sdk/client-bedrock-agent-runtime": "npm:^3.1163.0"
-    "@aws-sdk/client-bedrock-runtime": "npm:^3.1163.0"
     "@codegenie/serverless-express": "npm:^5.0.0"
     "@dotenvx/dotenvx": "npm:^2.23.0"
     "@limetry/evaluate": "workspace:*"
@@ -2784,7 +2788,6 @@ __metadata:
     "@types/pg": "npm:^8.23.1"
     "@types/supertest": "npm:^7.2.1"
     "@vitest/coverage-v8": "npm:4.1.11"
-    ai: "npm:^7.0.163"
     bcryptjs: "npm:^3.0.3"
     esbuild: "npm:^0.28.2"
     express: "npm:^5.2.1"
@@ -5754,16 +5757,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@smithy/eventstream-codec@npm:^4.3.3":
-  version: 4.5.2
-  resolution: "@smithy/eventstream-codec@npm:4.5.2"
-  dependencies:
-    "@smithy/core": "npm:^3.33.2"
-    tslib: "npm:^2.6.2"
-  checksum: 10c0/898a60f1f5cc8c8d0e876b636d957eb9e7c0374460c7275129bfcaf592849310d6790eac0e9a6b53d11bebc8604fa4b4065875034377660e5782fdc2e131e2b6
-  languageName: node
-  linkType: hard
-
 "@smithy/fetch-http-handler@npm:^5.8.0":
   version: 5.8.1
   resolution: "@smithy/fetch-http-handler@npm:5.8.1"
@@ -5803,16 +5796,6 @@ __metadata:
   dependencies:
     tslib: "npm:^2.6.2"
   checksum: 10c0/dc105f8ca1c3e1475da470a5b442ab73947144282e5d22c57dad22854983979a23725346d6227686f77c7621690ab5f28b3def286acf839258fb93691f7a02ec
-  languageName: node
-  linkType: hard
-
-"@smithy/util-utf8@npm:^4.3.3":
-  version: 4.5.2
-  resolution: "@smithy/util-utf8@npm:4.5.2"
-  dependencies:
-    "@smithy/core": "npm:^3.33.2"
-    tslib: "npm:^2.6.2"
-  checksum: 10c0/f29fc11997b94a1579a7697e18a0d4e4a43853666f6479cdc23131e87072b677751dbc2d6ccf070ba0fd2829e7b23e1b178fa6f0bb19c0fbcc8aa531ff2d9f30
   languageName: node
   linkType: hard
 
@@ -7391,13 +7374,6 @@ __metadata:
   dependencies:
     possible-typed-array-names: "npm:^1.0.0"
   checksum: 10c0/d07226ef4f87daa01bd0fe80f8f310982e345f372926da2e5296aecc25c41cab440916bbaa4c5e1034b453af3392f67df5961124e4b586df1e99793a1374bdb2
-  languageName: node
-  linkType: hard
-
-"aws4fetch@npm:^1.0.20":
-  version: 1.0.20
-  resolution: "aws4fetch@npm:1.0.20"
-  checksum: 10c0/a4eac7bd0d1c3e611c17ed1ef41ac0b48c0a8e74a985ad968c071e74d94586d3572edc943b43fa5ca756c686ea73baa2f48e264d657bb8c2e95c8e0037d48a87
   languageName: node
   linkType: hard
 

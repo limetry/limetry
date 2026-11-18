@@ -1,14 +1,19 @@
 /**
- * Ask Limetry product assistant orchestration (memory / pgvector / Bedrock Knowledge Bases).
+ * Ask Limetry product assistant orchestration (memory / pgvector / Bedrock).
  *
- * Grounding uses retrieval-augmented generation (RAG) as the technique; prefer
- * "assistant" naming in product, env, and API surfaces.
+ * Anthropic/OpenAI use the AI SDK when API keys are set. Bedrock uses AWS SDK
+ * Converse / ConverseStream only (never `@ai-sdk/amazon-bedrock`).
  */
 
-import type { ServerEnv } from "../../env.js"
+import {
+  generateWithBedrockConverse,
+  streamWithBedrockConverse,
+} from "./bedrock-converse.js"
 import { enrichSources } from "./citations.js"
 import { loadCorpus, retrieveFromChunks } from "./corpus.js"
-import { ASSISTANT_SYSTEM_PROMPT,extractiveAnswer, formatContext } from "./prompt.js"
+import type { AssistantEnv } from "./env.js"
+import { hasAwsCredentials } from "./env.js"
+import { ASSISTANT_SYSTEM_PROMPT, extractiveAnswer, formatContext } from "./prompt.js"
 import type {
   AssistantBackendName,
   AssistantChatRequest,
@@ -19,10 +24,10 @@ import type {
 /**
  * Resolves the active assistant retrieval backend from env.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @returns Backend name.
  */
-export function resolveAssistantBackend(env: ServerEnv): AssistantBackendName {
+export function resolveAssistantBackend(env: AssistantEnv): AssistantBackendName {
   const value = env.LIMETRY_ASSISTANT_BACKEND
   if (value === "pgvector" || value === "bedrock-kb" || value === "memory") {
     return value
@@ -33,29 +38,26 @@ export function resolveAssistantBackend(env: ServerEnv): AssistantBackendName {
 /**
  * Returns whether an LLM provider is configured for synthesis.
  *
- * @param env - Server env.
- * @returns True when Anthropic, OpenAI, or Bedrock can be used.
+ * @param env - Assistant env.
+ * @returns True when Anthropic, OpenAI, or usable Bedrock credentials exist.
  */
-export function hasLlmProvider(env: ServerEnv): boolean {
+export function hasLlmProvider(env: AssistantEnv): boolean {
   if (env.ANTHROPIC_API_KEY || env.OPENAI_API_KEY) {
     return true
   }
-  return Boolean(
-    env.LIMETRY_BEDROCK_MODEL_ID
-    || env.LIMETRY_ASSISTANT_BACKEND === "bedrock-kb"
-    || env.AWS_ACCESS_KEY_ID,
-  )
+  return Boolean(env.LIMETRY_BEDROCK_MODEL_ID || env.LIMETRY_ASSISTANT_BACKEND === "bedrock-kb")
+    && hasAwsCredentials(env)
 }
 
 /**
  * Retrieves sources for a question using the configured backend.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @param message - User question.
  * @returns Ranked sources.
  */
 export async function retrieveSources(
-  env: ServerEnv,
+  env: AssistantEnv,
   message: string,
 ): Promise<AssistantSource[]> {
   const backend = resolveAssistantBackend(env)
@@ -107,12 +109,12 @@ type AiSdkModel = {
 }
 
 /**
- * Resolves an AI SDK model from env keys.
+ * Resolves an AI SDK model for Anthropic or OpenAI API keys only.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @returns Model handle or null.
  */
-async function resolveAiSdkModel(env: ServerEnv): Promise<AiSdkModel | null> {
+async function resolvePortableAiSdkModel(env: AssistantEnv): Promise<AiSdkModel | null> {
   if (env.ANTHROPIC_API_KEY) {
     const { createAnthropic } = await import("@ai-sdk/anthropic")
     const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY })
@@ -125,38 +127,25 @@ async function resolveAiSdkModel(env: ServerEnv): Promise<AiSdkModel | null> {
     const modelId = env.LIMETRY_ASSISTANT_MODEL || "gpt-4o-mini"
     return { model: openai(modelId), modelId }
   }
-  const useBedrock = Boolean(
-    env.LIMETRY_BEDROCK_MODEL_ID
-    || env.LIMETRY_ASSISTANT_BACKEND === "bedrock-kb"
-    || env.AWS_ACCESS_KEY_ID,
-  )
-  if (useBedrock) {
-    const { createAmazonBedrock } = await import("@ai-sdk/amazon-bedrock")
-    const bedrock = createAmazonBedrock({
-      region: env.LIMETRY_BEDROCK_REGION || process.env.AWS_REGION || "us-east-1",
-    })
-    const modelId = env.LIMETRY_BEDROCK_MODEL_ID || "anthropic.claude-3-5-sonnet-20241022-v2:0"
-    return { model: bedrock(modelId), modelId }
-  }
   return null
 }
 
 /**
- * Generates an answer with AI SDK when a provider key is available.
+ * Generates an answer with AI SDK (Anthropic/OpenAI) when keys are set.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @param message - User question.
  * @param sources - Retrieved evidence.
  * @param history - Optional prior turns.
- * @returns Model text + model id, or null when no provider is configured.
+ * @returns Model text + model id, or null.
  */
-async function generateWithAiSdk(
-  env: ServerEnv,
+async function generateWithPortableAiSdk(
+  env: AssistantEnv,
   message: string,
   sources: AssistantSource[],
   history: AssistantChatRequest["history"] = [],
 ): Promise<{ text: string, model: string } | null> {
-  const resolved = await resolveAiSdkModel(env)
+  const resolved = await resolvePortableAiSdkModel(env)
   if (!resolved) {
     return null
   }
@@ -169,27 +158,27 @@ async function generateWithAiSdk(
     })
     return { text: result.text, model: resolved.modelId }
   } catch (error) {
-    console.warn("[assistant] AI SDK generation failed; using conversational fallback", error)
+    console.warn("[assistant] AI SDK generation failed; falling back", error)
     return null
   }
 }
 
 /**
- * Streams an answer with AI SDK when a provider key is available.
+ * Streams an answer with AI SDK (Anthropic/OpenAI) when keys are set.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @param message - User question.
  * @param sources - Retrieved evidence.
  * @param history - Optional prior turns.
  * @returns Async text stream + model id, or null.
  */
-export async function streamWithAiSdk(
-  env: ServerEnv,
+async function streamWithPortableAiSdk(
+  env: AssistantEnv,
   message: string,
   sources: AssistantSource[],
   history: AssistantChatRequest["history"] = [],
 ): Promise<{ textStream: AsyncIterable<string>, model: string } | null> {
-  const resolved = await resolveAiSdkModel(env)
+  const resolved = await resolvePortableAiSdkModel(env)
   if (!resolved) {
     return null
   }
@@ -208,14 +197,14 @@ export async function streamWithAiSdk(
 }
 
 /**
- * Runs retrieve + generate for a docs chat turn.
+ * Runs retrieve + generate for an Ask Limetry chat turn.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @param request - Chat payload.
  * @returns Answer with citations.
  */
 export async function runAssistantChat(
-  env: ServerEnv,
+  env: AssistantEnv,
   request: AssistantChatRequest,
 ): Promise<AssistantChatResponse> {
   const message = request.message.trim()
@@ -224,9 +213,8 @@ export async function runAssistantChat(
   }
 
   const backend = resolveAssistantBackend(env)
-  let sources: AssistantSource[] = []
 
-  if (backend === "bedrock-kb" && env.LIMETRY_BEDROCK_KB_ID) {
+  if (backend === "bedrock-kb" && env.LIMETRY_BEDROCK_KB_ID && hasAwsCredentials(env)) {
     try {
       const { retrieveAndGenerateBedrock } = await import("./bedrock-kb.js")
       const generated = await retrieveAndGenerateBedrock(env, message)
@@ -241,20 +229,30 @@ export async function runAssistantChat(
     }
   }
 
-  sources = await retrieveSources(env, message)
-  const generated = await generateWithAiSdk(env, message, sources, request.history)
-  if (generated) {
+  const sources = await retrieveSources(env, message)
+  const portable = await generateWithPortableAiSdk(env, message, sources, request.history)
+  if (portable) {
     return {
-      answer: generated.text,
+      answer: portable.text,
       sources,
       backend,
-      model: generated.model,
+      model: portable.model,
+    }
+  }
+
+  const bedrock = await generateWithBedrockConverse(env, message, sources, request.history)
+  if (bedrock) {
+    return {
+      answer: bedrock.text,
+      sources,
+      backend,
+      model: bedrock.model,
     }
   }
 
   if (!hasLlmProvider(env)) {
     console.warn(
-      "[assistant] No LLM provider configured (ANTHROPIC_API_KEY, OPENAI_API_KEY, or Bedrock). Returning conversational fallback without snippet dumps.",
+      "[assistant] No LLM provider configured (ANTHROPIC_API_KEY, OPENAI_API_KEY, or Bedrock with AWS credentials). Returning conversational fallback.",
     )
   }
 
@@ -268,12 +266,12 @@ export async function runAssistantChat(
 /**
  * Prepares a streaming chat turn (retrieve first, then stream tokens).
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @param request - Chat payload.
  * @returns Sources, backend, and optional text stream.
  */
 export async function prepareAssistantChatStream(
-  env: ServerEnv,
+  env: AssistantEnv,
   request: AssistantChatRequest,
 ): Promise<{
   sources: AssistantSource[]
@@ -288,16 +286,29 @@ export async function prepareAssistantChatStream(
   }
   const backend = resolveAssistantBackend(env)
   const sources = await retrieveSources(env, message)
-  const streamed = await streamWithAiSdk(env, message, sources, request.history)
-  if (streamed) {
+
+  const portable = await streamWithPortableAiSdk(env, message, sources, request.history)
+  if (portable) {
     return {
       sources,
       backend,
-      model: streamed.model,
-      textStream: streamed.textStream,
-      fallbackAnswer: "",
+      model: portable.model,
+      textStream: portable.textStream,
+      fallbackAnswer: extractiveAnswer(message, sources),
     }
   }
+
+  const bedrock = await streamWithBedrockConverse(env, message, sources, request.history)
+  if (bedrock) {
+    return {
+      sources,
+      backend,
+      model: bedrock.model,
+      textStream: bedrock.textStream,
+      fallbackAnswer: extractiveAnswer(message, sources),
+    }
+  }
+
   return {
     sources,
     backend,

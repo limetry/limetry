@@ -305,22 +305,6 @@ export function buildServerEnvironment(
     decisionHmacSecret: pulumi.Input<string>
     jwtSecret: pulumi.Input<string>
   },
-  assistantOpts?: {
-    backend?: string
-    corpusPath?: string
-    extraRoots?: string
-    chatPublic?: boolean
-    chatModel?: string
-    bedrockKbId?: pulumi.Input<string>
-    bedrockModelId?: pulumi.Input<string>
-    bedrockModelArn?: pulumi.Input<string>
-    bedrockEmbedModelId?: pulumi.Input<string>
-    bedrockGuardrailId?: pulumi.Input<string>
-    bedrockGuardrailVersion?: string
-    bedrockRegion?: string
-    openaiApiKey?: pulumi.Input<string>
-    anthropicApiKey?: pulumi.Input<string>
-  },
 ): ServerEnvironment {
   const environment: ServerEnvironment = {
     DECISION_HMAC_SECRET: secrets.decisionHmacSecret,
@@ -331,22 +315,6 @@ export function buildServerEnvironment(
     NODE_ENV: "serverless",
     SQLITE_DATABASE_PATH: config.sqliteDatabasePath,
     USE_POSTGRES_STORE: String(config.databaseProvider !== "sqlite"),
-    LIMETRY_ASSISTANT_BACKEND: assistantOpts?.backend
-      ?? (config.databaseProvider === "sqlite" ? "memory" : "pgvector"),
-    LIMETRY_ASSISTANT_CORPUS_PATH: assistantOpts?.corpusPath ?? "docs/assistant/corpus/assistant-corpus.json",
-    LIMETRY_ASSISTANT_EXTRA_ROOTS: assistantOpts?.extraRoots ?? "",
-    LIMETRY_ASSISTANT_PUBLIC: String(assistantOpts?.chatPublic ?? true),
-    LIMETRY_ASSISTANT_MODEL: assistantOpts?.chatModel ?? "",
-    LIMETRY_BEDROCK_REGION: assistantOpts?.bedrockRegion ?? "us-west-2",
-    LIMETRY_BEDROCK_MODEL_ID: assistantOpts?.bedrockModelId
-      ?? "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    LIMETRY_BEDROCK_MODEL_ARN: assistantOpts?.bedrockModelArn ?? "",
-    LIMETRY_BEDROCK_KB_ID: assistantOpts?.bedrockKbId ?? "",
-    LIMETRY_BEDROCK_EMBED_MODEL_ID: assistantOpts?.bedrockEmbedModelId ?? "",
-    LIMETRY_BEDROCK_GUARDRAIL_ID: assistantOpts?.bedrockGuardrailId ?? "",
-    LIMETRY_BEDROCK_GUARDRAIL_VERSION: assistantOpts?.bedrockGuardrailVersion ?? "",
-    OPENAI_API_KEY: assistantOpts?.openaiApiKey ?? "",
-    ANTHROPIC_API_KEY: assistantOpts?.anthropicApiKey ?? "",
   }
   return environment
 }

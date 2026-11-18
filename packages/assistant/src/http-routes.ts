@@ -1,18 +1,12 @@
 /**
- * Product assistant chat HTTP routes (`POST /v1/chat`, `POST /v1/chat/stream`).
+ * Ask Limetry HTTP routes (`POST /api/chat`, `POST /api/chat/stream`).
  */
 
 import type { Express, NextFunction, Request, Response } from "express"
 import { z } from "zod"
 
-import type { ServerEnv } from "../env.js"
-import { resolveLandingWebOrigin } from "../landing-links.js"
-import {
-  createBearerAuthMiddleware,
-  requireScopes,
-} from "../middleware/bearer-auth.js"
-import { prepareAssistantChatStream, runAssistantChat } from "../services/assistant/chat.js"
-import type { UserService } from "../services/user-service.js"
+import { prepareAssistantChatStream, runAssistantChat } from "./chat.js"
+import type { AssistantEnv } from "./env.js"
 
 const chatBodySchema = z.object({
   message: z.string().min(1).max(4_000),
@@ -24,9 +18,6 @@ const chatBodySchema = z.object({
 
 /**
  * Adds the `www.` / apex sibling for a marketing origin.
- *
- * Production serves the same site on both `limetry.org` and `www.limetry.org`;
- * browsers send whichever host the user opened as `Origin`.
  *
  * @param origin - Absolute origin without a trailing slash.
  * @returns Origin plus its www/apex twin when applicable.
@@ -51,20 +42,19 @@ export function chatCorsOriginVariants(origin: string): string[] {
 }
 
 /**
- * Builds allowed browser origins for the docs chat UI.
+ * Builds allowed browser origins for Ask Limetry.
  *
- * @param env - Server env (unused today; reserved for future allowlists).
- * @returns Origin strings that may call `/v1/chat` from the browser.
+ * @param env - Assistant env.
+ * @returns Origin strings that may call `/api/chat` from the browser.
  */
-function chatCorsOrigins(_env: ServerEnv): string[] {
+function chatCorsOrigins(env: AssistantEnv): string[] {
   const origins = new Set<string>([
-    ...chatCorsOriginVariants(resolveLandingWebOrigin()),
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3800",
     "http://127.0.0.1:3800",
   ])
-  const extra = process.env.LIMETRY_ASSISTANT_CORS_ORIGINS
+  const extra = env.LIMETRY_ASSISTANT_CORS_ORIGINS
   if (extra) {
     for (const origin of extra.split(",")) {
       const trimmed = origin.trim().replace(/\/$/, "")
@@ -79,17 +69,17 @@ function chatCorsOrigins(_env: ServerEnv): string[] {
 }
 
 /**
- * Applies CORS headers for browser docs chat requests.
+ * Applies CORS headers for browser Ask Limetry requests.
  *
  * @param request - Incoming request.
  * @param response - Outgoing response.
- * @param env - Server env.
+ * @param env - Assistant env.
  * @returns Whether the request Origin was allowed (or absent).
  */
 function applyChatCors(
   request: Request,
   response: Response,
-  env: ServerEnv,
+  env: AssistantEnv,
 ): boolean {
   const origin = request.headers.origin
   if (!origin) {
@@ -104,7 +94,7 @@ function applyChatCors(
   response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
   response.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization",
+    "Content-Type, Authorization, Accept",
   )
   response.setHeader("Access-Control-Max-Age", "86400")
   return true
@@ -121,17 +111,14 @@ function writeSse(response: Response, payload: unknown): void {
 }
 
 /**
- * Registers the Limetry docs assistant chat endpoints.
+ * Registers Ask Limetry chat endpoints on an Express app.
+ *
+ * Paths are same-origin on limetry.org: `/api/chat` and `/api/chat/stream`.
  *
  * @param app - Express app.
- * @param env - Validated server env.
- * @param userService - User/token store for optional auth.
+ * @param env - Validated assistant env.
  */
-export function createChatRoutes(
-  app: Express,
-  env: ServerEnv,
-  userService: UserService,
-): void {
+export function createChatRoutes(app: Express, env: AssistantEnv): void {
   const corsGate = (
     request: Request,
     response: Response,
@@ -144,33 +131,19 @@ export function createChatRoutes(
     next()
   }
 
-  const authHandlers = env.LIMETRY_ASSISTANT_PUBLIC
-    ? []
-    : [
-      createBearerAuthMiddleware(env, userService),
-      requireScopes("chat:read"),
-    ]
-
-  app.options("/v1/chat", (request, response) => {
-    if (!applyChatCors(request, response, env)) {
-      response.status(403).end()
-      return
-    }
-    response.status(204).end()
-  })
-
-  app.options("/v1/chat/stream", (request, response) => {
-    if (!applyChatCors(request, response, env)) {
-      response.status(403).end()
-      return
-    }
-    response.status(204).end()
-  })
+  for (const path of ["/api/chat", "/api/chat/stream"] as const) {
+    app.options(path, (request, response) => {
+      if (!applyChatCors(request, response, env)) {
+        response.status(403).end()
+        return
+      }
+      response.status(204).end()
+    })
+  }
 
   app.post(
-    "/v1/chat",
+    "/api/chat",
     corsGate,
-    ...authHandlers,
     async (request: Request, response: Response): Promise<void> => {
       const parsed = chatBodySchema.safeParse(request.body)
       if (!parsed.success) {
@@ -191,9 +164,8 @@ export function createChatRoutes(
   )
 
   app.post(
-    "/v1/chat/stream",
+    "/api/chat/stream",
     corsGate,
-    ...authHandlers,
     async (request: Request, response: Response): Promise<void> => {
       const parsed = chatBodySchema.safeParse(request.body)
       if (!parsed.success) {
@@ -218,11 +190,27 @@ export function createChatRoutes(
           model: prepared.model,
         })
 
+        let emittedDelta = false
         if (prepared.textStream) {
-          for await (const delta of prepared.textStream) {
-            if (delta) {
-              writeSse(response, { type: "delta", text: delta })
+          try {
+            for await (const delta of prepared.textStream) {
+              if (delta) {
+                emittedDelta = true
+                writeSse(response, { type: "delta", text: delta })
+              }
             }
+          } catch (streamError) {
+            const message = streamError instanceof Error
+              ? streamError.message
+              : "chat_stream_failed"
+            console.warn("[assistant] stream iteration failed; emitting fallback", streamError)
+            writeSse(response, { type: "error", message })
+            if (!emittedDelta && prepared.fallbackAnswer) {
+              writeSse(response, { type: "delta", text: prepared.fallbackAnswer })
+            }
+            writeSse(response, { type: "done" })
+            response.end()
+            return
           }
         } else if (prepared.fallbackAnswer) {
           writeSse(response, { type: "delta", text: prepared.fallbackAnswer })
@@ -234,6 +222,7 @@ export function createChatRoutes(
         const message = error instanceof Error ? error.message : "chat_failed"
         if (response.headersSent) {
           writeSse(response, { type: "error", message })
+          writeSse(response, { type: "done" })
           response.end()
           return
         }

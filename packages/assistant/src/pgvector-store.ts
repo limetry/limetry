@@ -7,28 +7,32 @@
 
 import { Pool } from "pg"
 
-import type { ServerEnv } from "../../env.js"
+import { bedrockRegion } from "./bedrock-converse.js"
 import {
   bedrockTitanEmbedding,
   localHashEmbedding,
   openAiEmbedding,
 } from "./embeddings.js"
+import type { AssistantEnv } from "./env.js"
 import type { AssistantChunk, AssistantSource } from "./types.js"
 
 /**
  * Embeds a query with the best available provider.
  *
- * @param env - Server env.
+ * @param env - Assistant env.
  * @param text - Query text.
  * @returns Embedding vector.
  */
-async function embedQuery(env: ServerEnv, text: string): Promise<number[]> {
+async function embedQuery(env: AssistantEnv, text: string): Promise<number[]> {
   if (env.OPENAI_API_KEY) {
     return openAiEmbedding(text, env.OPENAI_API_KEY)
   }
   if (env.LIMETRY_BEDROCK_EMBED_MODEL_ID) {
-    const region = env.LIMETRY_BEDROCK_REGION || process.env.AWS_REGION || "us-east-1"
-    return bedrockTitanEmbedding(text, env.LIMETRY_BEDROCK_EMBED_MODEL_ID, region)
+    return bedrockTitanEmbedding(
+      text,
+      env.LIMETRY_BEDROCK_EMBED_MODEL_ID,
+      bedrockRegion(env),
+    )
   }
   return localHashEmbedding(text)
 }
@@ -80,12 +84,12 @@ export async function upsertAssistantChunks(pool: Pool, chunks: AssistantChunk[]
 /**
  * Similarity search via pgvector (`<=>` cosine distance).
  *
- * @param env - Server env with DATABASE_URL.
+ * @param env - Assistant env with DATABASE_URL.
  * @param query - User question.
  * @returns Ranked sources.
  */
 export async function retrievePgvector(
-  env: ServerEnv,
+  env: AssistantEnv,
   query: string,
 ): Promise<AssistantSource[]> {
   const pool = new Pool({ connectionString: env.DATABASE_URL })
