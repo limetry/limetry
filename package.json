@@ -14,7 +14,7 @@
     "build:cli": "yarn workspace @limetry/cli build",
     "build:db": "yarn workspace @limetry/db build",
     "build:evaluate": "yarn workspace @limetry/evaluate build",
-    "build:infra:artifacts": "yarn build:sdk && yarn build:preflight && yarn build:lambda && yarn build:web:static",
+    "build:infra:artifacts": "yarn build:sdk && yarn build:preflight && yarn build:lambda && yarn build:assistant:lambda && yarn build:web:static",
     "build:lambda": "yarn workspace @limetry/server build:lambda",
     "build:preflight": "yarn workspace @limetry/preflight build",
     "build:sdk": "yarn workspace @limetry/sdk build",
@@ -66,7 +66,10 @@
     "test:web": "yarn workspace @limetry/web test",
     "test": "tsx scripts/run-workspaces.ts test --exclude limetry --exclude @limetry/skill",
     "typecheck": "tsx scripts/run-workspaces.ts typecheck --exclude limetry --exclude @limetry/skill",
-    "releasekit:status": "releasekit status"
+    "releasekit:status": "releasekit status",
+    "build:assistant": "yarn workspace @limetry/assistant build",
+    "build:assistant:lambda": "yarn workspace @limetry/assistant build:lambda",
+    "dev:assistant": "yarn workspace @limetry/assistant dev"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^2.23.0",

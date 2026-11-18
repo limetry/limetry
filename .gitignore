@@ -13,12 +13,13 @@ target/
 **/build
 **/coverage
 packages/server/lambda-bundle
+packages/assistant/lambda-bundle
 packages/web/out
 packages/infra/bin
 packages/wasm/pkg
 docs/api
 
-# Generated assistant corpus (rebuild with: yarn workspace @limetry/server assistant:ingest)
+# Generated assistant corpus (rebuild with: yarn workspace @limetry/assistant assistant:ingest)
 docs/assistant/corpus/assistant-corpus.json
 docs/assistant/corpus/plain/
 

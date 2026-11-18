@@ -1,0 +1,52 @@
+{
+  "name": "@limetry/assistant",
+  "version": "1.2.90",
+  "private": true,
+  "description": "Ask Limetry product assistant (retrieve + synthesize for limetry.org)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "build:lambda": "node scripts/build-lambda-bundle.mjs",
+    "dev": "tsx watch src/http-server.ts",
+    "start": "node dist/http-server.js",
+    "test": "vitest run",
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit",
+    "assistant:ingest": "node scripts/ingest-assistant-corpus.mjs",
+    "assistant:eval": "node scripts/eval-assistant-smoke.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.97",
+    "@ai-sdk/openai": "^4.0.109",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1163.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1163.0",
+    "@codegenie/serverless-express": "^5.0.0",
+    "ai": "^7.0.163",
+    "express": "^5.2.1",
+    "pg": "^8.23.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.163",
+    "@types/express": "^5.0.0",
+    "@types/node": "^26.4.1",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "esbuild": "^0.28.2",
+    "supertest": "^7.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

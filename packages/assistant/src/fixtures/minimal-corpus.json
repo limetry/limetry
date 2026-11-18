@@ -1,0 +1,27 @@
+{
+  "generatedAt": "fixture",
+  "chunkCount": 3,
+  "chunks": [
+    {
+      "id": "fixture-install-1",
+      "sourcePath": "INSTALL.md",
+      "title": "Install",
+      "section": "Self-host",
+      "text": "Self-host Limetry by installing the server package, setting LIMETRY_BEARER_TOKEN and JWT_SECRET, then running yarn workspace @limetry/server start. SQLite is the default local store."
+    },
+    {
+      "id": "fixture-usage-1",
+      "sourcePath": "USAGE.md",
+      "title": "Usage",
+      "section": "SDK quick start",
+      "text": "Get started with the Limetry SDK by installing @limetry/sdk and calling evaluate with your agent action. Prefer the quick-start docs for first integration."
+    },
+    {
+      "id": "fixture-security-1",
+      "sourcePath": "SECURITY.md",
+      "title": "Security",
+      "section": "Data minimization",
+      "text": "Data minimization for audit means storing only decision receipts and redacted metadata. Avoid logging secrets, credentials, or full request bodies in forensics mode unless required."
+    }
+  ]
+}
