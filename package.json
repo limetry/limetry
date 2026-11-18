@@ -1,6 +1,6 @@
 {
   "name": "limetry",
-  "version": "1.2.90",
+  "version": "1.2.91",
   "private": true,
   "type": "module",
   "packageManager": "yarn@4.13.0",
@@ -29,7 +29,8 @@
     "dev:cli": "yarn workspace @limetry/cli dev",
     "dev:mcp": "yarn workspace @limetry/mcp build && node packages/mcp/dist/index.js",
     "dev:server": "yarn workspace @limetry/server dev",
-    "dev:web": "yarn workspace @limetry/web dev",
+    "dev:web": "node scripts/dev-web.mjs",
+    "dev:web:only": "yarn workspace @limetry/web dev",
     "dev": "yarn dev:web",
     "docs:api:watch": "typedoc --options typedoc.json --watch",
     "docs:api": "typedoc --options typedoc.json",
