@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  citationLabel,
   assistantHrefForSource,
+  citationLabel,
   enrichSources,
   normalizeSourcePath,
   snapSnippet,

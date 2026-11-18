@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  ASSISTANT_SYSTEM_PROMPT,
   extractiveAnswer,
   formatContext,
   isLegacyExtractiveTemplate,
-  ASSISTANT_SYSTEM_PROMPT,
 } from "./prompt.js"
 import type { AssistantSource } from "./types.js"
 
