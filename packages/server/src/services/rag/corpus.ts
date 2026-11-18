@@ -6,6 +6,8 @@ import { existsSync, readFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { isAbsolute, join, resolve } from "node:path"
 
+import { sourcePriority } from "./chunk.js"
+import { enrichSources, inferProduct } from "./citations.js"
 import { cosineSimilarity, localHashEmbedding } from "./embeddings.js"
 import type { RagChunk, RagCorpusFile, RagSource } from "./types.js"
 
@@ -64,6 +66,8 @@ export function loadCorpus(corpusPath: string): RagChunk[] {
   const parsed = JSON.parse(readFileSync(absolute, "utf8")) as RagCorpusFile
   const chunks = (parsed.chunks ?? []).map((chunk) => ({
     ...chunk,
+    product: chunk.product ?? inferProduct(chunk.sourcePath),
+    priority: chunk.priority ?? sourcePriority(chunk.sourcePath),
     embedding: chunk.embedding ?? localHashEmbedding(chunk.text),
   }))
   cached = { path: absolute, chunks }
@@ -96,7 +100,12 @@ export function retrieveFromChunks(
   const queryVector = localHashEmbedding(query)
   const ranked = chunks
     .map((chunk) => {
-      const score = cosineSimilarity(queryVector, chunk.embedding ?? localHashEmbedding(chunk.text))
+      const similarity = cosineSimilarity(
+        queryVector,
+        chunk.embedding ?? localHashEmbedding(chunk.text),
+      )
+      const priorityBoost = (chunk.priority ?? sourcePriority(chunk.sourcePath)) * 0.02
+      const score = similarity + priorityBoost
       return {
         id: chunk.id,
         title: chunk.title,
@@ -104,13 +113,13 @@ export function retrieveFromChunks(
         section: chunk.section,
         snippet: chunk.text.slice(0, 500),
         score,
+        product: chunk.product ?? inferProduct(chunk.sourcePath),
       } satisfies RagSource
     })
     .sort((a, b) => b.score - a.score)
   const positive = ranked.filter((row) => row.score > 0).slice(0, limit)
-  if (positive.length > 0) {
-    return positive
-  }
-  // Always surface something for extractive answers / smoke tests.
-  return ranked.slice(0, Math.min(limit, 3))
+  const selected = positive.length > 0
+    ? positive
+    : ranked.slice(0, Math.min(limit, 3))
+  return enrichSources(selected)
 }
