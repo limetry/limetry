@@ -45,17 +45,7 @@ export function normalizeSourcePath(sourcePath: string): string {
   } else {
     normalized = normalized.replace(/\.txt$/i, "")
   }
-  const enterpriseMarkers = [
-    "limetry-enterprise/",
-    "enterprise/",
-  ]
-  for (const marker of enterpriseMarkers) {
-    const index = normalized.indexOf(marker)
-    if (index >= 0) {
-      normalized = normalized.slice(index + marker.length)
-      break
-    }
-  }
+  // Keep limetry-enterprise/ so Cloud sources are not mistaken for OSS root guides.
   return normalized
 }
 
@@ -67,6 +57,13 @@ export function normalizeSourcePath(sourcePath: string): string {
  */
 export function assistantHrefForSource(sourcePath: string): string | null {
   const normalized = normalizeSourcePath(sourcePath)
+  if (
+    normalized.startsWith("limetry-enterprise/")
+    || normalized.startsWith("enterprise/")
+  ) {
+    // Enterprise docs are not published under OSS /docs routes.
+    return null
+  }
   if (normalized.startsWith(DOCS_PREFIX)) {
     const rest = normalized.slice(DOCS_PREFIX.length).replace(/\.mdx?$/i, "")
     if (rest === "index" || rest.endsWith("/index")) {
@@ -101,9 +98,29 @@ export function assistantHrefForSource(sourcePath: string): string | null {
  * @param source - Retrieved source.
  * @returns Display title.
  */
+/**
+ * True when a retrieval title is corpus/Bedrock artifact metadata, not a doc title.
+ *
+ * @param title - Candidate title.
+ * @returns Whether to ignore the title for citation labels.
+ */
+function isArtifactCitationTitle(title: string): boolean {
+  if (/^chunk-\d+$/i.test(title)) {
+    return true
+  }
+  // Plain-corpus S3 objects look like `SECURITY.md__<hash>.txt`.
+  if (/__[a-f0-9]{8,}/i.test(title)) {
+    return true
+  }
+  if (/\.txt$/i.test(title)) {
+    return true
+  }
+  return false
+}
+
 export function citationLabel(source: Pick<AssistantSource, "title" | "sourcePath" | "section">): string {
   const title = source.title?.trim()
-  if (title && !/^chunk-\d+$/i.test(title)) {
+  if (title && !isArtifactCitationTitle(title)) {
     return title
   }
   const path = normalizeSourcePath(source.sourcePath)

@@ -53,4 +53,32 @@ describe("assistantHrefForSource", () => {
       "Data minimization",
     )
   })
+
+  it("does not map enterprise README to OSS introduction", () => {
+    assert.equal(
+      normalizeAssistantSourcePath("limetry-enterprise/README.md"),
+      "limetry-enterprise/README.md",
+    )
+    assert.equal(assistantHrefForSource("limetry-enterprise/README.md"), null)
+    assert.equal(
+      resolveSourceHref({
+        id: "ent",
+        title: "Limetry Cloud",
+        sourcePath: "limetry-enterprise/README.md",
+        snippet: "",
+        score: 1,
+      }),
+      null,
+    )
+  })
+
+  it("replaces Bedrock plain-corpus artifact titles", () => {
+    assert.equal(
+      assistantCitationLabel({
+        title: "SECURITY.md__abcdef12.txt",
+        sourcePath: "docs/assistant/corpus/plain/SECURITY.md__abcdef12.txt",
+      }),
+      "SECURITY",
+    )
+  })
 })

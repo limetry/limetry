@@ -106,4 +106,46 @@ describe("Ask Limetry e2e (mocked stream)", () => {
     const url = new URL("https://limetry.org/docs/introduction?ask=1")
     assert.equal(url.searchParams.get("ask"), "1")
   })
+
+  it("forwards non-streaming fallback through stream callbacks", async () => {
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/chat/stream")) {
+        return new Response("Not Found", { status: 404 })
+      }
+      return Response.json({
+        ok: true,
+        answer: answerMarkdown,
+        sources,
+        backend: "memory",
+        model: "fixture",
+      })
+    }) as typeof fetch
+
+    const deltas: string[] = []
+    let metaSources: AssistantChatSource[] = []
+    let done = false
+
+    const result = await askAssistantStream(
+      "What is data minimization?",
+      [],
+      {
+        onMeta: ({ sources: next }) => {
+          metaSources = next
+        },
+        onDelta: (text) => {
+          deltas.push(text)
+        },
+        onDone: () => {
+          done = true
+        },
+      },
+    )
+
+    assert.equal(result.ok, true)
+    assert.equal(result.answer, answerMarkdown)
+    assert.equal(deltas.join(""), answerMarkdown)
+    assert.equal(metaSources.length, 1)
+    assert.equal(done, true)
+  })
 })

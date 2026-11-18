@@ -51,6 +51,13 @@ describe("assistant chunk helpers", () => {
     }
   })
 
+  it("advances past oversized tokens instead of looping forever", () => {
+    const longToken = "x".repeat(1_500)
+    const chunks = chunkText(`${longToken} trailing words here`, 1_200, 200)
+    expect(chunks.length).toBeGreaterThan(0)
+    expect(chunks.join("")).toContain("trailing")
+  })
+
   it("reads title from heading", () => {
     expect(titleFromDoc("docs/x.md", "# Install\n\nsteps")).toBe("Install")
   })
