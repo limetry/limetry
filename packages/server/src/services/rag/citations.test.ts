@@ -29,6 +29,30 @@ describe("rag citations", () => {
     })).toBe("Install")
   })
 
+  it("replaces Bedrock plain-corpus artifact titles with path basenames", () => {
+    expect(citationLabel({
+      title: "SECURITY.md__abc123def456.txt",
+      sourcePath: "s3://bucket/docs/ai-rag/corpus/plain/SECURITY.md__abc123def456.txt",
+      section: undefined,
+    })).toBe("SECURITY")
+  })
+
+  it("does not map enterprise README sources to OSS introduction", () => {
+    expect(normalizeSourcePath("limetry-enterprise/README.md")).toBe("limetry-enterprise/README.md")
+    expect(docsHrefForSource("limetry-enterprise/README.md")).toBeNull()
+    const [source] = enrichSources([{
+      id: "ent-1",
+      title: "Limetry Cloud",
+      sourcePath: "limetry-enterprise/README.md",
+      snippet: "Cloud control plane.",
+      score: 1,
+      product: "cloud",
+    }])
+    expect(source?.href).toBeUndefined()
+    expect(source?.product).toBe("cloud")
+    expect(source?.sourcePath).toBe("limetry-enterprise/README.md")
+  })
+
   it("snaps snippets away from mid-token cuts", () => {
     const snippet = snapSnippet(`${"word ".repeat(80)}record_action runs client-side`, 40)
     expect(snippet).not.toMatch(/^ecord_action/)
