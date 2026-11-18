@@ -180,9 +180,16 @@ function windowChunks(text: string, chunkSize: number, overlap: number): string[
     if (end >= text.length) {
       break
     }
+    const previousStart = start
     const nextStart = Math.max(0, end - overlap)
-    start = snapBoundary(text, nextStart, "start")
-    if (start >= end) {
+    let snappedStart = snapBoundary(text, nextStart, "start")
+    // Long tokens can make snapBoundary("start") return 0 / stall behind `start`.
+    // Always advance so ingest and retrieval cannot loop forever.
+    if (snappedStart <= previousStart) {
+      snappedStart = nextStart > previousStart ? nextStart : end
+    }
+    start = snappedStart >= end ? end : snappedStart
+    if (start <= previousStart) {
       start = end
     }
     if (start >= text.length) {

@@ -64,9 +64,7 @@ export function normalizeDocsSourcePath(sourcePath: string): string {
       .replace(/\.txt$/i, "")
       .replace(/__/g, "/")
   }
-  if (normalized.startsWith("limetry-enterprise/")) {
-    normalized = normalized.slice("limetry-enterprise/".length)
-  }
+  // Keep limetry-enterprise/ so Cloud sources are not mapped to OSS root guides.
   return normalized
 }
 
@@ -78,6 +76,12 @@ export function normalizeDocsSourcePath(sourcePath: string): string {
  */
 export function docsHrefForSource(sourcePath: string): string | null {
   const normalized = normalizeDocsSourcePath(sourcePath)
+  if (
+    normalized.startsWith("limetry-enterprise/")
+    || normalized.startsWith("enterprise/")
+  ) {
+    return null
+  }
   if (normalized.startsWith(DOCS_PREFIX)) {
     const rest = normalized.slice(DOCS_PREFIX.length).replace(/\.mdx?$/i, "")
     if (rest === "index" || rest.endsWith("/index")) {
@@ -100,9 +104,28 @@ export function docsHrefForSource(sourcePath: string): string | null {
  * @param source - Chat source.
  * @returns Display title.
  */
+/**
+ * True when a retrieval title is corpus/Bedrock artifact metadata.
+ *
+ * @param title - Candidate title.
+ * @returns Whether to ignore the title for citation labels.
+ */
+function isArtifactCitationTitle(title: string): boolean {
+  if (/^chunk-\d+$/i.test(title)) {
+    return true
+  }
+  if (/__[a-f0-9]{8,}/i.test(title)) {
+    return true
+  }
+  if (/\.txt$/i.test(title)) {
+    return true
+  }
+  return false
+}
+
 export function docsCitationLabel(source: Pick<DocsChatSource, "title" | "sourcePath" | "section">): string {
   const title = source.title?.trim()
-  if (title && !/^chunk-\d+$/i.test(title)) {
+  if (title && !isArtifactCitationTitle(title)) {
     return title
   }
   const path = normalizeDocsSourcePath(source.sourcePath)
@@ -177,7 +200,15 @@ export async function askDocsStream(
   })
 
   if (!response.ok || !response.body) {
-    return askDocs(message, history)
+    const fallback = await askDocs(message, history)
+    handlers.onMeta?.({
+      sources: fallback.sources,
+      backend: fallback.backend,
+      model: fallback.model,
+    })
+    handlers.onDelta?.(fallback.answer)
+    handlers.onDone?.()
+    return fallback
   }
 
   const contentType = response.headers.get("content-type") || ""
