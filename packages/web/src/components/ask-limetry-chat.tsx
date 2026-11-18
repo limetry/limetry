@@ -16,16 +16,16 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
 import {
-  askDocsStream,
-  type DocsChatSource,
-  docsCitationLabel,
+  askAssistantStream,
+  type AssistantChatSource,
+  assistantCitationLabel,
   resolveSourceHref,
-} from "@/lib/docs-chat"
+} from "@/lib/assistant-chat"
 
 type Turn = {
   role: "user" | "assistant"
   content: string
-  sources?: DocsChatSource[]
+  sources?: AssistantChatSource[]
 }
 
 const STARTERS = [
@@ -104,7 +104,7 @@ function SendIcon(): React.JSX.Element {
  */
 function AssistantMarkdown({ content }: { content: string }): React.JSX.Element {
   return (
-    <div className="docs-ask-markdown prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mb-2 prose-headings:mt-3 prose-pre:my-2 prose-code:text-[0.85em]">
+    <div className="ask-limetry-markdown prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mb-2 prose-headings:mt-3 prose-pre:my-2 prose-code:text-[0.85em]">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>
         {content}
       </ReactMarkdown>
@@ -117,7 +117,7 @@ function AssistantMarkdown({ content }: { content: string }): React.JSX.Element 
  *
  * @returns Chat launcher + panel portal content.
  */
-export function DocsAskChat(): React.JSX.Element {
+export function AskLimetryChat(): React.JSX.Element {
   const panelId = useId()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -180,7 +180,7 @@ export function DocsAskChat(): React.JSX.Element {
       { role: "assistant", content: "", sources: [] },
     ])
     try {
-      await askDocsStream(trimmed, history, {
+      await askAssistantStream(trimmed, history, {
         onMeta: ({ sources }) => {
           setTurns((previous) => {
             const next = [...previous]
@@ -223,7 +223,7 @@ export function DocsAskChat(): React.JSX.Element {
             role="dialog"
             aria-modal="false"
             aria-label="Ask Limetry"
-            className="docs-ask-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10 dark:shadow-black/40"
+            className="ask-limetry-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10 dark:shadow-black/40"
           >
             <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div className="min-w-0">
@@ -293,7 +293,7 @@ export function DocsAskChat(): React.JSX.Element {
                       <ul className="mt-2 space-y-1 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
                         {turn.sources.slice(0, 4).map((source) => {
                           const href = resolveSourceHref(source)
-                          const label = docsCitationLabel(source)
+                          const label = assistantCitationLabel(source)
                           return (
                             <li key={source.id} className="truncate">
                               {href ? (
@@ -365,7 +365,7 @@ export function DocsAskChat(): React.JSX.Element {
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
           aria-label={open ? "Close Ask Limetry" : "Ask Limetry"}
-          className="docs-ask-fab inline-flex size-12 items-center justify-center rounded-full hover:scale-[1.03] active:scale-[0.98]"
+          className="ask-limetry-fab inline-flex size-12 items-center justify-center rounded-full hover:scale-[1.03] active:scale-[0.98]"
         >
           {open ? <CloseIcon /> : <ChatIcon />}
         </button>

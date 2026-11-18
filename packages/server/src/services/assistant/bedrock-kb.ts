@@ -1,11 +1,11 @@
 /**
  * Amazon Bedrock Knowledge Bases retrieve / RetrieveAndGenerate adapters.
  *
- * Optional AWS showcase path (`LIMETRY_RAG_BACKEND=bedrock-kb`).
+ * Optional AWS showcase path (`LIMETRY_ASSISTANT_BACKEND=bedrock-kb`).
  */
 
 import type { ServerEnv } from "../../env.js"
-import type { RagChatResponse, RagSource } from "./types.js"
+import type { AssistantChatResponse, AssistantSource } from "./types.js"
 
 /**
  * Retrieves passages from a Bedrock Knowledge Base.
@@ -17,7 +17,7 @@ import type { RagChatResponse, RagSource } from "./types.js"
 export async function retrieveBedrockKnowledgeBase(
   env: ServerEnv,
   query: string,
-): Promise<RagSource[]> {
+): Promise<AssistantSource[]> {
   if (!env.LIMETRY_BEDROCK_KB_ID) {
     return []
   }
@@ -44,7 +44,7 @@ export async function retrieveBedrockKnowledgeBase(
       sourcePath: location,
       snippet: text.slice(0, 500),
       score: row.score ?? 0,
-    } satisfies RagSource
+    } satisfies AssistantSource
   })
 }
 
@@ -58,7 +58,7 @@ export async function retrieveBedrockKnowledgeBase(
 export async function retrieveAndGenerateBedrock(
   env: ServerEnv,
   query: string,
-): Promise<RagChatResponse | null> {
+): Promise<AssistantChatResponse | null> {
   if (!env.LIMETRY_BEDROCK_KB_ID) {
     return null
   }
@@ -112,7 +112,7 @@ export async function retrieveAndGenerateBedrock(
   }
 
   const result = await client.send(new RetrieveAndGenerateCommand(input))
-  const sources: RagSource[] = (result.citations ?? []).flatMap((citation, citationIndex) => (
+  const sources: AssistantSource[] = (result.citations ?? []).flatMap((citation, citationIndex) => (
     (citation.retrievedReferences ?? []).map((ref, refIndex) => {
       const text = ref.content?.text ?? ""
       const location = ref.location?.s3Location?.uri
@@ -124,7 +124,7 @@ export async function retrieveAndGenerateBedrock(
         sourcePath: location,
         snippet: text.slice(0, 500),
         score: 1,
-      } satisfies RagSource
+      } satisfies AssistantSource
     })
   ))
 

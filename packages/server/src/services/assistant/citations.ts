@@ -1,8 +1,8 @@
 /**
- * Maps RAG source paths to public docs hrefs and display titles.
+ * Maps assistant source paths to public docs hrefs and display titles.
  */
 
-import type { RagProduct, RagSource } from "./types.js"
+import type { AssistantProduct, AssistantSource } from "./types.js"
 
 const DOCS_PREFIX = "packages/web/content/docs/"
 
@@ -35,7 +35,7 @@ export function normalizeSourcePath(sourcePath: string): string {
     normalized = s3Match[1]
   }
   normalized = normalized.replace(/^\/+/, "")
-  const plainPrefix = "docs/ai-rag/corpus/plain/"
+  const plainPrefix = "docs/assistant/corpus/plain/"
   if (normalized.startsWith(plainPrefix)) {
     const leaf = normalized.slice(plainPrefix.length)
     normalized = leaf
@@ -62,10 +62,10 @@ export function normalizeSourcePath(sourcePath: string): string {
 /**
  * Maps a corpus source path to an in-site docs href when possible.
  *
- * @param sourcePath - Repo-relative or S3-style path from the RAG corpus.
+ * @param sourcePath - Repo-relative or S3-style path from the assistant corpus.
  * @returns Site-relative docs URL or null.
  */
-export function docsHrefForSource(sourcePath: string): string | null {
+export function assistantHrefForSource(sourcePath: string): string | null {
   const normalized = normalizeSourcePath(sourcePath)
   if (normalized.startsWith(DOCS_PREFIX)) {
     const rest = normalized.slice(DOCS_PREFIX.length).replace(/\.mdx?$/i, "")
@@ -101,7 +101,7 @@ export function docsHrefForSource(sourcePath: string): string | null {
  * @param source - Retrieved source.
  * @returns Display title.
  */
-export function citationLabel(source: Pick<RagSource, "title" | "sourcePath" | "section">): string {
+export function citationLabel(source: Pick<AssistantSource, "title" | "sourcePath" | "section">): string {
   const title = source.title?.trim()
   if (title && !/^chunk-\d+$/i.test(title)) {
     return title
@@ -120,8 +120,8 @@ export function citationLabel(source: Pick<RagSource, "title" | "sourcePath" | "
  */
 export function inferProduct(
   sourcePath: string,
-  explicit?: RagProduct,
-): RagProduct {
+  explicit?: AssistantProduct,
+): AssistantProduct {
   if (explicit) {
     return explicit
   }
@@ -144,7 +144,7 @@ export function inferProduct(
  * @param sources - Raw retrieved sources.
  * @returns Sources ready for API + UI.
  */
-export function enrichSources(sources: RagSource[]): RagSource[] {
+export function enrichSources(sources: AssistantSource[]): AssistantSource[] {
   return sources.map((source) => {
     const sourcePath = normalizeSourcePath(source.sourcePath)
     const section = source.section && !/^chunk-\d+$/i.test(source.section)
@@ -155,7 +155,7 @@ export function enrichSources(sources: RagSource[]): RagSource[] {
       sourcePath,
       section,
       title: citationLabel({ ...source, sourcePath }),
-      href: docsHrefForSource(sourcePath) ?? undefined,
+      href: assistantHrefForSource(sourcePath) ?? undefined,
       product: inferProduct(sourcePath, source.product),
       snippet: snapSnippet(source.snippet),
     }

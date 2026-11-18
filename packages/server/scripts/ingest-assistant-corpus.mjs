@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Builds docs/ai-rag/corpus/rag-corpus.json from Limetry markdown sources.
+ * Builds docs/assistant/corpus/assistant-corpus.json from Limetry markdown sources.
  *
  * Usage (from repo root or packages/server):
- *   yarn workspace @limetry/server rag:ingest
+ *   yarn workspace @limetry/server assistant:ingest
  *
  * Optional Cloud/enterprise docs:
- *   LIMETRY_RAG_EXTRA_ROOTS=../limetry-enterprise yarn workspace @limetry/server rag:ingest
+ *   LIMETRY_ASSISTANT_EXTRA_ROOTS=../limetry-enterprise yarn workspace @limetry/server assistant:ingest
  */
 
 import { createHash } from "node:crypto"
@@ -24,8 +24,8 @@ import { fileURLToPath } from "node:url"
 const here = dirname(fileURLToPath(import.meta.url))
 const serverRoot = resolve(here, "..")
 const repoRoot = resolve(serverRoot, "../..")
-const outDir = resolve(repoRoot, "docs/ai-rag/corpus")
-const outFile = join(outDir, "rag-corpus.json")
+const outDir = resolve(repoRoot, "docs/assistant/corpus")
+const outFile = join(outDir, "assistant-corpus.json")
 
 const LOCAL_EMBED_DIM = 256
 
@@ -196,7 +196,7 @@ function walk(dir, predicate, acc = []) {
 }
 
 function resolveExtraRoots() {
-  const raw = process.env.LIMETRY_RAG_EXTRA_ROOTS || ""
+  const raw = process.env.LIMETRY_ASSISTANT_EXTRA_ROOTS || ""
   const roots = []
   for (const part of raw.split(",")) {
     const trimmed = part.trim()

@@ -1,11 +1,11 @@
 /**
- * Client helpers for the Limetry product RAG chat UI.
+ * Client helpers for the Limetry product assistant chat UI.
  */
 
 import { siteUrls } from "@/lib/site-urls"
 
 /** One citation returned by `POST /v1/chat`. */
-export type DocsChatSource = {
+export type AssistantChatSource = {
   id: string
   title: string
   sourcePath: string
@@ -17,10 +17,10 @@ export type DocsChatSource = {
 }
 
 /** Successful chat API payload. */
-export type DocsChatResponse = {
+export type AssistantChatClientResponse = {
   ok: true
   answer: string
-  sources: DocsChatSource[]
+  sources: AssistantChatSource[]
   backend: string
   model?: string
 }
@@ -49,14 +49,14 @@ const PACKAGE_README_HREFS: Record<string, string> = {
  * @param sourcePath - Raw path from the API.
  * @returns Normalized path.
  */
-export function normalizeDocsSourcePath(sourcePath: string): string {
+export function normalizeAssistantSourcePath(sourcePath: string): string {
   let normalized = sourcePath.replace(/\\/g, "/").trim()
   const s3Match = normalized.match(/^s3:\/\/[^/]+\/(.+)$/i)
   if (s3Match?.[1]) {
     normalized = s3Match[1]
   }
   normalized = normalized.replace(/^\/+/, "")
-  const plainPrefix = "docs/ai-rag/corpus/plain/"
+  const plainPrefix = "docs/assistant/corpus/plain/"
   if (normalized.startsWith(plainPrefix)) {
     const leaf = normalized.slice(plainPrefix.length)
     normalized = leaf
@@ -73,11 +73,11 @@ export function normalizeDocsSourcePath(sourcePath: string): string {
 /**
  * Maps a corpus source path to an in-site docs href when possible.
  *
- * @param sourcePath - Repo-relative path from the RAG corpus.
+ * @param sourcePath - Repo-relative path from the assistant corpus.
  * @returns Site-relative docs URL or null.
  */
-export function docsHrefForSource(sourcePath: string): string | null {
-  const normalized = normalizeDocsSourcePath(sourcePath)
+export function assistantHrefForSource(sourcePath: string): string | null {
+  const normalized = normalizeAssistantSourcePath(sourcePath)
   if (normalized.startsWith(DOCS_PREFIX)) {
     const rest = normalized.slice(DOCS_PREFIX.length).replace(/\.mdx?$/i, "")
     if (rest === "index" || rest.endsWith("/index")) {
@@ -100,12 +100,12 @@ export function docsHrefForSource(sourcePath: string): string | null {
  * @param source - Chat source.
  * @returns Display title.
  */
-export function docsCitationLabel(source: Pick<DocsChatSource, "title" | "sourcePath" | "section">): string {
+export function assistantCitationLabel(source: Pick<AssistantChatSource, "title" | "sourcePath" | "section">): string {
   const title = source.title?.trim()
   if (title && !/^chunk-\d+$/i.test(title)) {
     return title
   }
-  const path = normalizeDocsSourcePath(source.sourcePath)
+  const path = normalizeAssistantSourcePath(source.sourcePath)
   const base = path.split("/").pop() ?? path
   return base.replace(/\.(mdx?|ya?ml|json|txt)$/i, "")
 }
@@ -116,15 +116,15 @@ export function docsCitationLabel(source: Pick<DocsChatSource, "title" | "source
  * @param source - Chat source.
  * @returns Href or null.
  */
-export function resolveSourceHref(source: DocsChatSource): string | null {
+export function resolveSourceHref(source: AssistantChatSource): string | null {
   if (source.href) {
     return source.href
   }
-  return docsHrefForSource(source.sourcePath)
+  return assistantHrefForSource(source.sourcePath)
 }
 
 type StreamHandlers = {
-  onMeta?: (meta: { sources: DocsChatSource[], backend: string, model?: string }) => void
+  onMeta?: (meta: { sources: AssistantChatSource[], backend: string, model?: string }) => void
   onDelta?: (text: string) => void
   onDone?: () => void
 }
@@ -136,16 +136,16 @@ type StreamHandlers = {
  * @param history - Prior turns.
  * @returns Parsed chat response.
  */
-export async function askDocs(
+export async function askAssistant(
   message: string,
   history: Array<{ role: "user" | "assistant", content: string }> = [],
-): Promise<DocsChatResponse> {
+): Promise<AssistantChatClientResponse> {
   const response = await fetch(`${siteUrls.api}/v1/chat`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ message, history }),
   })
-  const json = await response.json() as DocsChatResponse & { error?: string, message?: string }
+  const json = await response.json() as AssistantChatClientResponse & { error?: string, message?: string }
   if (!response.ok || !json.ok) {
     throw new Error(json.message || json.error || `Chat failed (${response.status})`)
   }
@@ -155,18 +155,18 @@ export async function askDocs(
 /**
  * Streams an Ask Limetry answer over SSE (`POST /v1/chat/stream`).
  *
- * Falls back to non-streaming `askDocs` when the stream endpoint is unavailable.
+ * Falls back to non-streaming `askAssistant` when the stream endpoint is unavailable.
  *
  * @param message - User question.
  * @param history - Prior turns.
  * @param handlers - Stream callbacks.
  * @returns Final assembled response.
  */
-export async function askDocsStream(
+export async function askAssistantStream(
   message: string,
   history: Array<{ role: "user" | "assistant", content: string }> = [],
   handlers: StreamHandlers = {},
-): Promise<DocsChatResponse> {
+): Promise<AssistantChatClientResponse> {
   const response = await fetch(`${siteUrls.api}/v1/chat/stream`, {
     method: "POST",
     headers: {
@@ -177,12 +177,12 @@ export async function askDocsStream(
   })
 
   if (!response.ok || !response.body) {
-    return askDocs(message, history)
+    return askAssistant(message, history)
   }
 
   const contentType = response.headers.get("content-type") || ""
   if (!contentType.includes("text/event-stream")) {
-    const json = await response.json() as DocsChatResponse & { error?: string, message?: string }
+    const json = await response.json() as AssistantChatClientResponse & { error?: string, message?: string }
     if (!json.ok) {
       throw new Error(json.message || json.error || `Chat failed (${response.status})`)
     }
@@ -200,7 +200,7 @@ export async function askDocsStream(
   const decoder = new TextDecoder()
   let buffer = ""
   let answer = ""
-  let sources: DocsChatSource[] = []
+  let sources: AssistantChatSource[] = []
   let backend = "memory"
   let model: string | undefined
 
@@ -227,7 +227,7 @@ export async function askDocsStream(
       let event: {
         type?: string
         text?: string
-        sources?: DocsChatSource[]
+        sources?: AssistantChatSource[]
         backend?: string
         model?: string
         message?: string

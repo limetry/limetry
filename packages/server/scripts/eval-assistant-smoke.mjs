@@ -1,7 +1,7 @@
 /**
  * Citation + conversational-quality smoke checks against a running Limetry API.
  *
- * Usage: node scripts/eval-rag-smoke.mjs [baseUrl]
+ * Usage: node scripts/eval-assistant-smoke.mjs [baseUrl]
  */
 
 const baseUrl = (process.argv[2] || "http://127.0.0.1:3810").replace(/\/$/, "")
@@ -52,8 +52,8 @@ for (const message of questions) {
 }
 
 if (failures > 0) {
-  console.error(`eval-rag-smoke: ${failures} failure(s)`)
+  console.error(`eval-assistant-smoke: ${failures} failure(s)`)
   process.exit(1)
 }
 
-console.log("eval-rag-smoke: all questions returned clean cited answers")
+console.log("eval-assistant-smoke: all questions returned clean cited answers")

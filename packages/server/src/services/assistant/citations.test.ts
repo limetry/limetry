@@ -2,22 +2,22 @@ import { describe, expect, it } from "vitest"
 
 import {
   citationLabel,
-  docsHrefForSource,
+  assistantHrefForSource,
   enrichSources,
   normalizeSourcePath,
   snapSnippet,
 } from "./citations.js"
 
-describe("rag citations", () => {
+describe("assistant citations", () => {
   it("maps docs MDX and package READMEs to site hrefs", () => {
-    expect(docsHrefForSource("packages/web/content/docs/quick-start.mdx")).toBe("/docs/quick-start")
-    expect(docsHrefForSource("packages/mcp/README.md")).toBe("/docs/mcp")
-    expect(docsHrefForSource("SECURITY.md")).toBe("/docs/server/data-minimization")
+    expect(assistantHrefForSource("packages/web/content/docs/quick-start.mdx")).toBe("/docs/quick-start")
+    expect(assistantHrefForSource("packages/mcp/README.md")).toBe("/docs/mcp")
+    expect(assistantHrefForSource("SECURITY.md")).toBe("/docs/server/data-minimization")
   })
 
   it("normalizes S3 plain corpus paths", () => {
     expect(
-      normalizeSourcePath("s3://bucket/docs/ai-rag/corpus/plain/SECURITY.md__abc123def456.txt"),
+      normalizeSourcePath("s3://bucket/docs/assistant/corpus/plain/SECURITY.md__abc123def456.txt"),
     ).toBe("SECURITY.md")
   })
 

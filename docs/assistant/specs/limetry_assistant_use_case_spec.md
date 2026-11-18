@@ -8,7 +8,7 @@ Deploy base model (no fine-tuning)
 
 Give Limetry OSS users a conversational Q&A assistant over product documentation
 (use, deploy, architecture, security) with cited sources, while exemplifying a
-modern small-scale Amazon Bedrock RAG architecture and a portable Vercel AI SDK
+modern small-scale Amazon Bedrock knowledge-grounded assistant architecture and a portable Vercel AI SDK
 path for AWS/GCP/Azure via `packages/cloud`.
 
 ## Primary Users
@@ -18,7 +18,7 @@ path for AWS/GCP/Azure via `packages/cloud`.
 
 ## Deployment Constraints
 
-- **Task**: conversational RAG chatbot over documentation
+- **Task**: conversational product assistant (retrieval-augmented) over documentation
 - **Data type**: text (MDX, Markdown, OpenAPI)
 - **Size preference**: cost-sensitive at small / sparse QPS
 - **Deployment target**: Amazon Bedrock on AWS; portable AI SDK providers on GCP/Azure

@@ -1,5 +1,5 @@
 /**
- * Load and search the on-disk Limetry docs RAG corpus.
+ * Load and search the on-disk Limetry product assistant corpus.
  */
 
 import { existsSync, readFileSync } from "node:fs"
@@ -9,15 +9,15 @@ import { isAbsolute, join, resolve } from "node:path"
 import { sourcePriority } from "./chunk.js"
 import { enrichSources, inferProduct } from "./citations.js"
 import { cosineSimilarity, localHashEmbedding } from "./embeddings.js"
-import type { RagChunk, RagCorpusFile, RagSource } from "./types.js"
+import type { AssistantChunk, AssistantCorpusFile, AssistantSource } from "./types.js"
 
-let cached: { path: string, chunks: RagChunk[] } | null = null
+let cached: { path: string, chunks: AssistantChunk[] } | null = null
 
 /**
  * Expands `~` and resolves a corpus path.
  *
  * Tries `process.cwd()`, then walks parents so `packages/server` and Lambda
- * working directories still find `docs/ai-rag/corpus/rag-corpus.json`.
+ * working directories still find `docs/assistant/corpus/assistant-corpus.json`.
  *
  * @param value - Configured path.
  * @returns Absolute filesystem path (best candidate; may not exist yet).
@@ -51,10 +51,10 @@ export function resolveCorpusPath(value: string): string {
 /**
  * Loads corpus JSON, embedding any chunks that lack vectors with local hashes.
  *
- * @param corpusPath - Path to `rag-corpus.json`.
+ * @param corpusPath - Path to `assistant-corpus.json`.
  * @returns Chunks ready for retrieval.
  */
-export function loadCorpus(corpusPath: string): RagChunk[] {
+export function loadCorpus(corpusPath: string): AssistantChunk[] {
   const absolute = resolveCorpusPath(corpusPath)
   if (cached?.path === absolute) {
     return cached.chunks
@@ -63,7 +63,7 @@ export function loadCorpus(corpusPath: string): RagChunk[] {
     cached = { path: absolute, chunks: [] }
     return []
   }
-  const parsed = JSON.parse(readFileSync(absolute, "utf8")) as RagCorpusFile
+  const parsed = JSON.parse(readFileSync(absolute, "utf8")) as AssistantCorpusFile
   const chunks = (parsed.chunks ?? []).map((chunk) => ({
     ...chunk,
     product: chunk.product ?? inferProduct(chunk.sourcePath),
@@ -91,9 +91,9 @@ export function clearCorpusCache(): void {
  */
 export function retrieveFromChunks(
   query: string,
-  chunks: RagChunk[],
+  chunks: AssistantChunk[],
   limit = 6,
-): RagSource[] {
+): AssistantSource[] {
   if (chunks.length === 0) {
     return []
   }
@@ -114,7 +114,7 @@ export function retrieveFromChunks(
         snippet: chunk.text.slice(0, 500),
         score,
         product: chunk.product ?? inferProduct(chunk.sourcePath),
-      } satisfies RagSource
+      } satisfies AssistantSource
     })
     .sort((a, b) => b.score - a.score)
   const positive = ranked.filter((row) => row.score > 0).slice(0, limit)

@@ -1,5 +1,5 @@
 /**
- * Embedding helpers for portable RAG (local hash, OpenAI, Bedrock Titan).
+ * Embedding helpers for portable assistant retrieval (local hash, OpenAI, Bedrock Titan).
  */
 
 import { createHash } from "node:crypto"

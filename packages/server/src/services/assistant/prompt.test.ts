@@ -4,11 +4,11 @@ import {
   extractiveAnswer,
   formatContext,
   isLegacyExtractiveTemplate,
-  RAG_SYSTEM_PROMPT,
+  ASSISTANT_SYSTEM_PROMPT,
 } from "./prompt.js"
-import type { RagSource } from "./types.js"
+import type { AssistantSource } from "./types.js"
 
-const sampleSources: RagSource[] = [
+const sampleSources: AssistantSource[] = [
   {
     id: "1",
     title: "Data minimization",
@@ -19,12 +19,12 @@ const sampleSources: RagSource[] = [
   },
 ]
 
-describe("rag prompt helpers", () => {
+describe("assistant prompt helpers", () => {
   it("describes a conversational product assistant", () => {
-    expect(RAG_SYSTEM_PROMPT).toMatch(/Ask Limetry/)
-    expect(RAG_SYSTEM_PROMPT).toMatch(/summary/i)
-    expect(RAG_SYSTEM_PROMPT).toMatch(/follow-up/i)
-    expect(RAG_SYSTEM_PROMPT).not.toMatch(/documentation assistant only/i)
+    expect(ASSISTANT_SYSTEM_PROMPT).toMatch(/Ask Limetry/)
+    expect(ASSISTANT_SYSTEM_PROMPT).toMatch(/summary/i)
+    expect(ASSISTANT_SYSTEM_PROMPT).toMatch(/follow-up/i)
+    expect(ASSISTANT_SYSTEM_PROMPT).not.toMatch(/documentation assistant only/i)
   })
 
   it("never pastes raw snippets in the fallback answer", () => {

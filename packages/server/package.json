@@ -13,8 +13,8 @@
     "test": "yarn sync:openapi && vitest run",
     "test:critical-coverage": "vitest run src/services/action-evaluator.test.ts src/services/decision-receipt.test.ts src/routes/actions.test.ts --coverage",
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit",
-    "rag:ingest": "node scripts/ingest-rag-corpus.mjs",
-    "rag:eval": "node scripts/eval-rag-smoke.mjs"
+    "assistant:ingest": "node scripts/ingest-assistant-corpus.mjs",
+    "assistant:eval": "node scripts/eval-assistant-smoke.mjs"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^5.0.133",
