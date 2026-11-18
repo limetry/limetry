@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Floating Limetry docs RAG assistant (FAB + glass chat panel).
+ * Floating Limetry product assistant (FAB + glass chat panel).
  */
 
 import Link from "next/link"
@@ -12,11 +12,14 @@ import {
   useRef,
   useState,
 } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 import {
-  askDocs,
+  askDocsStream,
   type DocsChatSource,
-  docsHrefForSource,
+  docsCitationLabel,
+  resolveSourceHref,
 } from "@/lib/docs-chat"
 
 type Turn = {
@@ -94,7 +97,23 @@ function SendIcon(): React.JSX.Element {
 }
 
 /**
- * Floating docs assistant: lower-right FAB that opens a translucent chat panel.
+ * Renders assistant markdown with compact prose styles.
+ *
+ * @param props - Markdown source.
+ * @returns Rendered markdown.
+ */
+function AssistantMarkdown({ content }: { content: string }): React.JSX.Element {
+  return (
+    <div className="docs-ask-markdown prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mb-2 prose-headings:mt-3 prose-pre:my-2 prose-code:text-[0.85em]">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+}
+
+/**
+ * Floating product assistant: lower-right FAB that opens a translucent chat panel.
  *
  * @returns Chat launcher + panel portal content.
  */
@@ -155,20 +174,40 @@ export function DocsAskChat(): React.JSX.Element {
     setError(null)
     setInput("")
     const history = turns.map((turn) => ({ role: turn.role, content: turn.content }))
-    setTurns((previous) => [...previous, { role: "user", content: trimmed }])
+    setTurns((previous) => [
+      ...previous,
+      { role: "user", content: trimmed },
+      { role: "assistant", content: "", sources: [] },
+    ])
     try {
-      const result = await askDocs(trimmed, history)
-      setTurns((previous) => [
-        ...previous,
-        {
-          role: "assistant",
-          content: result.answer,
-          sources: result.sources,
+      await askDocsStream(trimmed, history, {
+        onMeta: ({ sources }) => {
+          setTurns((previous) => {
+            const next = [...previous]
+            const last = next[next.length - 1]
+            if (last?.role === "assistant") {
+              next[next.length - 1] = { ...last, sources }
+            }
+            return next
+          })
         },
-      ])
+        onDelta: (text) => {
+          setTurns((previous) => {
+            const next = [...previous]
+            const last = next[next.length - 1]
+            if (last?.role === "assistant") {
+              next[next.length - 1] = {
+                ...last,
+                content: `${last.content}${text}`,
+              }
+            }
+            return next
+          })
+        },
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chat failed")
-      setTurns((previous) => previous.slice(0, -1))
+      setTurns((previous) => previous.slice(0, -2))
       setInput(trimmed)
     } finally {
       setBusy(false)
@@ -183,7 +222,7 @@ export function DocsAskChat(): React.JSX.Element {
             id={panelId}
             role="dialog"
             aria-modal="false"
-            aria-label="Ask Limetry docs"
+            aria-label="Ask Limetry"
             className="docs-ask-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10 dark:shadow-black/40"
           >
             <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
@@ -192,7 +231,7 @@ export function DocsAskChat(): React.JSX.Element {
                   Ask Limetry
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  Docs assistant · cited answers
+                  Product guide · grounded answers
                 </p>
               </div>
               <button
@@ -212,7 +251,7 @@ export function DocsAskChat(): React.JSX.Element {
               {turns.length === 0 ? (
                 <div className="space-y-3 px-1 py-2">
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    Ask how to use, deploy, or understand Limetry. Answers stay grounded in the docs.
+                    Ask how to use, deploy, or understand Limetry and Limetry Cloud. I answer conversationally and cite the docs.
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {STARTERS.map((prompt) => (
@@ -236,16 +275,25 @@ export function DocsAskChat(): React.JSX.Element {
                   className={`flex ${turn.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${turn.role === "user"
-                      ? "rounded-br-md bg-primary text-primary-foreground"
+                    className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${turn.role === "user"
+                      ? "whitespace-pre-wrap rounded-br-md bg-primary text-primary-foreground"
                       : "rounded-bl-md border border-border bg-muted text-foreground"
                     }`}
                   >
-                    {turn.content}
+                    {turn.role === "assistant" ? (
+                      turn.content
+                        ? <AssistantMarkdown content={turn.content} />
+                        : (
+                          <span className="text-xs text-muted-foreground">
+                              Thinking…
+                          </span>
+                        )
+                    ) : turn.content}
                     {turn.sources && turn.sources.length > 0 ? (
                       <ul className="mt-2 space-y-1 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
                         {turn.sources.slice(0, 4).map((source) => {
-                          const href = docsHrefForSource(source.sourcePath)
+                          const href = resolveSourceHref(source)
+                          const label = docsCitationLabel(source)
                           return (
                             <li key={source.id} className="truncate">
                               {href ? (
@@ -254,10 +302,10 @@ export function DocsAskChat(): React.JSX.Element {
                                   className="text-primary underline-offset-2 hover:underline"
                                   onClick={close}
                                 >
-                                  {source.sourcePath}
+                                  {label}
                                 </Link>
                               ) : (
-                                <span>{source.sourcePath}</span>
+                                <span>{label}</span>
                               )}
                               {source.section ? ` · ${source.section}` : ""}
                             </li>
@@ -269,10 +317,10 @@ export function DocsAskChat(): React.JSX.Element {
                 </div>
               ))}
 
-              {busy ? (
+              {busy && turns[turns.length - 1]?.role !== "assistant" ? (
                 <div className="flex justify-start">
                   <div className="rounded-2xl rounded-bl-md border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
-                    Searching docs…
+                    Thinking…
                   </div>
                 </div>
               ) : null}
@@ -296,7 +344,7 @@ export function DocsAskChat(): React.JSX.Element {
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="Ask about Limetry…"
                   disabled={busy}
-                  aria-label="Ask Limetry docs"
+                  aria-label="Ask Limetry"
                 />
                 <button
                   type="submit"
@@ -316,7 +364,7 @@ export function DocsAskChat(): React.JSX.Element {
           onClick={toggle}
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
-          aria-label={open ? "Close Ask Limetry" : "Ask Limetry docs"}
+          aria-label={open ? "Close Ask Limetry" : "Ask Limetry"}
           className="docs-ask-fab inline-flex size-12 items-center justify-center rounded-full hover:scale-[1.03] active:scale-[0.98]"
         >
           {open ? <CloseIcon /> : <ChatIcon />}
