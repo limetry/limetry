@@ -34,6 +34,12 @@ export const assistantEnvSchema = z.object({
   LIMETRY_BEDROCK_REGION: z.preprocess(emptyStringToUndefined, z.string().optional()),
   OPENAI_API_KEY: z.preprocess(emptyStringToUndefined, z.string().optional()),
   ANTHROPIC_API_KEY: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  /**
+   * Optional Bedrock API key (bearer). Local/dev alternative to IAM access keys.
+   * Recognized by AWS SDKs as `AWS_BEARER_TOKEN_BEDROCK` — not used in Lambda
+   * (execution role instead).
+   */
+  AWS_BEARER_TOKEN_BEDROCK: z.preprocess(emptyStringToUndefined, z.string().optional()),
   AWS_ACCESS_KEY_ID: z.preprocess(emptyStringToUndefined, z.string().optional()),
   AWS_PROFILE: z.preprocess(emptyStringToUndefined, z.string().optional()),
   AWS_REGION: z.preprocess(emptyStringToUndefined, z.string().optional()),
@@ -59,14 +65,19 @@ export function loadAssistantEnv(
 }
 
 /**
- * True when the process can use the default AWS credential chain for Bedrock.
+ * True when Bedrock auth is available (IAM chain, Lambda role, or Bedrock API key).
+ *
+ * Deployed Lambda should rely on the execution role only — do not set
+ * `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` in Pulumi. Locally prefer
+ * `AWS_PROFILE`, or `AWS_BEARER_TOKEN_BEDROCK` as a Bedrock-only substitute.
  *
  * @param env - Assistant env.
  * @returns Whether Bedrock calls are likely to authenticate.
  */
 export function hasAwsCredentials(env: AssistantEnv): boolean {
   return Boolean(
-    env.AWS_ACCESS_KEY_ID
+    env.AWS_BEARER_TOKEN_BEDROCK
+    || env.AWS_ACCESS_KEY_ID
     || env.AWS_PROFILE
     || env.AWS_EXECUTION_ENV
     || env.AWS_LAMBDA_FUNCTION_NAME
