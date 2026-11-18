@@ -29,9 +29,42 @@ describe("docs RAG chat route", () => {
     expect(response.body.ok).toBe(true)
     expect(response.body.backend).toBe("memory")
     expect(response.body.answer).toBeTruthy()
+    expect(response.body.answer).not.toMatch(/Based on Limetry docs related to/)
+    expect(response.body.answer).not.toMatch(/## Tools \|/)
     expect(Array.isArray(response.body.sources)).toBe(true)
     expect(response.body.sources.length).toBeGreaterThan(0)
     expect(response.body.sources[0].sourcePath).toBeTruthy()
+    expect(response.body.sources[0].href).toBeTruthy()
+    expect(response.body.sources[0].title).toBeTruthy()
+  })
+
+  it("streams SSE meta, delta, and done events", async () => {
+    clearCorpusCache()
+    const env = testServerEnv({
+      LIMETRY_RAG_BACKEND: "memory",
+      LIMETRY_RAG_CORPUS_PATH: corpusPath,
+      LIMETRY_RAG_CHAT_PUBLIC: true,
+    })
+    const app = createApp({ env })
+    const response = await request(app)
+      .post("/v1/chat/stream")
+      .send({ message: "What is data minimization?" })
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = []
+        res.on("data", (chunk) => chunks.push(Buffer.from(chunk)))
+        res.on("end", () => {
+          callback(null, Buffer.concat(chunks).toString("utf8"))
+        })
+      })
+
+    expect(response.status).toBe(200)
+    expect(String(response.headers["content-type"])).toMatch(/text\/event-stream/)
+    const body = String(response.body)
+    expect(body).toContain("\"type\":\"meta\"")
+    expect(body).toContain("\"type\":\"delta\"")
+    expect(body).toContain("\"type\":\"done\"")
+    expect(body).not.toMatch(/Based on Limetry docs related to/)
   })
 
   it("rejects empty messages", async () => {
