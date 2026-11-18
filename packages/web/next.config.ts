@@ -106,6 +106,22 @@ const config: NextConfig = {
             : []),
         ]
       },
+      async rewrites() {
+        const assistantOrigin = (
+          process.env.LIMETRY_ASSISTANT_ORIGIN
+          || `http://127.0.0.1:${process.env.ASSISTANT_PORT || "3815"}`
+        ).replace(/\/$/, "")
+        return [
+          {
+            source: "/api/chat",
+            destination: `${assistantOrigin}/api/chat`,
+          },
+          {
+            source: "/api/chat/stream",
+            destination: `${assistantOrigin}/api/chat/stream`,
+          },
+        ]
+      },
     }),
 }
 

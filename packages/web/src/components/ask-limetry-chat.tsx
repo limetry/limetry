@@ -204,11 +204,24 @@ export function AskLimetryChat(): React.JSX.Element {
             return next
           })
         },
+        onError: (message) => {
+          setError(message)
+        },
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chat failed")
-      setTurns((previous) => previous.slice(0, -2))
-      setInput(trimmed)
+      let rolledBack = false
+      setTurns((previous) => {
+        const last = previous[previous.length - 1]
+        if (last?.role === "assistant" && last.content.trim().length > 0) {
+          return previous
+        }
+        rolledBack = true
+        return previous.slice(0, -2)
+      })
+      if (rolledBack) {
+        setInput(trimmed)
+      }
     } finally {
       setBusy(false)
     }

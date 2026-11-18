@@ -110,7 +110,7 @@ describe("Ask Limetry e2e (mocked stream)", () => {
   it("forwards non-streaming fallback through stream callbacks", async () => {
     globalThis.fetch = (async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes("/v1/chat/stream")) {
+      if (url.includes("/api/chat/stream")) {
         return new Response("Not Found", { status: 404 })
       }
       return Response.json({
