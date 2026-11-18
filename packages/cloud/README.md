@@ -183,7 +183,7 @@ Env vars are injected via `buildServerEnvironment`. Configure as needed:
 pulumi config set assistantBackend pgvector   # or memory | bedrock-kb
 pulumi config set assistantPublic true
 pulumi config set bedrockKbId YOUR_KB_ID
-pulumi config set bedrockModelId anthropic.claude-3-5-sonnet-20241022-v2:0
+pulumi config set bedrockModelId us.anthropic.claude-sonnet-4-5-20250929-v1:0
 pulumi config set bedrockEmbedModelId amazon.titan-embed-text-v2:0
 pulumi config set bedrockGuardrailId YOUR_GUARDRAIL_ID
 pulumi config set bedrockRegion us-east-1

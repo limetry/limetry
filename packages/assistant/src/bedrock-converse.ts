@@ -76,7 +76,8 @@ export async function generateWithBedrockConverse(
   if (!canUseBedrockConverse(env)) {
     return null
   }
-  const modelId = env.LIMETRY_BEDROCK_MODEL_ID || "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  const modelId = env.LIMETRY_BEDROCK_MODEL_ID
+    || "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
   try {
     const { BedrockRuntimeClient, ConverseCommand } = await import(
       "@aws-sdk/client-bedrock-runtime"
@@ -119,7 +120,8 @@ export async function streamWithBedrockConverse(
   if (!canUseBedrockConverse(env)) {
     return null
   }
-  const modelId = env.LIMETRY_BEDROCK_MODEL_ID || "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  const modelId = env.LIMETRY_BEDROCK_MODEL_ID
+    || "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
   try {
     const { BedrockRuntimeClient, ConverseStreamCommand } = await import(
       "@aws-sdk/client-bedrock-runtime"

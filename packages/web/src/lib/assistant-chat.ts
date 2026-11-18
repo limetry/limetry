@@ -158,6 +158,33 @@ const CHAT_PATH = "/api/chat"
 const CHAT_STREAM_PATH = "/api/chat/stream"
 
 /**
+ * Parses a chat JSON body, or throws a readable error for HTML/proxy failures.
+ *
+ * @param response - Fetch response.
+ * @returns Parsed payload.
+ */
+async function readChatJson(
+  response: Response,
+): Promise<AssistantChatClientResponse & { error?: string, message?: string }> {
+  const contentType = response.headers.get("content-type") || ""
+  const raw = await response.text()
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      response.ok
+        ? "Ask Limetry returned a non-JSON response. Is `yarn dev:assistant` running on :3815?"
+        : `Ask Limetry unavailable (${response.status}). Start \`yarn dev:assistant\` (rewrites /api/chat* → :3815).`,
+    )
+  }
+  try {
+    return JSON.parse(raw) as AssistantChatClientResponse & { error?: string, message?: string }
+  } catch {
+    throw new Error(
+      `Ask Limetry returned invalid JSON (${response.status}). Is \`yarn dev:assistant\` running on :3815?`,
+    )
+  }
+}
+
+/**
  * Calls Ask Limetry (non-streaming).
  *
  * @param message - User question.
@@ -173,7 +200,7 @@ export async function askAssistant(
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ message, history }),
   })
-  const json = await response.json() as AssistantChatClientResponse & { error?: string, message?: string }
+  const json = await readChatJson(response)
   if (!response.ok || !json.ok) {
     throw new Error(json.message || json.error || `Chat failed (${response.status})`)
   }
@@ -206,20 +233,27 @@ export async function askAssistantStream(
   })
 
   if (!response.ok || !response.body) {
-    const fallback = await askAssistant(message, history)
-    handlers.onMeta?.({
-      sources: fallback.sources,
-      backend: fallback.backend,
-      model: fallback.model,
-    })
-    handlers.onDelta?.(fallback.answer)
-    handlers.onDone?.()
-    return fallback
+    try {
+      const fallback = await askAssistant(message, history)
+      handlers.onMeta?.({
+        sources: fallback.sources,
+        backend: fallback.backend,
+        model: fallback.model,
+      })
+      handlers.onDelta?.(fallback.answer)
+      handlers.onDone?.()
+      return fallback
+    } catch (error) {
+      const messageText = error instanceof Error
+        ? error.message
+        : `Ask Limetry unavailable (${response.status})`
+      throw new Error(messageText)
+    }
   }
 
   const contentType = response.headers.get("content-type") || ""
   if (!contentType.includes("text/event-stream")) {
-    const json = await response.json() as AssistantChatClientResponse & { error?: string, message?: string }
+    const json = await readChatJson(response)
     if (!json.ok) {
       throw new Error(json.message || json.error || `Chat failed (${response.status})`)
     }
