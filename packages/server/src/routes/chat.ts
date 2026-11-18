@@ -1,5 +1,5 @@
 /**
- * Docs RAG chat HTTP route (`POST /v1/chat`).
+ * Docs RAG chat HTTP routes (`POST /v1/chat`, `POST /v1/chat/stream`).
  */
 
 import type { Express, NextFunction, Request, Response } from "express"
@@ -11,7 +11,7 @@ import {
   createBearerAuthMiddleware,
   requireScopes,
 } from "../middleware/bearer-auth.js"
-import { runRagChat } from "../services/rag/chat.js"
+import { prepareRagChatStream, runRagChat } from "../services/rag/chat.js"
 import type { UserService } from "../services/user-service.js"
 
 const chatBodySchema = z.object({
@@ -111,7 +111,17 @@ function applyChatCors(
 }
 
 /**
- * Registers the Limetry docs assistant chat endpoint.
+ * Writes one SSE data event.
+ *
+ * @param response - Express response.
+ * @param payload - JSON-serializable event body.
+ */
+function writeSse(response: Response, payload: unknown): void {
+  response.write(`data: ${JSON.stringify(payload)}\n\n`)
+}
+
+/**
+ * Registers the Limetry docs assistant chat endpoints.
  *
  * @param app - Express app.
  * @param env - Validated server env.
@@ -122,6 +132,25 @@ export function createChatRoutes(
   env: ServerEnv,
   userService: UserService,
 ): void {
+  const corsGate = (
+    request: Request,
+    response: Response,
+    next: NextFunction,
+  ): void => {
+    if (!applyChatCors(request, response, env)) {
+      response.status(403).json({ error: "cors_origin_denied" })
+      return
+    }
+    next()
+  }
+
+  const authHandlers = env.LIMETRY_RAG_CHAT_PUBLIC
+    ? []
+    : [
+      createBearerAuthMiddleware(env, userService),
+      requireScopes("chat:read"),
+    ]
+
   app.options("/v1/chat", (request, response) => {
     if (!applyChatCors(request, response, env)) {
       response.status(403).end()
@@ -130,20 +159,18 @@ export function createChatRoutes(
     response.status(204).end()
   })
 
-  const handlers = [
-    (request: Request, response: Response, next: NextFunction): void => {
-      if (!applyChatCors(request, response, env)) {
-        response.status(403).json({ error: "cors_origin_denied" })
-        return
-      }
-      next()
-    },
-    ...(env.LIMETRY_RAG_CHAT_PUBLIC
-      ? []
-      : [
-        createBearerAuthMiddleware(env, userService),
-        requireScopes("chat:read"),
-      ]),
+  app.options("/v1/chat/stream", (request, response) => {
+    if (!applyChatCors(request, response, env)) {
+      response.status(403).end()
+      return
+    }
+    response.status(204).end()
+  })
+
+  app.post(
+    "/v1/chat",
+    corsGate,
+    ...authHandlers,
     async (request: Request, response: Response): Promise<void> => {
       const parsed = chatBodySchema.safeParse(request.body)
       if (!parsed.success) {
@@ -161,7 +188,57 @@ export function createChatRoutes(
         response.status(500).json({ error: "chat_failed", message })
       }
     },
-  ]
+  )
 
-  app.post("/v1/chat", ...handlers)
+  app.post(
+    "/v1/chat/stream",
+    corsGate,
+    ...authHandlers,
+    async (request: Request, response: Response): Promise<void> => {
+      const parsed = chatBodySchema.safeParse(request.body)
+      if (!parsed.success) {
+        response.status(400).json({
+          error: "invalid_chat_request",
+          details: parsed.error.issues,
+        })
+        return
+      }
+      try {
+        const prepared = await prepareRagChatStream(env, parsed.data)
+        response.status(200)
+        response.setHeader("Content-Type", "text/event-stream; charset=utf-8")
+        response.setHeader("Cache-Control", "no-cache, no-transform")
+        response.setHeader("Connection", "keep-alive")
+        response.flushHeaders?.()
+
+        writeSse(response, {
+          type: "meta",
+          sources: prepared.sources,
+          backend: prepared.backend,
+          model: prepared.model,
+        })
+
+        if (prepared.textStream) {
+          for await (const delta of prepared.textStream) {
+            if (delta) {
+              writeSse(response, { type: "delta", text: delta })
+            }
+          }
+        } else if (prepared.fallbackAnswer) {
+          writeSse(response, { type: "delta", text: prepared.fallbackAnswer })
+        }
+
+        writeSse(response, { type: "done" })
+        response.end()
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "chat_failed"
+        if (response.headersSent) {
+          writeSse(response, { type: "error", message })
+          response.end()
+          return
+        }
+        response.status(500).json({ error: "chat_failed", message })
+      }
+    },
+  )
 }

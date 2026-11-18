@@ -91,6 +91,10 @@ const envSchema = z.object({
    */
   LIMETRY_RAG_CORPUS_PATH: z.string().min(1).default("docs/ai-rag/corpus/rag-corpus.json"),
   /**
+   * Extra ingest roots (comma-separated) for Limetry Cloud / enterprise docs.
+   */
+  LIMETRY_RAG_EXTRA_ROOTS: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  /**
    * When true, `POST /v1/chat` does not require bearer auth (still rate-friendly).
    */
   LIMETRY_RAG_CHAT_PUBLIC: z

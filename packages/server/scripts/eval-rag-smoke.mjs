@@ -1,5 +1,5 @@
 /**
- * Citation smoke checks against a running Limetry API (`POST /v1/chat`).
+ * Citation + conversational-quality smoke checks against a running Limetry API.
  *
  * Usage: node scripts/eval-rag-smoke.mjs [baseUrl]
  */
@@ -14,6 +14,13 @@ const questions = [
   "How does policy evaluate work over HTTP?",
 ]
 
+const banned = [
+  /Based on Limetry docs related to/i,
+  /## Tools\s*\|/,
+  /\[!NOTE\]/,
+  /\bchunk-\d+\b/i,
+]
+
 let failures = 0
 
 for (const message of questions) {
@@ -24,11 +31,18 @@ for (const message of questions) {
   })
   const body = await response.json().catch(() => ({}))
   const sources = Array.isArray(body.sources) ? body.sources : []
-  const ok = response.ok && body.ok && Boolean(body.answer) && sources.length > 0
+  const answer = typeof body.answer === "string" ? body.answer : ""
+  const leak = banned.find((pattern) => pattern.test(answer))
+  const ok = response.ok
+    && body.ok
+    && Boolean(answer)
+    && sources.length > 0
+    && !leak
   console.log(
     ok ? "PASS" : "FAIL",
     response.status,
     sources.length,
+    leak ? `leak=${leak}` : "clean",
     message.slice(0, 48),
   )
   if (!ok) {
@@ -42,4 +56,4 @@ if (failures > 0) {
   process.exit(1)
 }
 
-console.log("eval-rag-smoke: all questions returned citations")
+console.log("eval-rag-smoke: all questions returned clean cited answers")

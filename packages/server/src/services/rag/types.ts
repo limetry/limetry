@@ -2,6 +2,9 @@
  * Shared types for Limetry docs RAG (memory / pgvector / Bedrock KB).
  */
 
+/** Product stack a corpus source belongs to. */
+export type RagProduct = "oss" | "cloud"
+
 /** One retrieved evidence span with citation metadata. */
 export type RagSource = {
   id: string
@@ -10,6 +13,8 @@ export type RagSource = {
   section?: string
   snippet: string
   score: number
+  product?: RagProduct
+  href?: string
 }
 
 /** Chunk stored in the corpus index. */
@@ -20,6 +25,8 @@ export type RagChunk = {
   section?: string
   text: string
   embedding?: number[]
+  product?: RagProduct
+  priority?: number
 }
 
 /** On-disk corpus file shape produced by the ingest script. */
