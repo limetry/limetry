@@ -173,15 +173,15 @@ Useful settings include:
 - `apiPathPrefix`: path prefix when the API is behind another proxy.
 - `minInstances` and `maxInstances`: Cloud Run or Container Apps scaling.
 - `memoryMb` and `timeoutSeconds`: serverless compute sizing
-  (AWS defaults to 60s for docs RAG headroom).
+  (AWS defaults to 60s for product assistant headroom).
 
-### Docs RAG (optional)
+### Product assistant (optional)
 
 Env vars are injected via `buildServerEnvironment`. Configure as needed:
 
 ```sh
-pulumi config set ragBackend pgvector   # or memory | bedrock-kb
-pulumi config set ragChatPublic true
+pulumi config set assistantBackend pgvector   # or memory | bedrock-kb
+pulumi config set assistantPublic true
 pulumi config set bedrockKbId YOUR_KB_ID
 pulumi config set bedrockModelId anthropic.claude-3-5-sonnet-20241022-v2:0
 pulumi config set bedrockEmbedModelId amazon.titan-embed-text-v2:0
@@ -191,7 +191,7 @@ pulumi config set --secret openaiApiKey sk-...
 pulumi config set --secret anthropicApiKey sk-ant-...
 ```
 
-See `docs/ai-rag/README.md` for corpus ingest and eval notes.
+See `docs/assistant/README.md` for corpus ingest and eval notes.
 
 ## Custom API domains and DNS
 

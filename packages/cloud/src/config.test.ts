@@ -93,11 +93,11 @@ describe("serverless configuration", () => {
     expect(buildServerEnvironment(sqliteConfig, secrets)).toMatchObject({
       SQLITE_DATABASE_PATH: "/tmp/limetry.sqlite",
       USE_POSTGRES_STORE: "false",
-      LIMETRY_RAG_BACKEND: "memory",
+      LIMETRY_ASSISTANT_BACKEND: "memory",
     })
     expect(buildServerEnvironment(managedConfig, secrets)).toMatchObject({
       USE_POSTGRES_STORE: "true",
-      LIMETRY_RAG_BACKEND: "pgvector",
+      LIMETRY_ASSISTANT_BACKEND: "pgvector",
     })
     expect(buildServerEnvironment(managedConfig, secrets, {
       backend: "bedrock-kb",

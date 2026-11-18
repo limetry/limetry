@@ -1,7 +1,8 @@
 /**
- * Optional Postgres pgvector retrieval for portable multi-cloud RAG.
+ * Optional Postgres pgvector retrieval for the Ask Limetry assistant.
  *
- * Falls back gracefully when the extension or table is missing.
+ * Uses RAG-style vector search over ingested chunks; falls back gracefully when
+ * the extension or table is missing.
  */
 
 import { Pool } from "pg"
@@ -12,7 +13,7 @@ import {
   localHashEmbedding,
   openAiEmbedding,
 } from "./embeddings.js"
-import type { RagChunk, RagSource } from "./types.js"
+import type { AssistantChunk, AssistantSource } from "./types.js"
 
 /**
  * Embeds a query with the best available provider.
@@ -33,14 +34,14 @@ async function embedQuery(env: ServerEnv, text: string): Promise<number[]> {
 }
 
 /**
- * Ensures pgvector extension + rag_chunks table exist.
+ * Ensures pgvector extension + limetry_assistant_chunks table exist.
  *
  * @param pool - Postgres pool.
  */
-export async function ensureRagSchema(pool: Pool): Promise<void> {
+export async function ensureAssistantSchema(pool: Pool): Promise<void> {
   await pool.query("CREATE EXTENSION IF NOT EXISTS vector")
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS limetry_rag_chunks (
+    CREATE TABLE IF NOT EXISTS limetry_assistant_chunks (
       id text PRIMARY KEY,
       title text NOT NULL,
       source_path text NOT NULL,
@@ -57,13 +58,13 @@ export async function ensureRagSchema(pool: Pool): Promise<void> {
  * @param pool - Postgres pool.
  * @param chunks - Corpus chunks.
  */
-export async function upsertRagChunks(pool: Pool, chunks: RagChunk[]): Promise<void> {
-  await ensureRagSchema(pool)
+export async function upsertAssistantChunks(pool: Pool, chunks: AssistantChunk[]): Promise<void> {
+  await ensureAssistantSchema(pool)
   for (const chunk of chunks) {
     const embedding = chunk.embedding ?? localHashEmbedding(chunk.text)
     const literal = `[${embedding.join(",")}]`
     await pool.query(
-      `INSERT INTO limetry_rag_chunks (id, title, source_path, section, body, embedding)
+      `INSERT INTO limetry_assistant_chunks (id, title, source_path, section, body, embedding)
        VALUES ($1, $2, $3, $4, $5, $6::vector)
        ON CONFLICT (id) DO UPDATE SET
          title = EXCLUDED.title,
@@ -86,17 +87,17 @@ export async function upsertRagChunks(pool: Pool, chunks: RagChunk[]): Promise<v
 export async function retrievePgvector(
   env: ServerEnv,
   query: string,
-): Promise<RagSource[]> {
+): Promise<AssistantSource[]> {
   const pool = new Pool({ connectionString: env.DATABASE_URL })
   try {
-    await ensureRagSchema(pool)
+    await ensureAssistantSchema(pool)
     const embedding = await embedQuery(env, query)
     // Local hash embeddings are 256-d; OpenAI/Bedrock dims differ — when dims
     // mismatch, fall back to a sequential scan using stored vectors only if
     // dimensions match; otherwise return empty and let caller use memory.
     const dimCheck = await pool.query<{ dim: number }>(
       `SELECT COALESCE(vector_dims(embedding), 0)::int AS dim
-       FROM limetry_rag_chunks
+       FROM limetry_assistant_chunks
        LIMIT 1`,
     )
     const storedDim = dimCheck.rows[0]?.dim ?? 0
@@ -114,7 +115,7 @@ export async function retrievePgvector(
     }>(
       `SELECT id, title, source_path, section, body,
               1 - (embedding <=> $1::vector) AS score
-       FROM limetry_rag_chunks
+       FROM limetry_assistant_chunks
        ORDER BY embedding <=> $1::vector
        LIMIT 6`,
       [literal],

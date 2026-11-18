@@ -1,11 +1,11 @@
-# Docs RAG evaluation smoke set
+# Product assistant evaluation smoke set
 
 Run against a live server with a built corpus:
 
 ```bash
-yarn workspace @limetry/server rag:ingest
+yarn workspace @limetry/server assistant:ingest
 # start API, then:
-yarn workspace @limetry/server rag:eval
+yarn workspace @limetry/server assistant:eval
 # or:
 curl -s http://localhost:3810/v1/chat -H 'content-type: application/json' \
   -d '{"message":"How do I self-host Limetry?"}' | jq .
@@ -26,6 +26,6 @@ With Bedrock/OpenAI/Anthropic configured: answer synthesizes sources and still r
 
 ## Cost notes (small scale)
 
-- Prefer `LIMETRY_RAG_BACKEND=memory` or `pgvector` for OSS default.
+- Prefer `LIMETRY_ASSISTANT_BACKEND=memory` or `pgvector` for OSS default.
 - AWS showcase: Bedrock Knowledge Bases + **S3 Vectors** (~pennies storage/request at low QPS).
 - Avoid classic OpenSearch Serverless quick-create idle floors (~$175–350/mo).

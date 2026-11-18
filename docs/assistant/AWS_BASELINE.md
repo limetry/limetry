@@ -1,4 +1,4 @@
-# AWS baseline for Limetry docs RAG
+# AWS baseline for Limetry product assistant
 
 Best-effort Bedrock guidance (outside SageMaker skill validated workflows).
 
@@ -16,7 +16,7 @@ Do **not** rely on Titan Text Express + LangChain `RetrievalQA` for production.
 
 ## S3 corpus bucket
 
-1. Create a private bucket (e.g. `limetry-docs-rag-<account>`).
+1. Create a private bucket (e.g. `limetry-docs-assistant-<account>`).
 2. Upload ingest output under `corpus/` (markdown/text chunks or synced MDX export).
 3. Grant the Knowledge Base service role `s3:GetObject` / `ListBucket` on that prefix.
 
@@ -54,15 +54,15 @@ Avoid `bedrock:*`.
 
 | Variable | Purpose |
 |----------|---------|
-| `LIMETRY_RAG_BACKEND` | `memory` (default) \| `pgvector` \| `bedrock-kb` |
-| `LIMETRY_RAG_CORPUS_PATH` | Path to ingest JSON (memory backend) |
+| `LIMETRY_ASSISTANT_BACKEND` | `memory` (default) \| `pgvector` \| `bedrock-kb` |
+| `LIMETRY_ASSISTANT_CORPUS_PATH` | Path to ingest JSON (memory backend) |
 | `LIMETRY_BEDROCK_KB_ID` | Knowledge Base id |
 | `LIMETRY_BEDROCK_MODEL_ID` | Claude model id for Converse / RetrieveAndGenerate |
 | `LIMETRY_BEDROCK_EMBED_MODEL_ID` | Titan Embed model id |
 | `LIMETRY_BEDROCK_GUARDRAIL_ID` | Optional Guardrail id |
 | `LIMETRY_BEDROCK_REGION` | Overrides `AWS_REGION` for Bedrock clients |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Portable AI SDK providers (non-AWS clouds) |
-| `LIMETRY_RAG_CHAT_PUBLIC` | `true` to allow unauthenticated chat (rate-limited) |
+| `LIMETRY_ASSISTANT_PUBLIC` | `true` to allow unauthenticated chat (rate-limited) |
 
 ## Cost expectation (small scale)
 

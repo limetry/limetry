@@ -1,5 +1,5 @@
 /**
- * Docs RAG chat HTTP routes (`POST /v1/chat`, `POST /v1/chat/stream`).
+ * Product assistant chat HTTP routes (`POST /v1/chat`, `POST /v1/chat/stream`).
  */
 
 import type { Express, NextFunction, Request, Response } from "express"
@@ -11,7 +11,7 @@ import {
   createBearerAuthMiddleware,
   requireScopes,
 } from "../middleware/bearer-auth.js"
-import { prepareRagChatStream, runRagChat } from "../services/rag/chat.js"
+import { prepareAssistantChatStream, runAssistantChat } from "../services/assistant/chat.js"
 import type { UserService } from "../services/user-service.js"
 
 const chatBodySchema = z.object({
@@ -64,7 +64,7 @@ function chatCorsOrigins(_env: ServerEnv): string[] {
     "http://localhost:3800",
     "http://127.0.0.1:3800",
   ])
-  const extra = process.env.LIMETRY_RAG_CORS_ORIGINS
+  const extra = process.env.LIMETRY_ASSISTANT_CORS_ORIGINS
   if (extra) {
     for (const origin of extra.split(",")) {
       const trimmed = origin.trim().replace(/\/$/, "")
@@ -144,7 +144,7 @@ export function createChatRoutes(
     next()
   }
 
-  const authHandlers = env.LIMETRY_RAG_CHAT_PUBLIC
+  const authHandlers = env.LIMETRY_ASSISTANT_PUBLIC
     ? []
     : [
       createBearerAuthMiddleware(env, userService),
@@ -181,7 +181,7 @@ export function createChatRoutes(
         return
       }
       try {
-        const result = await runRagChat(env, parsed.data)
+        const result = await runAssistantChat(env, parsed.data)
         response.status(200).json({ ok: true, ...result })
       } catch (error) {
         const message = error instanceof Error ? error.message : "chat_failed"
@@ -204,7 +204,7 @@ export function createChatRoutes(
         return
       }
       try {
-        const prepared = await prepareRagChatStream(env, parsed.data)
+        const prepared = await prepareAssistantChatStream(env, parsed.data)
         response.status(200)
         response.setHeader("Content-Type", "text/event-stream; charset=utf-8")
         response.setHeader("Cache-Control", "no-cache, no-transform")

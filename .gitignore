@@ -18,9 +18,9 @@ packages/infra/bin
 packages/wasm/pkg
 docs/api
 
-# Generated docs RAG corpus (rebuild with: yarn workspace @limetry/server rag:ingest)
-docs/ai-rag/corpus/rag-corpus.json
-docs/ai-rag/corpus/plain/
+# Generated assistant corpus (rebuild with: yarn workspace @limetry/server assistant:ingest)
+docs/assistant/corpus/assistant-corpus.json
+docs/assistant/corpus/plain/
 
 .DS_Store
 .env*

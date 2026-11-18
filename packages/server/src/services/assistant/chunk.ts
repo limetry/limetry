@@ -1,5 +1,5 @@
 /**
- * Text normalization and chunking for docs RAG ingest.
+ * Text normalization and chunking for assistant corpus ingest.
  */
 
 /**

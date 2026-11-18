@@ -8,19 +8,19 @@ import assert from "node:assert/strict"
 import { after, before, describe, it, mock } from "node:test"
 
 import {
-  askDocsStream,
-  type DocsChatSource,
-  docsCitationLabel,
-  docsHrefForSource,
+  askAssistantStream,
+  type AssistantChatSource,
+  assistantCitationLabel,
+  assistantHrefForSource,
   resolveSourceHref,
-} from "../src/lib/docs-chat.ts"
+} from "../src/lib/assistant-chat.ts"
 
 function sseBody(events: unknown[]): string {
   return events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join("")
 }
 
 describe("Ask Limetry e2e (mocked stream)", () => {
-  const sources: DocsChatSource[] = [
+  const sources: AssistantChatSource[] = [
     {
       id: "sec-1",
       title: "Data minimization",
@@ -70,9 +70,9 @@ describe("Ask Limetry e2e (mocked stream)", () => {
 
   it("streams a conversational answer and working citation hrefs", async () => {
     const deltas: string[] = []
-    let metaSources: DocsChatSource[] = []
+    let metaSources: AssistantChatSource[] = []
 
-    const result = await askDocsStream(
+    const result = await askAssistantStream(
       "What is data minimization?",
       [],
       {
@@ -96,10 +96,10 @@ describe("Ask Limetry e2e (mocked stream)", () => {
 
     const source = result.sources[0]
     assert.ok(source)
-    assert.equal(docsCitationLabel(source), "Data minimization")
+    assert.equal(assistantCitationLabel(source), "Data minimization")
     assert.equal(resolveSourceHref(source), "/docs/server/data-minimization")
-    assert.equal(docsHrefForSource(source.sourcePath), "/docs/server/data-minimization")
-    assert.doesNotMatch(docsCitationLabel(source), /chunk-/i)
+    assert.equal(assistantHrefForSource(source.sourcePath), "/docs/server/data-minimization")
+    assert.doesNotMatch(assistantCitationLabel(source), /chunk-/i)
   })
 
   it("keeps FAB deep-link query contract for opening Ask Limetry", () => {
@@ -123,10 +123,10 @@ describe("Ask Limetry e2e (mocked stream)", () => {
     }) as typeof fetch
 
     const deltas: string[] = []
-    let metaSources: DocsChatSource[] = []
+    let metaSources: AssistantChatSource[] = []
     let done = false
 
-    const result = await askDocsStream(
+    const result = await askAssistantStream(
       "What is data minimization?",
       [],
       {

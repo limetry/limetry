@@ -2,32 +2,32 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 
 import {
-  docsCitationLabel,
-  docsHrefForSource,
-  normalizeDocsSourcePath,
+  assistantCitationLabel,
+  assistantHrefForSource,
+  normalizeAssistantSourcePath,
   resolveSourceHref,
-} from "./docs-chat.ts"
+} from "./assistant-chat.ts"
 
-describe("docsHrefForSource", () => {
+describe("assistantHrefForSource", () => {
   it("maps content docs paths to /docs routes", () => {
     assert.equal(
-      docsHrefForSource("packages/web/content/docs/quick-start.mdx"),
+      assistantHrefForSource("packages/web/content/docs/quick-start.mdx"),
       "/docs/quick-start",
     )
   })
 
   it("maps root guides and package READMEs to sensible docs pages", () => {
-    assert.equal(docsHrefForSource("SECURITY.md"), "/docs/server/data-minimization")
-    assert.equal(docsHrefForSource("packages/mcp/README.md"), "/docs/mcp")
+    assert.equal(assistantHrefForSource("SECURITY.md"), "/docs/server/data-minimization")
+    assert.equal(assistantHrefForSource("packages/mcp/README.md"), "/docs/mcp")
   })
 
   it("returns null for unknown paths", () => {
-    assert.equal(docsHrefForSource("packages/sdk/src/index.ts"), null)
+    assert.equal(assistantHrefForSource("packages/sdk/src/index.ts"), null)
   })
 
   it("normalizes S3 plain paths", () => {
     assert.equal(
-      normalizeDocsSourcePath("s3://bucket/docs/ai-rag/corpus/plain/INSTALL.md__abcdef12.txt"),
+      normalizeAssistantSourcePath("s3://bucket/docs/assistant/corpus/plain/INSTALL.md__abcdef12.txt"),
       "INSTALL.md",
     )
   })
@@ -45,7 +45,7 @@ describe("docsHrefForSource", () => {
       "/docs/server/data-minimization",
     )
     assert.equal(
-      docsCitationLabel({
+      assistantCitationLabel({
         title: "Data minimization",
         sourcePath: "SECURITY.md",
         section: "chunk-3",
@@ -56,10 +56,10 @@ describe("docsHrefForSource", () => {
 
   it("does not map enterprise README to OSS introduction", () => {
     assert.equal(
-      normalizeDocsSourcePath("limetry-enterprise/README.md"),
+      normalizeAssistantSourcePath("limetry-enterprise/README.md"),
       "limetry-enterprise/README.md",
     )
-    assert.equal(docsHrefForSource("limetry-enterprise/README.md"), null)
+    assert.equal(assistantHrefForSource("limetry-enterprise/README.md"), null)
     assert.equal(
       resolveSourceHref({
         id: "ent",
@@ -74,9 +74,9 @@ describe("docsHrefForSource", () => {
 
   it("replaces Bedrock plain-corpus artifact titles", () => {
     assert.equal(
-      docsCitationLabel({
+      assistantCitationLabel({
         title: "SECURITY.md__abcdef12.txt",
-        sourcePath: "docs/ai-rag/corpus/plain/SECURITY.md__abcdef12.txt",
+        sourcePath: "docs/assistant/corpus/plain/SECURITY.md__abcdef12.txt",
       }),
       "SECURITY",
     )

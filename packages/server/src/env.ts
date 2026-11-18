@@ -83,21 +83,21 @@ const envSchema = z.object({
     z.string().min(32).optional(),
   ),
   /**
-   * Docs RAG backend: in-process corpus, Postgres pgvector, or Bedrock KB.
+   * Product assistant backend: in-process corpus, Postgres pgvector, or Bedrock KB.
    */
-  LIMETRY_RAG_BACKEND: z.enum(["memory", "pgvector", "bedrock-kb"]).default("memory"),
+  LIMETRY_ASSISTANT_BACKEND: z.enum(["memory", "pgvector", "bedrock-kb"]).default("memory"),
   /**
    * Path to ingest JSON used by the memory backend.
    */
-  LIMETRY_RAG_CORPUS_PATH: z.string().min(1).default("docs/ai-rag/corpus/rag-corpus.json"),
+  LIMETRY_ASSISTANT_CORPUS_PATH: z.string().min(1).default("docs/assistant/corpus/assistant-corpus.json"),
   /**
    * Extra ingest roots (comma-separated) for Limetry Cloud / enterprise docs.
    */
-  LIMETRY_RAG_EXTRA_ROOTS: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  LIMETRY_ASSISTANT_EXTRA_ROOTS: z.preprocess(emptyStringToUndefined, z.string().optional()),
   /**
    * When true, `POST /v1/chat` does not require bearer auth (still rate-friendly).
    */
-  LIMETRY_RAG_CHAT_PUBLIC: z
+  LIMETRY_ASSISTANT_PUBLIC: z
     .enum(["true", "false"])
     .default("true")
     .transform((value) => value === "true"),
@@ -108,7 +108,7 @@ const envSchema = z.object({
   LIMETRY_BEDROCK_GUARDRAIL_ID: z.preprocess(emptyStringToUndefined, z.string().optional()),
   LIMETRY_BEDROCK_GUARDRAIL_VERSION: z.preprocess(emptyStringToUndefined, z.string().optional()),
   LIMETRY_BEDROCK_REGION: z.preprocess(emptyStringToUndefined, z.string().optional()),
-  LIMETRY_RAG_CHAT_MODEL: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  LIMETRY_ASSISTANT_MODEL: z.preprocess(emptyStringToUndefined, z.string().optional()),
   OPENAI_API_KEY: z.preprocess(emptyStringToUndefined, z.string().optional()),
   ANTHROPIC_API_KEY: z.preprocess(emptyStringToUndefined, z.string().optional()),
   AWS_ACCESS_KEY_ID: z.preprocess(emptyStringToUndefined, z.string().optional()),

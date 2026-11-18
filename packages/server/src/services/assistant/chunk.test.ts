@@ -8,7 +8,7 @@ import {
   titleFromDoc,
 } from "./chunk.js"
 
-describe("rag chunk helpers", () => {
+describe("assistant chunk helpers", () => {
   it("strips MDX frontmatter and tags", () => {
     const text = stripMdx("---\ntitle: X\n---\n\n# Hello\n\nimport x from \"y\"\n\n<Callout>Hi</Callout>\n\nBody.")
     expect(text).toContain("Hello")

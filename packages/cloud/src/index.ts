@@ -99,11 +99,11 @@ const neonApiKey = serverlessConfig.databaseProvider === "neon"
   : undefined
 
 /**
- * Ask Limetry / docs RAG (plain Pulumi config — not secrets).
+ * Ask Limetry / product assistant (plain Pulumi config — not secrets).
  * Default synthesis is Bedrock; Anthropic/OpenAI keys are optional alternates.
  */
-const ragBackend = config.get("ragBackend")
-const ragChatPublic = config.getBoolean("ragChatPublic")
+const assistantBackend = config.get("assistantBackend")
+const assistantPublic = config.getBoolean("assistantPublic")
 
 /** Environment variables shared by all serverless provider adapters. */
 const environment = buildServerEnvironment(
@@ -114,11 +114,11 @@ const environment = buildServerEnvironment(
     jwtSecret,
   },
   {
-    backend: ragBackend,
-    corpusPath: config.get("ragCorpusPath") ?? undefined,
-    extraRoots: config.get("ragExtraRoots") ?? "",
-    chatPublic: ragChatPublic,
-    chatModel: config.get("ragChatModel") ?? "",
+    backend: assistantBackend,
+    corpusPath: config.get("assistantCorpusPath") ?? undefined,
+    extraRoots: config.get("assistantExtraRoots") ?? "",
+    chatPublic: assistantPublic,
+    chatModel: config.get("assistantModel") ?? "",
     bedrockKbId: config.get("bedrockKbId") ?? "",
     bedrockModelId: config.get("bedrockModelId")
       ?? "anthropic.claude-3-5-sonnet-20241022-v2:0",

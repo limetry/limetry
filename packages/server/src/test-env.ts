@@ -4,11 +4,11 @@
 
 import type { ServerEnv } from "./env.js"
 
-/** Docs RAG defaults for hand-built ServerEnv objects in unit tests. */
-export const ragTestEnvDefaults = {
-  LIMETRY_RAG_BACKEND: "memory",
-  LIMETRY_RAG_CORPUS_PATH: "docs/ai-rag/corpus/rag-corpus.json",
-  LIMETRY_RAG_CHAT_PUBLIC: true,
+/** Product assistant defaults for hand-built ServerEnv objects in unit tests. */
+export const assistantTestEnvDefaults = {
+  LIMETRY_ASSISTANT_BACKEND: "memory",
+  LIMETRY_ASSISTANT_CORPUS_PATH: "docs/assistant/corpus/assistant-corpus.json",
+  LIMETRY_ASSISTANT_PUBLIC: true,
 } as const satisfies Partial<ServerEnv>
 
 /**
@@ -33,7 +33,7 @@ export function testServerEnv(overrides: Partial<ServerEnv> = {}): ServerEnv {
     LIMETRY_AUDIT_RETENTION_DAYS: 90,
     LIMETRY_AUDIT_PURGE_INTERVAL_MS: 3_600_000,
     DECISION_HMAC_SECRET: "test-decision-hmac-secret-at-least-32-chars",
-    ...ragTestEnvDefaults,
+    ...assistantTestEnvDefaults,
     ...overrides,
   }
 }

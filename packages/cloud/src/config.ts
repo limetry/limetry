@@ -305,7 +305,7 @@ export function buildServerEnvironment(
     decisionHmacSecret: pulumi.Input<string>
     jwtSecret: pulumi.Input<string>
   },
-  rag?: {
+  assistantOpts?: {
     backend?: string
     corpusPath?: string
     extraRoots?: string
@@ -331,22 +331,22 @@ export function buildServerEnvironment(
     NODE_ENV: "serverless",
     SQLITE_DATABASE_PATH: config.sqliteDatabasePath,
     USE_POSTGRES_STORE: String(config.databaseProvider !== "sqlite"),
-    LIMETRY_RAG_BACKEND: rag?.backend
+    LIMETRY_ASSISTANT_BACKEND: assistantOpts?.backend
       ?? (config.databaseProvider === "sqlite" ? "memory" : "pgvector"),
-    LIMETRY_RAG_CORPUS_PATH: rag?.corpusPath ?? "docs/ai-rag/corpus/rag-corpus.json",
-    LIMETRY_RAG_EXTRA_ROOTS: rag?.extraRoots ?? "",
-    LIMETRY_RAG_CHAT_PUBLIC: String(rag?.chatPublic ?? true),
-    LIMETRY_RAG_CHAT_MODEL: rag?.chatModel ?? "",
-    LIMETRY_BEDROCK_REGION: rag?.bedrockRegion ?? "us-west-2",
-    LIMETRY_BEDROCK_MODEL_ID: rag?.bedrockModelId
+    LIMETRY_ASSISTANT_CORPUS_PATH: assistantOpts?.corpusPath ?? "docs/assistant/corpus/assistant-corpus.json",
+    LIMETRY_ASSISTANT_EXTRA_ROOTS: assistantOpts?.extraRoots ?? "",
+    LIMETRY_ASSISTANT_PUBLIC: String(assistantOpts?.chatPublic ?? true),
+    LIMETRY_ASSISTANT_MODEL: assistantOpts?.chatModel ?? "",
+    LIMETRY_BEDROCK_REGION: assistantOpts?.bedrockRegion ?? "us-west-2",
+    LIMETRY_BEDROCK_MODEL_ID: assistantOpts?.bedrockModelId
       ?? "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    LIMETRY_BEDROCK_MODEL_ARN: rag?.bedrockModelArn ?? "",
-    LIMETRY_BEDROCK_KB_ID: rag?.bedrockKbId ?? "",
-    LIMETRY_BEDROCK_EMBED_MODEL_ID: rag?.bedrockEmbedModelId ?? "",
-    LIMETRY_BEDROCK_GUARDRAIL_ID: rag?.bedrockGuardrailId ?? "",
-    LIMETRY_BEDROCK_GUARDRAIL_VERSION: rag?.bedrockGuardrailVersion ?? "",
-    OPENAI_API_KEY: rag?.openaiApiKey ?? "",
-    ANTHROPIC_API_KEY: rag?.anthropicApiKey ?? "",
+    LIMETRY_BEDROCK_MODEL_ARN: assistantOpts?.bedrockModelArn ?? "",
+    LIMETRY_BEDROCK_KB_ID: assistantOpts?.bedrockKbId ?? "",
+    LIMETRY_BEDROCK_EMBED_MODEL_ID: assistantOpts?.bedrockEmbedModelId ?? "",
+    LIMETRY_BEDROCK_GUARDRAIL_ID: assistantOpts?.bedrockGuardrailId ?? "",
+    LIMETRY_BEDROCK_GUARDRAIL_VERSION: assistantOpts?.bedrockGuardrailVersion ?? "",
+    OPENAI_API_KEY: assistantOpts?.openaiApiKey ?? "",
+    ANTHROPIC_API_KEY: assistantOpts?.anthropicApiKey ?? "",
   }
   return environment
 }

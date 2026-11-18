@@ -1,11 +1,11 @@
 /**
- * System prompts and answer assembly for Limetry product RAG chat.
+ * System prompts and answer assembly for Limetry product assistant chat.
  */
 
-import type { RagSource } from "./types.js"
+import type { AssistantSource } from "./types.js"
 
 /** Conversational product-assistant instructions grounded in retrieved sources. */
-export const RAG_SYSTEM_PROMPT = `You are Ask Limetry, a conversational product specialist for Limetry (open-source) and Limetry Cloud (enterprise).
+export const ASSISTANT_SYSTEM_PROMPT = `You are Ask Limetry, a conversational product specialist for Limetry (open-source) and Limetry Cloud (enterprise).
 
 Behave like a capable AI chat assistant customers expect from ChatGPT or Claude — warm, clear, and helpful — while staying strictly scoped to Limetry products.
 
@@ -19,7 +19,7 @@ Grounding rules:
 - Paraphrase tables, callouts, and markdown chrome into clean prose or simple markdown lists.
 - Never invent install commands, secrets, endpoints, APIs, pricing, or architecture details.
 - If sources are insufficient, say so plainly and suggest what to ask next or which product area to check.
-- Never mention chunks, embeddings, retrieval, RAG backends, or that you are pasting documentation.
+- Never mention chunks, embeddings, retrieval backends, or that you are pasting documentation.
 - Cite evidence with compact markdown links or bracket refs like [1], [2] matching the numbered sources. Do not dump raw file paths as the main answer body.
 - Prefer human titles over repository paths when referring to docs.`
 
@@ -29,7 +29,7 @@ Grounding rules:
  * @param sources - Ranked evidence.
  * @returns Context string.
  */
-export function formatContext(sources: RagSource[]): string {
+export function formatContext(sources: AssistantSource[]): string {
   if (sources.length === 0) {
     return "(no sources retrieved)"
   }
@@ -56,7 +56,7 @@ export function formatContext(sources: RagSource[]): string {
  */
 export function extractiveAnswer(
   _message: string,
-  sources: RagSource[],
+  sources: AssistantSource[],
 ): string {
   if (sources.length === 0) {
     return [

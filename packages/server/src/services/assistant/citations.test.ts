@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  assistantHrefForSource,
   citationLabel,
-  docsHrefForSource,
   enrichSources,
   normalizeSourcePath,
   snapSnippet,
 } from "./citations.js"
 
-describe("rag citations", () => {
+describe("assistant citations", () => {
   it("maps docs MDX and package READMEs to site hrefs", () => {
-    expect(docsHrefForSource("packages/web/content/docs/quick-start.mdx")).toBe("/docs/quick-start")
-    expect(docsHrefForSource("packages/mcp/README.md")).toBe("/docs/mcp")
-    expect(docsHrefForSource("SECURITY.md")).toBe("/docs/server/data-minimization")
+    expect(assistantHrefForSource("packages/web/content/docs/quick-start.mdx")).toBe("/docs/quick-start")
+    expect(assistantHrefForSource("packages/mcp/README.md")).toBe("/docs/mcp")
+    expect(assistantHrefForSource("SECURITY.md")).toBe("/docs/server/data-minimization")
   })
 
   it("normalizes S3 plain corpus paths", () => {
     expect(
-      normalizeSourcePath("s3://bucket/docs/ai-rag/corpus/plain/SECURITY.md__abc123def456.txt"),
+      normalizeSourcePath("s3://bucket/docs/assistant/corpus/plain/SECURITY.md__abc123def456.txt"),
     ).toBe("SECURITY.md")
   })
 
@@ -32,14 +32,14 @@ describe("rag citations", () => {
   it("replaces Bedrock plain-corpus artifact titles with path basenames", () => {
     expect(citationLabel({
       title: "SECURITY.md__abc123def456.txt",
-      sourcePath: "s3://bucket/docs/ai-rag/corpus/plain/SECURITY.md__abc123def456.txt",
+      sourcePath: "s3://bucket/docs/assistant/corpus/plain/SECURITY.md__abc123def456.txt",
       section: undefined,
     })).toBe("SECURITY")
   })
 
   it("does not map enterprise README sources to OSS introduction", () => {
     expect(normalizeSourcePath("limetry-enterprise/README.md")).toBe("limetry-enterprise/README.md")
-    expect(docsHrefForSource("limetry-enterprise/README.md")).toBeNull()
+    expect(assistantHrefForSource("limetry-enterprise/README.md")).toBeNull()
     const [source] = enrichSources([{
       id: "ent-1",
       title: "Limetry Cloud",
