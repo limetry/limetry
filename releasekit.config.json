@@ -4,21 +4,57 @@
     "prerelease": "beta"
   },
   "stamp": [
-    { "type": "packageJson", "path": "package.json" },
-    { "type": "packageJson", "path": "packages/ci/package.json" },
-    { "type": "packageJson", "path": "packages/cli/package.json" },
-    { "type": "packageJson", "path": "packages/mcp/package.json" },
-    { "type": "packageJson", "path": "packages/preflight/package.json" },
-    { "type": "packageJson", "path": "packages/sdk/package.json" },
-    { "type": "packageJson", "path": "packages/shopify/package.json" },
-    { "type": "packageJson", "path": "packages/sql/package.json" },
-    { "type": "packageJson", "path": "packages/ui/package.json" },
-    { "type": "packageJson", "path": "packages/web/package.json" },
-    { "type": "packageJson", "path": "packages/assistant/package.json" }
+    {
+      "type": "packageJson",
+      "path": "package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/ci/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/cli/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/mcp/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/preflight/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/sdk/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/shopify/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/sql/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/ui/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/web/package.json"
+    },
+    {
+      "type": "packageJson",
+      "path": "packages/assistant/package.json"
+    }
   ],
   "channels": {
     "prod": {
-      "branch": ["main", "master"],
+      "branch": [
+        "main",
+        "master"
+      ],
       "prerelease": false
     },
     "dev": {
