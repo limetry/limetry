@@ -1,17 +1,13 @@
 /**
- * Fastify route: public `POST /api/contact` via pluggable contact providers.
+ * Fastify route: public `POST /api/contact` via `@limetry/email` providers.
  */
 
+import {
+  createContactProvider,
+  parseContactMessage,
+} from "@limetry/email"
+import { errorJsonSchema } from "@limetry/assistant"
 import type { FastifyInstance, FastifyPluginAsync } from "fastify"
-
-import type { AssistantEnv } from "../env.js"
-import { errorJsonSchema } from "../schemas.js"
-import { createContactProvider } from "./index.js"
-import { parseContactMessage } from "./validate.js"
-
-type ContactRoutesOpts = {
-  env: AssistantEnv
-}
 
 const contactBodyJsonSchema = {
   type: "object",
@@ -41,14 +37,8 @@ const contactSuccessJsonSchema = {
  * Registers the public contact-form endpoint.
  *
  * @param app - Fastify instance.
- * @param opts - Plugin options including validated env.
  */
-export const contactRoutes: FastifyPluginAsync<ContactRoutesOpts> = async (
-  app,
-  opts,
-) => {
-  const { env } = opts
-
+export const contactRoutes: FastifyPluginAsync = async (app) => {
   app.post(
     "/api/contact",
     {
@@ -70,18 +60,7 @@ export const contactRoutes: FastifyPluginAsync<ContactRoutesOpts> = async (
         return reply.status(400).send({ error: parsed.error })
       }
 
-      const provider = createContactProvider({
-        CONTACT_PROVIDER: env.CONTACT_PROVIDER,
-        BREVO_API_KEY: env.BREVO_API_KEY,
-        BREVO_FROM_EMAIL: env.BREVO_FROM_EMAIL,
-        BREVO_FROM_NAME: env.BREVO_FROM_NAME,
-        BREVO_CONTACT_TO: env.BREVO_CONTACT_TO,
-        RESEND_API_KEY: env.RESEND_API_KEY,
-        RESEND_FROM_EMAIL: env.RESEND_FROM_EMAIL,
-        RESEND_FROM_NAME: env.RESEND_FROM_NAME,
-        RESEND_CONTACT_TO: env.RESEND_CONTACT_TO,
-      })
-
+      const provider = createContactProvider(process.env)
       if (!provider) {
         return reply.status(412).send({ error: "Contact email is not configured" })
       }
@@ -108,11 +87,7 @@ export const contactRoutes: FastifyPluginAsync<ContactRoutesOpts> = async (
  * Registers contact routes on an existing Fastify app.
  *
  * @param app - Fastify instance.
- * @param env - Validated assistant env.
  */
-export async function createContactRoutes(
-  app: FastifyInstance,
-  env: AssistantEnv,
-): Promise<void> {
-  await app.register(contactRoutes, { env })
+export async function createContactRoutes(app: FastifyInstance): Promise<void> {
+  await app.register(contactRoutes)
 }

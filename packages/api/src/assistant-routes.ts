@@ -4,16 +4,16 @@
  * Same-origin only via limetry.org CloudFront / Next rewrites — no CORS.
  */
 
-import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify"
-
-import { prepareAssistantChatStream, runAssistantChat } from "./chat.js"
-import type { AssistantEnv } from "./env.js"
 import {
+  type AssistantChatRequest,
+  type AssistantEnv,
   chatBodyJsonSchema,
   chatSuccessJsonSchema,
   errorJsonSchema,
-} from "./schemas.js"
-import type { AssistantChatRequest } from "./types.js"
+  prepareAssistantChatStream,
+  runAssistantChat,
+} from "@limetry/assistant"
+import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify"
 
 type AssistantRoutesOpts = {
   env: AssistantEnv
@@ -121,7 +121,6 @@ export const assistantRoutes: FastifyPluginAsync<AssistantRoutesOpts> = async (
           "Same as JSON chat, but streams `meta` / `delta` / `error` / `done` SSE events. "
           + "Response body is text/event-stream (not JSON Schema validated).",
         body: chatBodyJsonSchema,
-        // SSE body is not JSON — omit 200 response schema.
         response: {
           400: errorJsonSchema,
           401: errorJsonSchema,
@@ -161,7 +160,7 @@ export const assistantRoutes: FastifyPluginAsync<AssistantRoutesOpts> = async (
             const message = streamError instanceof Error
               ? streamError.message
               : "chat_stream_failed"
-            console.warn("[assistant] stream iteration failed; emitting fallback", streamError)
+            console.warn("[api] stream iteration failed; emitting fallback", streamError)
             writeSse(reply, { type: "error", message })
             if (!emittedDelta && prepared.fallbackAnswer) {
               writeSse(reply, { type: "delta", text: prepared.fallbackAnswer })

@@ -76,6 +76,6 @@ function shutdown(code) {
 process.on("SIGINT", () => shutdown(0))
 process.on("SIGTERM", () => shutdown(0))
 
-console.log("[dev-web] starting Ask Limetry (:3815) + @limetry/web")
-startWorkspace("@limetry/assistant", "dev", "assistant")
+console.log("[dev-web] starting Limetry public API (:3815) + @limetry/web")
+startWorkspace("@limetry/api", "dev", "api")
 startWorkspace("@limetry/web", "dev", "web")

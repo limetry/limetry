@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
- * Bundles the Ask Limetry Lambda handler into packages/assistant/lambda-bundle.
+ * Bundles the Limetry.org public API Lambda into packages/api/lambda-bundle.
  *
- * Ensures `docs/assistant/corpus` exists (runs ingest when missing) so a clean
- * CI/deploy never ships an empty retrieval index.
+ * Ensures `docs/assistant/corpus` exists (runs assistant ingest when missing).
  */
 import { spawnSync } from "node:child_process"
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
@@ -32,17 +31,17 @@ function ensureCorpus() {
   }
   console.log("docs/assistant/corpus missing; running assistant:ingest…")
   const result = spawnSync(
-    process.execPath,
-    [join(__dirname, "ingest-assistant-corpus.mjs")],
+    "yarn",
+    ["workspace", "@limetry/assistant", "assistant:ingest"],
     {
-      cwd: packageRoot,
+      cwd: repoRoot,
       stdio: "inherit",
       env: process.env,
     },
   )
   if (result.status !== 0) {
     throw new Error(
-      "assistant:ingest failed; cannot package Ask Limetry Lambda without a corpus",
+      "assistant:ingest failed; cannot package public API Lambda without a corpus",
     )
   }
   if (!existsSync(corpusJson)) {
@@ -84,7 +83,7 @@ writeFileSync(
   join(outDir, "package.json"),
   JSON.stringify(
     {
-      name: "limetry-assistant-lambda",
+      name: "limetry-api-lambda",
       private: true,
       main: "lambda.js",
     },
@@ -96,10 +95,10 @@ writeFileSync(
 writeFileSync(
   join(outDir, "README.md"),
   [
-    "# Ask Limetry Lambda bundle",
+    "# Limetry.org public API Lambda bundle",
     "",
-    "Built by `yarn workspace @limetry/assistant build:lambda`.",
-    "Deployed behind CloudFront `/api/assistant*` on limetry.org.",
+    "Built by `yarn workspace @limetry/api build:lambda`.",
+    "Deployed behind CloudFront `/api/assistant*` and `/api/contact*` on limetry.org.",
     "",
   ].join("\n"),
 )

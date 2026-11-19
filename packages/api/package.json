@@ -1,0 +1,43 @@
+{
+  "name": "@limetry/api",
+  "version": "1.2.92",
+  "private": true,
+  "description": "Limetry.org public HTTP API (Ask Limetry + contact) for local and Lambda",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "build:lambda": "node scripts/build-lambda-bundle.mjs",
+    "dev": "tsx watch src/http-server.ts",
+    "start": "node dist/http-server.js",
+    "test": "vitest run",
+    "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/aws-lambda": "^6.4.2",
+    "@fastify/swagger": "^9.9.5",
+    "@fastify/swagger-ui": "^6.1.4",
+    "@limetry/assistant": "workspace:*",
+    "@limetry/email": "workspace:*",
+    "fastify": "^5.12.8"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.163",
+    "@types/node": "^26.4.1",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

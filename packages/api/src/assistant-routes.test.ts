@@ -1,12 +1,11 @@
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
+import { clearCorpusCache, loadAssistantEnv } from "@limetry/assistant"
 import type { FastifyInstance } from "fastify"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { clearCorpusCache } from "./corpus.js"
-import { createAssistantApp } from "./create-app.js"
-import { loadAssistantEnv } from "./env.js"
+import { createApiApp } from "./create-app.js"
 
 const corpusPath = resolve(
   fileURLToPath(new URL("./fixtures/minimal-corpus.json", import.meta.url)),
@@ -29,7 +28,7 @@ async function buildApp(
   overrides: Record<string, string | boolean | number> = {},
 ): Promise<FastifyInstance> {
   clearCorpusCache()
-  const app = await createAssistantApp(testEnv(overrides))
+  const app = await createApiApp(testEnv(overrides))
   await app.ready()
   apps.push(app)
   return app
@@ -124,5 +123,22 @@ describe("Ask Limetry chat routes", () => {
     })
     expect(allowed.statusCode).toBe(200)
     expect(allowed.json().ok).toBe(true)
+  })
+})
+
+describe("contact routes", () => {
+  it("returns 412 when Brevo is not configured", async () => {
+    const app = await buildApp()
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/contact",
+      payload: {
+        name: "Ada Lovelace",
+        email: "ada@example.com",
+        message: "Hello from the analytical engine era.",
+      },
+    })
+    expect(response.statusCode).toBe(412)
+    expect(response.json().error).toMatch(/not configured/i)
   })
 })

@@ -3,6 +3,7 @@
  */
 
 import awsLambdaFastify from "@fastify/aws-lambda"
+import { loadAssistantEnv } from "@limetry/assistant"
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
@@ -10,8 +11,7 @@ import type {
 } from "aws-lambda"
 import type { FastifyInstance } from "fastify"
 
-import { createAssistantApp } from "./create-app.js"
-import { loadAssistantEnv } from "./env.js"
+import { createApiApp } from "./create-app.js"
 
 /**
  * Promise-only Lambda handler (Node.js 24+ rejects callback-style handlers).
@@ -34,7 +34,7 @@ async function resolveHandler(): Promise<ProxyHandler> {
     return cachedHandler
   }
   const env = loadAssistantEnv()
-  const app = await createAssistantApp(env)
+  const app = await createApiApp(env)
   await app.ready()
   cachedApp = app
   const proxy = awsLambdaFastify(app, {
@@ -48,7 +48,7 @@ async function resolveHandler(): Promise<ProxyHandler> {
 }
 
 /**
- * Lambda entry for Ask Limetry.
+ * Lambda entry for Limetry.org public API (Ask Limetry + contact).
  *
  * @param event - API Gateway / Function URL event.
  * @param context - Lambda context.
@@ -67,6 +67,6 @@ export async function handler(
  *
  * @returns Cached app or undefined.
  */
-export function getCachedAssistantApp(): FastifyInstance | undefined {
+export function getCachedApiApp(): FastifyInstance | undefined {
   return cachedApp
 }

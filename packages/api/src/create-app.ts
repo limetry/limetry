@@ -1,23 +1,25 @@
 /**
- * Fastify app factory for Ask Limetry (`@limetry/assistant`).
+ * Fastify app factory for Limetry.org public API (`@limetry/api`).
  */
 
 import swagger from "@fastify/swagger"
 import swaggerUi from "@fastify/swagger-ui"
+import {
+  type AssistantEnv,
+  healthJsonSchema,
+} from "@limetry/assistant"
 import Fastify, { type FastifyInstance } from "fastify"
 
-import { createContactRoutes } from "./contact/routes.js"
-import type { AssistantEnv } from "./env.js"
-import { createChatRoutes } from "./http-routes.js"
-import { healthJsonSchema } from "./schemas.js"
+import { createChatRoutes } from "./assistant-routes.js"
+import { createContactRoutes } from "./contact-routes.js"
 
 /**
- * Builds the Ask Limetry HTTP app (`/api/assistant*`, `/api/contact`, health, OpenAPI).
+ * Builds the public HTTP app (`/api/assistant*`, `/api/contact`, health, OpenAPI).
  *
- * @param env - Validated assistant env.
+ * @param env - Validated assistant env (contact credentials read from process.env).
  * @returns Configured Fastify instance (call `ready()` before inject/listen).
  */
-export async function createAssistantApp(
+export async function createApiApp(
   env: AssistantEnv,
 ): Promise<FastifyInstance> {
   const app = Fastify({
@@ -34,9 +36,9 @@ export async function createAssistantApp(
   await app.register(swagger, {
     openapi: {
       info: {
-        title: "Ask Limetry",
+        title: "Limetry public API",
         description:
-          "Product assistant and contact form for Limetry (open-source) and Limetry Cloud. "
+          "Ask Limetry and contact form for limetry.org. "
           + "Served same-origin at https://limetry.org/api/assistant and /api/contact.",
         version: "1.0.0",
       },
@@ -76,7 +78,7 @@ export async function createAssistantApp(
   )
 
   await createChatRoutes(app, env)
-  await createContactRoutes(app, env)
+  await createContactRoutes(app)
 
   app.setNotFoundHandler(async (request, reply) => {
     if (request.url.startsWith("/api")) {
@@ -87,3 +89,6 @@ export async function createAssistantApp(
 
   return app
 }
+
+/** @deprecated Use {@link createApiApp}. */
+export const createAssistantApp = createApiApp

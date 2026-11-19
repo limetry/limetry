@@ -1,5 +1,7 @@
 /**
- * `@limetry/assistant` — Ask Limetry product chat for limetry.org.
+ * `@limetry/assistant` — Ask Limetry product chat library for limetry.org.
+ *
+ * HTTP hosting lives in `@limetry/api` (depends on this package).
  */
 
 export {
@@ -16,14 +18,13 @@ export {
   retrieveSources,
   runAssistantChat,
 } from "./chat.js"
-export { createAssistantApp } from "./create-app.js"
+export { clearCorpusCache } from "./corpus.js"
 export {
   type AssistantEnv,
   assistantEnvSchema,
   hasAwsCredentials,
   loadAssistantEnv,
 } from "./env.js"
-export { assistantRoutes, createChatRoutes } from "./http-routes.js"
 export {
   assistantEnvJsonSchema,
   assistantSourceJsonSchema,
