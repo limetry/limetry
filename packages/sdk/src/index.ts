@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-export { AppVersion } from "./app-version.js"
+export { APP_VERSION, AppVersion } from "./app-version.js"
 export { COMPATIBILITY } from "./compatibility.js"
 export type { PolicyEngine } from "./engine/policy-engine.js"
 export type { RemotePolicyEngineOptions } from "./engine/remote-engine.js"

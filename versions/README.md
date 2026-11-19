@@ -10,8 +10,9 @@ Only `main` / `master` commits a product version. Feature-branch
 an ephemeral `next-patch-beta.N` for the deploy, then restore version files
 so the PR keeps the last stable version.
 
-Product versioning is driven by **releasekit** (`yarn release`,
-`yarn release:vercel`, `yarn sync-version` → `releasekit sync`). The runtime
+Product versioning is driven by **releasekit**. Dual-stack releases and
+`align-product-version` run from the private **limetry-workspace** parent so
+this public repo stays free of release orchestration. The runtime
 `AppVersion()` helper reads the monorepo root `package.json` (no stamped
 `app-version.ts`).
 
@@ -29,7 +30,11 @@ policy revision, not this schema semver.
 
 ## Compatibility
 
-`versions/compatibility.json` is the published map of this product version to
-package, website, and schema ranges. The same document is exported as
-`COMPATIBILITY` from `@limetry/sdk` and copied to the website at
-`/compatibility.json`.
+**`versions/compatibility.json` is the single source of truth** for the
+published map of this product version to package, website, and schema ranges.
+
+Derived (do not edit by hand):
+
+- `packages/sdk/src/compatibility.ts` — `COMPATIBILITY` export for `@limetry/sdk`
+- `packages/web/public/compatibility.json` — static site copy (gitignored; created
+  at web build / parent align time)

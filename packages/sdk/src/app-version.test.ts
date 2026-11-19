@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 
 import { describe, expect, it } from "vitest"
 
-import { AppVersion } from "./app-version"
+import { APP_VERSION, AppVersion } from "./app-version"
 
 describe("AppVersion", () => {
   it("matches the root package.json version", () => {
@@ -14,6 +14,7 @@ describe("AppVersion", () => {
     const rootPackageJson = JSON.parse(readFileSync(rootPackagePath, "utf8")) as { version: string }
 
     expect(packageJson.version).toBe(rootPackageJson.version)
+    expect(APP_VERSION).toBe(packageJson.version)
     expect(AppVersion()).toBe(`v${packageJson.version}`)
     expect(AppVersion()).toMatch(/^v\d+\.\d+\.\d+/)
   })

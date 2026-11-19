@@ -25,7 +25,7 @@
       "prerelease": true
     }
   },
-  "qualityGate": "tsx scripts/align-product-version.ts && yarn workspace @limetry/sdk typecheck && yarn workspace @limetry/preflight typecheck && yarn workspace @limetry/server typecheck && yarn workspace @limetry/web typecheck && yarn docs:check",
+  "qualityGate": "yarn workspace @limetry/sdk typecheck && yarn workspace @limetry/preflight typecheck && yarn workspace @limetry/server typecheck && yarn workspace @limetry/web typecheck && yarn docs:check",
   "deploy": [],
   "git": {
     "commitTemplate": "chore: released {version}",
@@ -34,7 +34,6 @@
     "extraPaths": [
       "versions/compatibility.json",
       "packages/sdk/src/compatibility.ts",
-      "packages/web/public/compatibility.json",
       "yarn.lock"
     ]
   }
