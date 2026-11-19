@@ -1,6 +1,6 @@
 {
   "name": "@limetry/assistant",
-  "version": "1.2.90",
+  "version": "1.2.92",
   "private": true,
   "description": "Ask Limetry product assistant (retrieve + synthesize for limetry.org)",
   "type": "module",

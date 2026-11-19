@@ -2775,7 +2775,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/ci@workspace:packages/ci"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.87"
+    "@limetry/sdk": "npm:^1.2.92"
     "@types/node": "npm:^26.4.1"
     "@vitest/coverage-v8": "npm:4.1.11"
     typescript: "npm:^5.8.2"
@@ -2791,7 +2791,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/cli@workspace:packages/cli"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.87"
+    "@limetry/sdk": "npm:^1.2.92"
     "@types/inquirer": "npm:^9.0.7"
     "@types/node": "npm:^26.4.1"
     chalk: "npm:^6.0.0"
@@ -2861,7 +2861,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/mcp@workspace:packages/mcp"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.87"
+    "@limetry/sdk": "npm:^1.2.92"
     "@modelcontextprotocol/sdk": "npm:^1.30.0"
     "@types/node": "npm:^22.20.2"
     typescript: "npm:^5.8.2"
@@ -2871,7 +2871,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@limetry/preflight@workspace:*, @limetry/preflight@workspace:packages/preflight":
+"@limetry/preflight@npm:^1.2.92, @limetry/preflight@workspace:*, @limetry/preflight@workspace:packages/preflight":
   version: 0.0.0-use.local
   resolution: "@limetry/preflight@workspace:packages/preflight"
   dependencies:
@@ -2894,7 +2894,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@limetry/sdk@npm:^1.2.87, @limetry/sdk@workspace:*, @limetry/sdk@workspace:packages/sdk":
+"@limetry/sdk@npm:^1.2.92, @limetry/sdk@workspace:*, @limetry/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@limetry/sdk@workspace:packages/sdk"
   dependencies:
@@ -2944,7 +2944,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/shopify@workspace:packages/shopify"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.87"
+    "@limetry/sdk": "npm:^1.2.92"
     "@types/node": "npm:^26.4.1"
     "@vitest/coverage-v8": "npm:4.1.11"
     typescript: "npm:^5.8.2"
@@ -2967,7 +2967,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@limetry/sql@workspace:packages/sql"
   dependencies:
-    "@limetry/sdk": "npm:^1.2.87"
+    "@limetry/sdk": "npm:^1.2.92"
     "@modelcontextprotocol/sdk": "npm:^1.30.0"
     "@types/node": "npm:^26.4.1"
     "@types/pg": "npm:^8.11.11"
@@ -2984,7 +2984,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@limetry/ui@workspace:*, @limetry/ui@workspace:packages/ui":
+"@limetry/ui@npm:^1.2.92, @limetry/ui@workspace:packages/ui":
   version: 0.0.0-use.local
   resolution: "@limetry/ui@workspace:packages/ui"
   dependencies:
@@ -3019,9 +3019,9 @@ __metadata:
   resolution: "@limetry/web@workspace:packages/web"
   dependencies:
     "@dotenvx/dotenvx": "npm:^2.23.0"
-    "@limetry/preflight": "workspace:*"
-    "@limetry/sdk": "workspace:*"
-    "@limetry/ui": "workspace:*"
+    "@limetry/preflight": "npm:^1.2.92"
+    "@limetry/sdk": "npm:^1.2.92"
+    "@limetry/ui": "npm:^1.2.92"
     "@next/eslint-plugin-next": "npm:16.3.4"
     "@sentry/nextjs": "npm:^10"
     "@tailwindcss/postcss": "npm:^4.3.3"

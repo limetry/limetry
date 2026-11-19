@@ -53,7 +53,7 @@
     "publish:ui": "yarn workspace @limetry/ui build && npm publish ./packages/ui --access public",
     "release": "releasekit release -y",
     "start": "yarn workspace @limetry/web start",
-    "sync-version": "releasekit sync",
+    "sync-version": "releasekit sync && tsx scripts/align-product-version.ts",
     "test:ci": "yarn workspace @limetry/ci test",
     "test:cli": "yarn workspace @limetry/cli test",
     "test:e2e": "tsx scripts/run-workspaces.ts test:e2e --exclude limetry --exclude @limetry/skill",
