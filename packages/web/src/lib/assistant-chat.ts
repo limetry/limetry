@@ -171,7 +171,7 @@ async function readChatJson(
   if (!contentType.includes("application/json")) {
     throw new Error(
       response.ok
-        ? "Ask Limetry returned a non-JSON response. Is `yarn dev:assistant` running on :3815?"
+        ? "Ask Limetry returned a non-JSON response. Is `yarn dev:api` running on :3815?"
         : `Ask Limetry unavailable (${response.status})`,
     )
   }
@@ -179,7 +179,7 @@ async function readChatJson(
     return JSON.parse(raw) as AssistantChatClientResponse & { error?: string, message?: string }
   } catch {
     throw new Error(
-      `Ask Limetry returned invalid JSON (${response.status}). Is \`yarn dev:assistant\` running on :3815?`,
+      `Ask Limetry returned invalid JSON (${response.status}). Is \`yarn dev:api\` running on :3815?`,
     )
   }
 }

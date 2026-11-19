@@ -2,7 +2,7 @@
  * Client helper that submits the marketing contact form via the configured provider.
  */
 
-import { getContactAdapter } from "@/lib/email-providers/contact"
+import { getContactAdapter } from "@limetry/email/client"
 
 export type ContactSubmitFields = {
   name: string
