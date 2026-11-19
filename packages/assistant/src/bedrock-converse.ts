@@ -77,7 +77,7 @@ export async function generateWithBedrockConverse(
     return null
   }
   const modelId = env.LIMETRY_BEDROCK_MODEL_ID
-    || "us.anthropic.claude-sonnet-5-5"
+    || "us.anthropic.claude-sonnet-4-6"
   try {
     const { BedrockRuntimeClient, ConverseCommand } = await import(
       "@aws-sdk/client-bedrock-runtime"
@@ -121,7 +121,7 @@ export async function streamWithBedrockConverse(
     return null
   }
   const modelId = env.LIMETRY_BEDROCK_MODEL_ID
-    || "us.anthropic.claude-sonnet-5-5"
+    || "us.anthropic.claude-sonnet-4-6"
   try {
     const { BedrockRuntimeClient, ConverseStreamCommand } = await import(
       "@aws-sdk/client-bedrock-runtime"
