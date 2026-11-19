@@ -55,6 +55,14 @@ export const STATIC_SEARCH_ENTRIES: StaticSearchEntry[] = [
     keywords: "community discord github contribute",
   },
   {
+    id: "site-contact",
+    title: "Contact",
+    description: "Contact the Limetry team about open-source Limetry, Cloud, or partnerships.",
+    url: "/contact",
+    section: "site",
+    keywords: "contact support email partnership hello",
+  },
+  {
     id: "site-changelog",
     title: "Changelog",
     description: "Product updates and release notes for Limetry.",

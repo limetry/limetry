@@ -87,10 +87,20 @@ export const siteUrls = {
   ),
   github: trimTrailingSlash(process.env.NEXT_PUBLIC_GITHUB_URL || "https://github.com/limetry/limetry"),
   discord: trimTrailingSlash(process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/VxUWz7cZP"),
-  contactUrl: clientSafeOrigin(
-    process.env.NEXT_PUBLIC_CONTACT_FORM_URL,
-    "https://app.limetry.com/contact",
-  ),
+  /**
+   * Prefer same-origin `/contact` on limetry.org. Absolute overrides remain supported
+   * via `NEXT_PUBLIC_CONTACT_FORM_URL` for cross-product deep links.
+   */
+  contactUrl: (() => {
+    const configured = process.env.NEXT_PUBLIC_CONTACT_FORM_URL?.trim()
+    if (configured && configured.length > 0) {
+      if (configured.startsWith("/")) {
+        return configured
+      }
+      return clientSafeOrigin(configured, "https://limetry.org/contact")
+    }
+    return "/contact"
+  })(),
 } as const
 
 /**

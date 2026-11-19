@@ -10,6 +10,7 @@ import Link from "next/link"
 
 import { Logo } from "@/components/brand"
 import { CloudCtaBanner } from "@/components/cloud-cta-banner"
+import { ContactSection } from "@/components/contact-section"
 import { isLaunchOpen } from "@/lib/launching-soon"
 import { siteUrls } from "@/lib/site-urls"
 
@@ -19,6 +20,10 @@ export type FooterProps = {
    * footer is safe on the API host landing page.
    */
   ossLinksRelative?: boolean
+  /**
+   * When false, hides the brief contact strip (e.g. on `/contact`).
+   */
+  showContact?: boolean
 }
 
 function FooterLink(props: DrawerLinkProps): React.JSX.Element {
@@ -40,6 +45,7 @@ function FooterLink(props: DrawerLinkProps): React.JSX.Element {
 /** Renders the shared site footer with the OSS-specific Cloud CTA. */
 export function Footer(props: FooterProps = {}): React.JSX.Element {
   const ossLinksRelative = props.ossLinksRelative ?? true
+  const showContact = props.showContact ?? true
   const footerLinks = buildSiteFooterLinks({
     ossWebOrigin: siteUrls.web,
     cloudAppOrigin: siteUrls.cloudWeb,
@@ -51,6 +57,7 @@ export function Footer(props: FooterProps = {}): React.JSX.Element {
 
   return (
     <>
+      {showContact ? <ContactSection /> : null}
       {isLaunchOpen() ? <CloudCtaBanner /> : null}
       <SiteFooter
         links={footerLinks}

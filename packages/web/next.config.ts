@@ -128,6 +128,10 @@ const config: NextConfig = {
             source: "/api/assistant/docs/:path*",
             destination: `${assistantOrigin}/api/assistant/docs/:path*`,
           },
+          {
+            source: "/api/contact",
+            destination: `${assistantOrigin}/api/contact`,
+          },
         ]
       },
     }),

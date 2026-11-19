@@ -10,7 +10,7 @@
     "start": "node ./scripts/run-next.mjs start",
     "lint": "eslint .",
     "typecheck": "fumadocs-mdx && yarn run -T tsgo -p tsconfig.json --noEmit",
-    "test": "NODE_ENV=test tsx --test src/lib/document-title.test.ts src/lib/launching-soon.test.ts src/lib/preflight.test.ts src/lib/public-origins.test.ts src/lib/site-search-index.test.ts src/lib/docs-mdx-components.test.ts src/lib/docs-routing.test.ts src/lib/example-markdown-links.test.ts src/lib/assistant-chat.test.ts",
+    "test": "NODE_ENV=test tsx --test src/lib/document-title.test.ts src/lib/launching-soon.test.ts src/lib/preflight.test.ts src/lib/public-origins.test.ts src/lib/site-search-index.test.ts src/lib/docs-mdx-components.test.ts src/lib/docs-routing.test.ts src/lib/example-markdown-links.test.ts src/lib/assistant-chat.test.ts src/lib/email-providers/contact/index.test.ts",
     "test:e2e": "NODE_ENV=test tsx --test e2e/ask-limetry.e2e.test.ts"
   },
   "dependencies": {

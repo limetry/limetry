@@ -38,7 +38,22 @@ const envSchema = z.object({
   ),
   NEXT_PUBLIC_CONTACT_FORM_URL: z.preprocess(
     emptyStringToUndefined,
-    z.string().url().default("https://app.limetry.com/contact"),
+    z.string().min(1).default("/contact").refine(
+      (value) => value.startsWith("/") || /^https?:\/\//i.test(value),
+      "Must be an absolute URL or a site path starting with /",
+    ),
+  ),
+  NEXT_PUBLIC_CONTACT_PROVIDER: z.preprocess(
+    emptyStringToUndefined,
+    z.enum(["brevo", "formspree", "resend"]).default("brevo"),
+  ),
+  NEXT_PUBLIC_CONTACT_API_URL: z.preprocess(
+    emptyStringToUndefined,
+    z.string().min(1).optional(),
+  ),
+  NEXT_PUBLIC_FORMSPREE_FORM_ID: z.preprocess(
+    emptyStringToUndefined,
+    z.string().min(1).optional(),
   ),
   NEXT_PUBLIC_CLOUD_WEB_URL: z.preprocess(
     emptyStringToUndefined,
