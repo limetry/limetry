@@ -113,12 +113,20 @@ const config: NextConfig = {
         ).replace(/\/$/, "")
         return [
           {
-            source: "/api/chat",
-            destination: `${assistantOrigin}/api/chat`,
+            source: "/api/assistant",
+            destination: `${assistantOrigin}/api/assistant`,
           },
           {
-            source: "/api/chat/stream",
-            destination: `${assistantOrigin}/api/chat/stream`,
+            source: "/api/assistant/stream",
+            destination: `${assistantOrigin}/api/assistant/stream`,
+          },
+          {
+            source: "/api/assistant/docs",
+            destination: `${assistantOrigin}/api/assistant/docs`,
+          },
+          {
+            source: "/api/assistant/docs/:path*",
+            destination: `${assistantOrigin}/api/assistant/docs/:path*`,
           },
         ]
       },

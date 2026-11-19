@@ -2,12 +2,13 @@
  * AWS Lambda / Function URL (API Gateway HTTP API payload 2.0) adapter.
  */
 
-import { configure as serverlessExpress } from "@codegenie/serverless-express"
+import awsLambdaFastify from "@fastify/aws-lambda"
 import type {
   APIGatewayProxyEventV2,
   APIGatewayProxyStructuredResultV2,
   Context,
 } from "aws-lambda"
+import type { FastifyInstance } from "fastify"
 
 import { createAssistantApp } from "./create-app.js"
 import { loadAssistantEnv } from "./env.js"
@@ -20,20 +21,29 @@ type ProxyHandler = (
   context: Context,
 ) => Promise<APIGatewayProxyStructuredResultV2>
 
+let cachedApp: FastifyInstance | undefined
 let cachedHandler: ProxyHandler | undefined
 
 /**
- * Lazily builds and caches the Express-backed Lambda proxy handler.
+ * Lazily builds and caches the Fastify-backed Lambda proxy handler.
  *
- * @returns Configured serverless-express handler.
+ * @returns Configured `@fastify/aws-lambda` handler.
  */
 async function resolveHandler(): Promise<ProxyHandler> {
   if (cachedHandler) {
     return cachedHandler
   }
   const env = loadAssistantEnv()
-  const app = createAssistantApp(env)
-  cachedHandler = serverlessExpress({ app }) as unknown as ProxyHandler
+  const app = await createAssistantApp(env)
+  await app.ready()
+  cachedApp = app
+  const proxy = awsLambdaFastify(app, {
+    binaryMimeTypes: ["application/octet-stream"],
+  })
+  cachedHandler = async (event, context) => {
+    const result = await proxy(event, context)
+    return result as APIGatewayProxyStructuredResultV2
+  }
   return cachedHandler
 }
 
@@ -50,4 +60,13 @@ export async function handler(
 ): Promise<APIGatewayProxyStructuredResultV2> {
   const resolved = await resolveHandler()
   return resolved(event, context)
+}
+
+/**
+ * Test helper: returns the warm Fastify app when the Lambda handler has run.
+ *
+ * @returns Cached app or undefined.
+ */
+export function getCachedAssistantApp(): FastifyInstance | undefined {
+  return cachedApp
 }

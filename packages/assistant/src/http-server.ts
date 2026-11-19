@@ -6,10 +6,10 @@ import { createAssistantApp } from "./create-app.js"
 import { loadAssistantEnv } from "./env.js"
 
 const env = loadAssistantEnv()
-const app = createAssistantApp(env)
+const app = await createAssistantApp(env)
 const port = env.ASSISTANT_PORT
 
-app.listen(port, () => {
-  console.log(`[assistant] Ask Limetry listening on http://127.0.0.1:${port}`)
-  console.log("[assistant] POST /api/chat and /api/chat/stream")
-})
+await app.listen({ port, host: "127.0.0.1" })
+console.log(`[assistant] Ask Limetry listening on http://127.0.0.1:${port}`)
+console.log("[assistant] POST /api/assistant and /api/assistant/stream")
+console.log(`[assistant] OpenAPI UI http://127.0.0.1:${port}/api/assistant/docs`)
