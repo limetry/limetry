@@ -4,7 +4,7 @@
  * Sleek contact form used on `/contact` and the site-wide contact strip.
  */
 
-import { useState, type FormEvent } from "react"
+import { type FormEvent, useState } from "react"
 
 import { ContactSubmitError, submitContactMessage } from "@/lib/submit-contact"
 
