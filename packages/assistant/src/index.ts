@@ -23,7 +23,15 @@ export {
   hasAwsCredentials,
   loadAssistantEnv,
 } from "./env.js"
-export { chatCorsOriginVariants, createChatRoutes } from "./http-routes.js"
+export { assistantRoutes, createChatRoutes } from "./http-routes.js"
+export {
+  assistantEnvJsonSchema,
+  assistantSourceJsonSchema,
+  chatBodyJsonSchema,
+  chatSuccessJsonSchema,
+  errorJsonSchema,
+  healthJsonSchema,
+} from "./schemas.js"
 export type {
   AssistantBackendName,
   AssistantChatRequest,

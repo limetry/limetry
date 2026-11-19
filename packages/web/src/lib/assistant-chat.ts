@@ -2,7 +2,7 @@
  * Client helpers for the Limetry product assistant chat UI.
  */
 
-/** One citation returned by `POST /api/chat`. */
+/** One citation returned by `POST /api/assistant`. */
 export type AssistantChatSource = {
   id: string
   title: string
@@ -154,8 +154,8 @@ type StreamHandlers = {
 /**
  * Same-origin Ask Limetry endpoints (CloudFront → Lambda in prod; Next rewrite locally).
  */
-const CHAT_PATH = "/api/chat"
-const CHAT_STREAM_PATH = "/api/chat/stream"
+const CHAT_PATH = "/api/assistant"
+const CHAT_STREAM_PATH = "/api/assistant/stream"
 
 /**
  * Parses a chat JSON body, or throws a readable error for HTML/proxy failures.
@@ -172,7 +172,7 @@ async function readChatJson(
     throw new Error(
       response.ok
         ? "Ask Limetry returned a non-JSON response. Is `yarn dev:assistant` running on :3815?"
-        : `Ask Limetry unavailable (${response.status}). Start \`yarn dev:assistant\` (rewrites /api/chat* → :3815).`,
+        : `Ask Limetry unavailable (${response.status}). Start \`yarn dev:assistant\` (rewrites /api/assistant* → :3815).`,
     )
   }
   try {
@@ -208,7 +208,7 @@ export async function askAssistant(
 }
 
 /**
- * Streams an Ask Limetry answer over SSE (`POST /api/chat/stream`).
+ * Streams an Ask Limetry answer over SSE (`POST /api/assistant/stream`).
  *
  * Falls back to non-streaming `askAssistant` when the stream endpoint is unavailable.
  * Stream `error` events clear Thinking… via `onError` / thrown message after fallback delta.

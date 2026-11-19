@@ -1,73 +1,22 @@
 /**
- * Ask Limetry HTTP routes (`POST /api/chat`, `POST /api/chat/stream`).
+ * Ask Limetry Fastify routes (`POST /api/assistant`, `POST /api/assistant/stream`).
+ *
+ * Same-origin only via limetry.org CloudFront / Next rewrites — no CORS.
  */
 
-import type { Express, NextFunction, Request, Response } from "express"
-import { z } from "zod"
+import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify"
 
 import { prepareAssistantChatStream, runAssistantChat } from "./chat.js"
 import type { AssistantEnv } from "./env.js"
+import {
+  chatBodyJsonSchema,
+  chatSuccessJsonSchema,
+  errorJsonSchema,
+} from "./schemas.js"
+import type { AssistantChatRequest } from "./types.js"
 
-const chatBodySchema = z.object({
-  message: z.string().min(1).max(4_000),
-  history: z.array(z.object({
-    role: z.enum(["user", "assistant"]),
-    content: z.string().max(8_000),
-  })).max(20).optional(),
-})
-
-/**
- * Adds the `www.` / apex sibling for a marketing origin.
- *
- * @param origin - Absolute origin without a trailing slash.
- * @returns Origin plus its www/apex twin when applicable.
- */
-export function chatCorsOriginVariants(origin: string): string[] {
-  const trimmed = origin.replace(/\/$/, "")
-  try {
-    const url = new URL(trimmed)
-    const host = url.hostname
-    const variants = new Set<string>([url.origin])
-    if (host.startsWith("www.")) {
-      url.hostname = host.slice(4)
-      variants.add(url.origin)
-    } else if (host.includes(".")) {
-      url.hostname = `www.${host}`
-      variants.add(url.origin)
-    }
-    return [...variants]
-  } catch {
-    return [trimmed]
-  }
-}
-
-/**
- * Builds allowed browser origins for Ask Limetry.
- *
- * @param env - Assistant env.
- * @returns Origin strings that may call `/api/chat` from the browser.
- */
-function chatCorsOrigins(env: AssistantEnv): string[] {
-  const origins = new Set<string>([
-    "https://limetry.org",
-    "https://www.limetry.org",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3800",
-    "http://127.0.0.1:3800",
-  ])
-  const extra = env.LIMETRY_ASSISTANT_CORS_ORIGINS
-  if (extra) {
-    for (const origin of extra.split(",")) {
-      const trimmed = origin.trim().replace(/\/$/, "")
-      if (trimmed) {
-        for (const variant of chatCorsOriginVariants(trimmed)) {
-          origins.add(variant)
-        }
-      }
-    }
-  }
-  return [...origins]
+type AssistantRoutesOpts = {
+  env: AssistantEnv
 }
 
 /**
@@ -78,7 +27,7 @@ function chatCorsOrigins(env: AssistantEnv): string[] {
  * @returns Error payload when denied; otherwise null.
  */
 function chatAuthDenial(
-  request: Request,
+  request: FastifyRequest,
   env: AssistantEnv,
 ): { status: number, error: string } | null {
   if (env.LIMETRY_ASSISTANT_PUBLIC) {
@@ -100,136 +49,99 @@ function chatAuthDenial(
 }
 
 /**
- * Applies CORS headers for browser Ask Limetry requests.
+ * Writes one SSE data event to the raw Node response.
  *
- * @param request - Incoming request.
- * @param response - Outgoing response.
- * @param env - Assistant env.
- * @returns Whether the request Origin was allowed (or absent).
- */
-function applyChatCors(
-  request: Request,
-  response: Response,
-  env: AssistantEnv,
-): boolean {
-  const origin = request.headers.origin
-  if (!origin) {
-    return true
-  }
-  const allowed = chatCorsOrigins(env)
-  if (!allowed.includes(origin)) {
-    return false
-  }
-  response.setHeader("Access-Control-Allow-Origin", origin)
-  response.setHeader("Vary", "Origin")
-  response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
-  response.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, Accept",
-  )
-  response.setHeader("Access-Control-Max-Age", "86400")
-  return true
-}
-
-/**
- * Writes one SSE data event.
- *
- * @param response - Express response.
+ * @param reply - Fastify reply (hijacked for streaming).
  * @param payload - JSON-serializable event body.
  */
-function writeSse(response: Response, payload: unknown): void {
-  response.write(`data: ${JSON.stringify(payload)}\n\n`)
+function writeSse(reply: FastifyReply, payload: unknown): void {
+  reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
 }
 
 /**
- * Registers Ask Limetry chat endpoints on an Express app.
+ * Fastify plugin registering Ask Limetry chat endpoints.
  *
- * Paths are same-origin on limetry.org: `/api/chat` and `/api/chat/stream`.
- *
- * @param app - Express app.
- * @param env - Validated assistant env.
+ * @param app - Fastify instance.
+ * @param opts - Plugin options including validated env.
  */
-export function createChatRoutes(app: Express, env: AssistantEnv): void {
-  const corsGate = (
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): void => {
-    if (!applyChatCors(request, response, env)) {
-      response.status(403).json({ error: "cors_origin_denied" })
+export const assistantRoutes: FastifyPluginAsync<AssistantRoutesOpts> = async (
+  app,
+  opts,
+) => {
+  const { env } = opts
+
+  app.addHook("preHandler", async (request, reply) => {
+    if (!request.url.startsWith("/api/assistant")) {
       return
     }
-    next()
-  }
-
-  const authGate = (
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): void => {
+    if (request.method === "OPTIONS" || request.method === "GET") {
+      return
+    }
     const denial = chatAuthDenial(request, env)
     if (denial) {
-      response.status(denial.status).json({ error: denial.error })
-      return
+      return reply.status(denial.status).send({ error: denial.error })
     }
-    next()
-  }
+  })
 
-  for (const path of ["/api/chat", "/api/chat/stream"] as const) {
-    app.options(path, (request, response) => {
-      if (!applyChatCors(request, response, env)) {
-        response.status(403).end()
-        return
-      }
-      response.status(204).end()
-    })
-  }
-
-  app.post(
-    "/api/chat",
-    corsGate,
-    authGate,
-    async (request: Request, response: Response): Promise<void> => {
-      const parsed = chatBodySchema.safeParse(request.body)
-      if (!parsed.success) {
-        response.status(400).json({
-          error: "invalid_chat_request",
-          details: parsed.error.issues,
-        })
-        return
-      }
+  app.post<{ Body: AssistantChatRequest }>(
+    "/api/assistant",
+    {
+      schema: {
+        tags: ["assistant"],
+        summary: "Ask Limetry (JSON)",
+        description: "Retrieve Limetry docs and synthesize a grounded answer.",
+        body: chatBodyJsonSchema,
+        response: {
+          200: chatSuccessJsonSchema,
+          400: errorJsonSchema,
+          401: errorJsonSchema,
+          500: errorJsonSchema,
+          503: errorJsonSchema,
+        },
+      },
+    },
+    async (request, reply) => {
       try {
-        const result = await runAssistantChat(env, parsed.data)
-        response.status(200).json({ ok: true, ...result })
+        const result = await runAssistantChat(env, request.body)
+        return reply.status(200).send({ ok: true, ...result })
       } catch (error) {
         const message = error instanceof Error ? error.message : "chat_failed"
-        response.status(500).json({ error: "chat_failed", message })
+        return reply.status(500).send({ error: "chat_failed", message })
       }
     },
   )
 
-  app.post(
-    "/api/chat/stream",
-    corsGate,
-    authGate,
-    async (request: Request, response: Response): Promise<void> => {
-      const parsed = chatBodySchema.safeParse(request.body)
-      if (!parsed.success) {
-        response.status(400).json({
-          error: "invalid_chat_request",
-          details: parsed.error.issues,
-        })
-        return
-      }
+  app.post<{ Body: AssistantChatRequest }>(
+    "/api/assistant/stream",
+    {
+      schema: {
+        tags: ["assistant"],
+        summary: "Ask Limetry (SSE stream)",
+        description:
+          "Same as JSON chat, but streams `meta` / `delta` / `error` / `done` SSE events. "
+          + "Response body is text/event-stream (not JSON Schema validated).",
+        body: chatBodyJsonSchema,
+        // SSE body is not JSON — omit 200 response schema.
+        response: {
+          400: errorJsonSchema,
+          401: errorJsonSchema,
+          500: errorJsonSchema,
+          503: errorJsonSchema,
+        },
+      },
+    },
+    async (request, reply) => {
       try {
-        const prepared = await prepareAssistantChatStream(env, parsed.data)
-        response.status(200)
-        response.setHeader("Content-Type", "text/event-stream; charset=utf-8")
-        response.setHeader("Cache-Control", "no-cache, no-transform")
-        response.setHeader("Connection", "keep-alive")
-        response.flushHeaders?.()
+        const prepared = await prepareAssistantChatStream(env, request.body)
 
-        writeSse(response, {
+        reply.hijack()
+        reply.raw.writeHead(200, {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+        })
+
+        writeSse(reply, {
           type: "meta",
           sources: prepared.sources,
           backend: prepared.backend,
@@ -242,7 +154,7 @@ export function createChatRoutes(app: Express, env: AssistantEnv): void {
             for await (const delta of prepared.textStream) {
               if (delta) {
                 emittedDelta = true
-                writeSse(response, { type: "delta", text: delta })
+                writeSse(reply, { type: "delta", text: delta })
               }
             }
           } catch (streamError) {
@@ -250,30 +162,43 @@ export function createChatRoutes(app: Express, env: AssistantEnv): void {
               ? streamError.message
               : "chat_stream_failed"
             console.warn("[assistant] stream iteration failed; emitting fallback", streamError)
-            writeSse(response, { type: "error", message })
+            writeSse(reply, { type: "error", message })
             if (!emittedDelta && prepared.fallbackAnswer) {
-              writeSse(response, { type: "delta", text: prepared.fallbackAnswer })
+              writeSse(reply, { type: "delta", text: prepared.fallbackAnswer })
             }
-            writeSse(response, { type: "done" })
-            response.end()
+            writeSse(reply, { type: "done" })
+            reply.raw.end()
             return
           }
         } else if (prepared.fallbackAnswer) {
-          writeSse(response, { type: "delta", text: prepared.fallbackAnswer })
+          writeSse(reply, { type: "delta", text: prepared.fallbackAnswer })
         }
 
-        writeSse(response, { type: "done" })
-        response.end()
+        writeSse(reply, { type: "done" })
+        reply.raw.end()
       } catch (error) {
         const message = error instanceof Error ? error.message : "chat_failed"
-        if (response.headersSent) {
-          writeSse(response, { type: "error", message })
-          writeSse(response, { type: "done" })
-          response.end()
+        if (reply.raw.headersSent) {
+          writeSse(reply, { type: "error", message })
+          writeSse(reply, { type: "done" })
+          reply.raw.end()
           return
         }
-        response.status(500).json({ error: "chat_failed", message })
+        return reply.status(500).send({ error: "chat_failed", message })
       }
     },
   )
+}
+
+/**
+ * Registers Ask Limetry routes on a Fastify instance.
+ *
+ * @param app - Fastify app.
+ * @param env - Validated assistant env.
+ */
+export async function createChatRoutes(
+  app: FastifyInstance,
+  env: AssistantEnv,
+): Promise<void> {
+  await app.register(assistantRoutes, { env })
 }

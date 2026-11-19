@@ -36,7 +36,7 @@ export type AssistantCorpusFile = {
   chunks: AssistantChunk[]
 }
 
-/** Chat request accepted by `POST /api/chat`. */
+/** Chat request accepted by `POST /api/assistant`. */
 export type AssistantChatRequest = {
   message: string
   history?: Array<{ role: "user" | "assistant", content: string }>

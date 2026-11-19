@@ -25,7 +25,7 @@ const banned = [
 let failures = 0
 
 for (const message of questions) {
-  const response = await fetch(`${baseUrl}/api/chat`, {
+  const response = await fetch(`${baseUrl}/api/assistant`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ message }),
