@@ -38,8 +38,7 @@ export async function createApiApp(
       info: {
         title: "Limetry public API",
         description:
-          "Ask Limetry and contact form for limetry.org. "
-          + "Served same-origin at https://limetry.org/api/assistant and /api/contact.",
+          "Limetry API for limetry.org.",
         version: "1.0.0",
       },
       tags: [
