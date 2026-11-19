@@ -13,6 +13,7 @@ describe("buildSiteFooterLinks", () => {
       ossLinksRelative: true,
     })
     expect(links.product[0]?.href).toBe("/docs/introduction")
+    expect(links.product.find((l) => l.label === "Contact")?.href).toBe("/contact")
     expect(links.opensource.find((l) => l.label === "Changelog")?.href).toBe("/changelog")
     expect(links.legal.privacy.href).toBe("/privacy")
     expect(links.legal.terms.href).toBe("/terms")
