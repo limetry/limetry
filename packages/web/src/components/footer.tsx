@@ -64,6 +64,9 @@ export function Footer(props: FooterProps = {}): React.JSX.Element {
         brand={<Logo className="h-8 w-auto" />}
         LinkComponent={FooterLink}
         version={AppVersion()}
+        contactHref={
+          ossLinksRelative ? "/contact" : `${siteUrls.web.replace(/\/$/, "")}/contact`
+        }
         discordHref={siteUrls.discord}
       />
     </>
