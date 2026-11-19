@@ -7,14 +7,18 @@
 export { assistantRoutes, createChatRoutes } from "./assistant-routes.js"
 export { contactRoutes, createContactRoutes } from "./contact-routes.js"
 export {
+  contactOptionsFromEnv,
   createBrevoContactProvider,
   createContactProvider,
   createResendContactProvider,
+  defaultContactAdapters,
   normalizeContactProviderId,
+  type ContactAdapterFactory,
+  type ContactMailConfig,
   type ContactMessage,
   type ContactProvider,
-  type ContactProviderEnv,
   type ContactProviderId,
+  type ContactProviderOptions,
   type ContactSendResult,
 } from "./contact/index.js"
 export { parseContactMessage } from "./contact/validate.js"

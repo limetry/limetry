@@ -4,7 +4,10 @@
 
 import { errorJsonSchema } from "@limetry/assistant"
 
-import { createContactProvider } from "./contact/index.js"
+import {
+  contactOptionsFromEnv,
+  createContactProvider,
+} from "./contact/index.js"
 import { parseContactMessage } from "./contact/validate.js"
 import type { FastifyInstance, FastifyPluginAsync } from "fastify"
 
@@ -59,7 +62,7 @@ export const contactRoutes: FastifyPluginAsync = async (app) => {
         return reply.status(400).send({ error: parsed.error })
       }
 
-      const provider = createContactProvider(process.env)
+      const provider = createContactProvider(contactOptionsFromEnv(process.env))
       if (!provider) {
         return reply.status(412).send({ error: "Contact email is not configured" })
       }

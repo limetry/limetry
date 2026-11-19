@@ -1,12 +1,19 @@
 /**
- * Contact provider factory — select Brevo or Resend via CONTACT_PROVIDER.
+ * Contact provider factory — DI adapters selected by CONTACT_PROVIDER.
  */
 
 import { createBrevoContactProvider } from "./brevo.js"
 import { createResendContactProvider } from "./resend.js"
-import type { ContactProvider, ContactProviderId } from "./types.js"
+import type {
+  ContactAdapterFactory,
+  ContactMailConfig,
+  ContactProvider,
+  ContactProviderId,
+} from "./types.js"
 
 export type {
+  ContactAdapterFactory,
+  ContactMailConfig,
   ContactMessage,
   ContactProvider,
   ContactProviderId,
@@ -16,17 +23,24 @@ export type {
 export { createBrevoContactProvider } from "./brevo.js"
 export { createResendContactProvider } from "./resend.js"
 
-/** Env keys used to resolve a contact provider. */
-export type ContactProviderEnv = {
-  CONTACT_PROVIDER?: string
-  BREVO_API_KEY?: string
-  BREVO_FROM_EMAIL?: string
-  BREVO_FROM_NAME?: string
-  BREVO_CONTACT_TO?: string
-  RESEND_API_KEY?: string
-  RESEND_FROM_EMAIL?: string
-  RESEND_FROM_NAME?: string
-  RESEND_CONTACT_TO?: string
+/** Default adapter registry (Brevo + Resend). */
+export const defaultContactAdapters: Record<
+  ContactProviderId,
+  ContactAdapterFactory
+> = {
+  brevo: createBrevoContactProvider,
+  resend: createResendContactProvider,
+}
+
+/**
+ * Host-injected contact options (no provider-prefixed duplicates).
+ */
+export type ContactProviderOptions = {
+  provider?: string | null
+  apiKey?: string | null
+  fromEmail?: string | null
+  fromName?: string | null
+  toEmail?: string | null
 }
 
 /**
@@ -42,41 +56,53 @@ export function normalizeContactProviderId(
 }
 
 /**
- * Resolves the configured contact provider, or null when unset/incomplete.
+ * Maps shared CONTACT_* process env into {@link ContactProviderOptions}.
  *
- * @param env - Process env (or subset) with provider credentials.
+ * @param env - Process env (or subset).
+ * @returns Options for {@link createContactProvider}.
+ */
+export function contactOptionsFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): ContactProviderOptions {
+  return {
+    provider: env.CONTACT_PROVIDER,
+    apiKey: env.CONTACT_API_KEY,
+    fromEmail: env.CONTACT_FROM_EMAIL,
+    fromName: env.CONTACT_FROM_NAME,
+    toEmail: env.CONTACT_TO_EMAIL,
+  }
+}
+
+/**
+ * Resolves a contact provider via the adapter registry, or null when incomplete.
+ *
+ * @param options - Shared mail credentials + provider id.
+ * @param adapters - Optional DI override of adapter factories (tests / custom backends).
  * @returns Configured {@link ContactProvider}, or null.
  */
 export function createContactProvider(
-  env: ContactProviderEnv = process.env,
+  options: ContactProviderOptions,
+  adapters: Partial<Record<ContactProviderId, ContactAdapterFactory>> = defaultContactAdapters,
 ): ContactProvider | null {
-  const id = (normalizeContactProviderId(env.CONTACT_PROVIDER) || "brevo") as ContactProviderId
-
-  if (id === "resend") {
-    const apiKey = env.RESEND_API_KEY?.trim()
-    const fromEmail = env.RESEND_FROM_EMAIL?.trim()
-    const toEmail = (env.RESEND_CONTACT_TO || fromEmail)?.trim()
-    if (!apiKey || !fromEmail || !toEmail) {
-      return null
-    }
-    return createResendContactProvider({
-      apiKey,
-      fromEmail,
-      fromName: env.RESEND_FROM_NAME?.trim() || "Limetry",
-      toEmail,
-    })
+  const id = (normalizeContactProviderId(options.provider) || "brevo") as ContactProviderId
+  const factory = adapters[id]
+  if (!factory) {
+    return null
   }
 
-  const apiKey = env.BREVO_API_KEY?.trim()
-  const fromEmail = env.BREVO_FROM_EMAIL?.trim()
-  const toEmail = (env.BREVO_CONTACT_TO || fromEmail)?.trim()
+  const apiKey = options.apiKey?.trim()
+  const fromEmail = options.fromEmail?.trim()
+  const toEmail = (options.toEmail || options.fromEmail)?.trim()
+  const fromName = options.fromName?.trim() || "Limetry"
   if (!apiKey || !fromEmail || !toEmail) {
     return null
   }
-  return createBrevoContactProvider({
+
+  const config: ContactMailConfig = {
     apiKey,
     fromEmail,
-    fromName: env.BREVO_FROM_NAME?.trim() || "Limetry",
+    fromName,
     toEmail,
-  })
+  }
+  return factory(config)
 }

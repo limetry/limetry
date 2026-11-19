@@ -25,6 +25,24 @@ export type ContactSendResult = {
 }
 
 /**
+ * Shared mail credentials injected into every contact adapter.
+ *
+ * Provider-specific env prefixes are avoided — one set of from/to/key fields
+ * is selected by {@link ContactProviderId}.
+ */
+export type ContactMailConfig = {
+  apiKey: string
+  fromEmail: string
+  fromName: string
+  toEmail: string
+}
+
+/**
+ * Factory that builds a {@link ContactProvider} from shared mail config.
+ */
+export type ContactAdapterFactory = (config: ContactMailConfig) => ContactProvider
+
+/**
  * Pluggable contact delivery backend.
  */
 export interface ContactProvider {

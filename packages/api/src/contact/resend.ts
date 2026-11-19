@@ -3,17 +3,14 @@
  */
 
 import type {
+  ContactMailConfig,
   ContactMessage,
   ContactProvider,
   ContactSendResult,
 } from "./types.js"
 
-export type ResendContactConfig = {
-  apiKey: string
-  fromEmail: string
-  fromName: string
-  toEmail: string
-}
+/** @deprecated Prefer {@link ContactMailConfig}. */
+export type ResendContactConfig = ContactMailConfig
 
 /**
  * Escapes HTML special characters for safe email bodies.
@@ -36,7 +33,7 @@ function escapeHtml(value: string): string {
  * @returns {@link ContactProvider} that posts to Resend emails API.
  */
 export function createResendContactProvider(
-  config: ResendContactConfig,
+  config: ContactMailConfig,
 ): ContactProvider {
   return {
     id: "resend",

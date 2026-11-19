@@ -3,17 +3,14 @@
  */
 
 import type {
+  ContactMailConfig,
   ContactMessage,
   ContactProvider,
   ContactSendResult,
 } from "./types.js"
 
-export type BrevoContactConfig = {
-  apiKey: string
-  fromEmail: string
-  fromName: string
-  toEmail: string
-}
+/** @deprecated Prefer {@link ContactMailConfig}. */
+export type BrevoContactConfig = ContactMailConfig
 
 /**
  * Escapes HTML special characters for safe email bodies.
@@ -36,7 +33,7 @@ function escapeHtml(value: string): string {
  * @returns {@link ContactProvider} that posts to Brevo SMTP API.
  */
 export function createBrevoContactProvider(
-  config: BrevoContactConfig,
+  config: ContactMailConfig,
 ): ContactProvider {
   return {
     id: "brevo",
