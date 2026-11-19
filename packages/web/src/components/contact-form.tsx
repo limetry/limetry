@@ -86,6 +86,12 @@ export function ContactForm({
         void handleSubmit(event)
       }}
       className={className}
+      // Contact form — not a login. Opt out of password-manager save/fill heuristics.
+      autoComplete="off"
+      data-1p-ignore
+      data-lpignore="true"
+      data-bwignore
+      data-form-type="other"
     >
       <div className={compact ? "grid gap-4 sm:grid-cols-2" : "space-y-5"}>
         <div className="space-y-2">
@@ -98,7 +104,10 @@ export function ContactForm({
           <input
             id={`${idPrefix}-name`}
             name="name"
-            autoComplete="name"
+            type="text"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             required
             minLength={2}
             maxLength={120}
@@ -117,7 +126,10 @@ export function ContactForm({
             id={`${idPrefix}-email`}
             name="email"
             type="email"
-            autoComplete="email"
+            inputMode="email"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             required
             maxLength={254}
             className={fieldClassName}
@@ -136,7 +148,10 @@ export function ContactForm({
             <input
               id={`${idPrefix}-company`}
               name="company"
-              autoComplete="organization"
+              type="text"
+              autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
               maxLength={160}
               className={fieldClassName}
               placeholder="Organization"
@@ -153,6 +168,9 @@ export function ContactForm({
           <textarea
             id={`${idPrefix}-message`}
             name="message"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             required
             minLength={10}
             maxLength={5_000}
