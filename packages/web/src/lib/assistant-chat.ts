@@ -274,6 +274,7 @@ export async function askAssistantStream(
   let sources: AssistantChatSource[] = []
   let backend = "memory"
   let model: string | undefined
+  let sawDone = false
 
   while (true) {
     const { done, value } = await reader.read()
@@ -325,12 +326,19 @@ export async function askAssistantStream(
           // Keep reading for a possible fallback delta + done.
         }
       } else if (event.type === "done") {
-        handlers.onDone?.()
+        if (!sawDone) {
+          sawDone = true
+          handlers.onDone?.()
+        }
       }
     }
   }
 
-  handlers.onDone?.()
+  // Server streams guarantee a terminal `done`; only call onDone at EOF if
+  // the stream ended without one (truncated / proxy cut).
+  if (!sawDone) {
+    handlers.onDone?.()
+  }
   if (!answer) {
     throw new Error("Chat stream failed")
   }

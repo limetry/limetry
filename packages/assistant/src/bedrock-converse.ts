@@ -8,6 +8,9 @@ import { ASSISTANT_SYSTEM_PROMPT } from "./prompt.js"
 import { formatContext } from "./prompt.js"
 import type { AssistantChatRequest, AssistantSource } from "./types.js"
 
+/** Default Bedrock inference profile when `LIMETRY_BEDROCK_MODEL_ID` is unset. */
+export const DEFAULT_BEDROCK_MODEL_ID = "us.anthropic.claude-sonnet-4-6"
+
 /**
  * Resolves Bedrock region for Runtime clients.
  *
@@ -19,15 +22,24 @@ export function bedrockRegion(env: AssistantEnv): string {
 }
 
 /**
+ * Resolves the Bedrock model id (env override or package default).
+ *
+ * @param env - Assistant env.
+ * @returns Model / inference profile id.
+ */
+export function resolveBedrockModelId(env: AssistantEnv): string {
+  return env.LIMETRY_BEDROCK_MODEL_ID || DEFAULT_BEDROCK_MODEL_ID
+}
+
+/**
  * True when Bedrock model synthesis should be attempted.
+ *
+ * Uses the package default model when `LIMETRY_BEDROCK_MODEL_ID` is unset.
  *
  * @param env - Assistant env.
  * @returns Whether Converse can run.
  */
 export function canUseBedrockConverse(env: AssistantEnv): boolean {
-  if (!env.LIMETRY_BEDROCK_MODEL_ID && env.LIMETRY_ASSISTANT_BACKEND !== "bedrock-kb") {
-    return false
-  }
   return hasAwsCredentials(env)
 }
 
@@ -76,8 +88,7 @@ export async function generateWithBedrockConverse(
   if (!canUseBedrockConverse(env)) {
     return null
   }
-  const modelId = env.LIMETRY_BEDROCK_MODEL_ID
-    || "us.anthropic.claude-sonnet-4-6"
+  const modelId = resolveBedrockModelId(env)
   try {
     const { BedrockRuntimeClient, ConverseCommand } = await import(
       "@aws-sdk/client-bedrock-runtime"
@@ -120,8 +131,7 @@ export async function streamWithBedrockConverse(
   if (!canUseBedrockConverse(env)) {
     return null
   }
-  const modelId = env.LIMETRY_BEDROCK_MODEL_ID
-    || "us.anthropic.claude-sonnet-4-6"
+  const modelId = resolveBedrockModelId(env)
   try {
     const { BedrockRuntimeClient, ConverseStreamCommand } = await import(
       "@aws-sdk/client-bedrock-runtime"

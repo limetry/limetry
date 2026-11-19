@@ -3,8 +3,10 @@
  */
 
 export {
+  DEFAULT_BEDROCK_MODEL_ID,
   canUseBedrockConverse,
   generateWithBedrockConverse,
+  resolveBedrockModelId,
   streamWithBedrockConverse,
 } from "./bedrock-converse.js"
 export {
@@ -21,7 +23,7 @@ export {
   hasAwsCredentials,
   loadAssistantEnv,
 } from "./env.js"
-export { chatCorsOriginVariants,createChatRoutes } from "./http-routes.js"
+export { chatCorsOriginVariants, createChatRoutes } from "./http-routes.js"
 export type {
   AssistantBackendName,
   AssistantChatRequest,

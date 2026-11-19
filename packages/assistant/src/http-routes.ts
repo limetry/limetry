@@ -49,6 +49,8 @@ export function chatCorsOriginVariants(origin: string): string[] {
  */
 function chatCorsOrigins(env: AssistantEnv): string[] {
   const origins = new Set<string>([
+    "https://limetry.org",
+    "https://www.limetry.org",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3800",
@@ -66,6 +68,35 @@ function chatCorsOrigins(env: AssistantEnv): string[] {
     }
   }
   return [...origins]
+}
+
+/**
+ * Enforces bearer auth when Ask Limetry is not public.
+ *
+ * @param request - Incoming request.
+ * @param env - Assistant env.
+ * @returns Error payload when denied; otherwise null.
+ */
+function chatAuthDenial(
+  request: Request,
+  env: AssistantEnv,
+): { status: number, error: string } | null {
+  if (env.LIMETRY_ASSISTANT_PUBLIC) {
+    return null
+  }
+  const expected = env.LIMETRY_ASSISTANT_BEARER_TOKEN
+  if (!expected) {
+    return { status: 503, error: "assistant_auth_misconfigured" }
+  }
+  const header = request.headers.authorization
+  if (typeof header !== "string" || !header.startsWith("Bearer ")) {
+    return { status: 401, error: "assistant_auth_required" }
+  }
+  const token = header.slice("Bearer ".length).trim()
+  if (token !== expected) {
+    return { status: 401, error: "assistant_auth_invalid" }
+  }
+  return null
 }
 
 /**
@@ -131,6 +162,19 @@ export function createChatRoutes(app: Express, env: AssistantEnv): void {
     next()
   }
 
+  const authGate = (
+    request: Request,
+    response: Response,
+    next: NextFunction,
+  ): void => {
+    const denial = chatAuthDenial(request, env)
+    if (denial) {
+      response.status(denial.status).json({ error: denial.error })
+      return
+    }
+    next()
+  }
+
   for (const path of ["/api/chat", "/api/chat/stream"] as const) {
     app.options(path, (request, response) => {
       if (!applyChatCors(request, response, env)) {
@@ -144,6 +188,7 @@ export function createChatRoutes(app: Express, env: AssistantEnv): void {
   app.post(
     "/api/chat",
     corsGate,
+    authGate,
     async (request: Request, response: Response): Promise<void> => {
       const parsed = chatBodySchema.safeParse(request.body)
       if (!parsed.success) {
@@ -166,6 +211,7 @@ export function createChatRoutes(app: Express, env: AssistantEnv): void {
   app.post(
     "/api/chat/stream",
     corsGate,
+    authGate,
     async (request: Request, response: Response): Promise<void> => {
       const parsed = chatBodySchema.safeParse(request.body)
       if (!parsed.success) {

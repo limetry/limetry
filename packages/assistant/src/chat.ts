@@ -45,8 +45,8 @@ export function hasLlmProvider(env: AssistantEnv): boolean {
   if (env.ANTHROPIC_API_KEY || env.OPENAI_API_KEY) {
     return true
   }
-  return Boolean(env.LIMETRY_BEDROCK_MODEL_ID || env.LIMETRY_ASSISTANT_BACKEND === "bedrock-kb")
-    && hasAwsCredentials(env)
+  // Bedrock Converse uses a package default model when LIMETRY_BEDROCK_MODEL_ID is unset.
+  return hasAwsCredentials(env)
 }
 
 /**
