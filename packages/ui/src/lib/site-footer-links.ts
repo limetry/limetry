@@ -115,7 +115,6 @@ export function buildSiteFooterLinks(input: BuildSiteFooterLinksInput): SiteFoot
   const product: SiteFooterLink[] = [
     { label: "Docs", ...ossHref("/docs/introduction", input) },
     { label: "Examples", ...ossHref("/examples", input) },
-    { label: "Contact", ...ossHref("/contact", input) },
     { label: "Quick start", ...ossHref("/docs/quick-start", input) },
   ]
   if (input.includeCloudLink) {

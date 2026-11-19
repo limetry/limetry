@@ -10,6 +10,7 @@ export function SiteFooter({
   brand,
   LinkComponent,
   version,
+  contactHref,
   discordHref,
 }: SiteFooterProps): React.JSX.Element {
   return (
@@ -23,10 +24,24 @@ export function SiteFooter({
             <Text className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               {links.blurb}
             </Text>
-            {discordHref ? (
-              <LinkComponent href={discordHref} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex">
-                <Text className="text-sm text-slate-500 dark:text-slate-400">Discord</Text>
-              </LinkComponent>
+            {contactHref || discordHref ? (
+              <View className="mt-4 gap-2">
+                {contactHref ? (
+                  <LinkComponent href={contactHref} className="inline-flex">
+                    <Text className="text-sm text-slate-500 dark:text-slate-400">Contact</Text>
+                  </LinkComponent>
+                ) : null}
+                {discordHref ? (
+                  <LinkComponent
+                    href={discordHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex"
+                  >
+                    <Text className="text-sm text-slate-500 dark:text-slate-400">Discord</Text>
+                  </LinkComponent>
+                ) : null}
+              </View>
             ) : null}
           </View>
           <FooterColumn title="Product" links={links.product} LinkComponent={LinkComponent} />

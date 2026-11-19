@@ -31,6 +31,7 @@ export function SiteFooter({
   brand,
   LinkComponent,
   version,
+  contactHref,
   discordHref,
   className,
 }: SiteFooterProps): JSX.Element {
@@ -43,16 +44,26 @@ export function SiteFooter({
               {brand}
             </LinkComponent>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{links.blurb}</p>
-            {discordHref ? (
-              <div className="mt-4">
-                <LinkComponent
-                  href={discordHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Discord
-                </LinkComponent>
+            {contactHref || discordHref ? (
+              <div className="mt-4 flex flex-col gap-2">
+                {contactHref ? (
+                  <LinkComponent
+                    href={contactHref}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Contact
+                  </LinkComponent>
+                ) : null}
+                {discordHref ? (
+                  <LinkComponent
+                    href={discordHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Discord
+                  </LinkComponent>
+                ) : null}
               </div>
             ) : null}
           </div>

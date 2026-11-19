@@ -14,7 +14,11 @@ export type SiteFooterProps = {
   LinkComponent: ComponentType<DrawerLinkProps>
   /** Product version displayed in the legal bar. */
   version?: string
-  /** Optional social destinations. */
+  /**
+   * Same-product contact page (shown above Discord in the brand column).
+   */
+  contactHref?: string
+  /** Optional Discord invite URL. */
   discordHref?: string
   /** Additional classes for the footer root. */
   className?: string

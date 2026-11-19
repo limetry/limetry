@@ -47,6 +47,13 @@
       "import": "./src/lib/site-footer-links.ts",
       "default": "./src/lib/site-footer-links.ts"
     },
+    "./contact-form": {
+      "types": "./dist/components/contact-form.web.d.ts",
+      "react-native": "./src/components/contact-form.tsx",
+      "browser": "./src/components/contact-form.web.tsx",
+      "import": "./src/components/contact-form.web.tsx",
+      "default": "./src/components/contact-form.web.tsx"
+    },
     "./theme-toggle": {
       "types": "./dist/components/theme-toggle.web.d.ts",
       "react-native": "./src/components/theme-toggle.tsx",
