@@ -27,7 +27,7 @@ describe("buildSiteFooterLinks", () => {
       ossWebOrigin: "http://localhost:3800",
       cloudAppOrigin: "http://localhost:3830",
       openApiHref: "/openapi",
-      githubUrl: "https://github.com/limetry/sdk",
+      githubUrl: "https://github.com/limetry/limetry",
       includeCloudLink: true,
       ossLinksRelative: false,
     })
