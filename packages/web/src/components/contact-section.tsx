@@ -40,7 +40,6 @@ export function ContactSection({
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Questions about self-run Limetry, Limetry Cloud, or partnerships — send a note.
-            Prefer a full page?{" "}
             <Link
               href="/contact"
               className="font-medium text-primary underline-offset-4 hover:underline"

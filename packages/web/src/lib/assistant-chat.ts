@@ -172,7 +172,7 @@ async function readChatJson(
     throw new Error(
       response.ok
         ? "Ask Limetry returned a non-JSON response. Is `yarn dev:assistant` running on :3815?"
-        : `Ask Limetry unavailable (${response.status}). Start \`yarn dev:assistant\` (rewrites /api/assistant* → :3815).`,
+        : `Ask Limetry unavailable (${response.status})`,
     )
   }
   try {
