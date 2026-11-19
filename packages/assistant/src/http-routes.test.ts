@@ -73,9 +73,9 @@ describe("Ask Limetry chat routes", () => {
     expect(response.body.error).toBe("invalid_chat_request")
   })
 
-  it("allows www and apex landing origins on OPTIONS preflight", async () => {
+  it("allows www and apex landing origins on OPTIONS preflight by default", async () => {
     const app = createAssistantApp(testEnv({
-      LIMETRY_ASSISTANT_CORS_ORIGINS: "https://limetry.org",
+      LIMETRY_ASSISTANT_CORS_ORIGINS: "",
     }))
     for (const origin of ["https://limetry.org", "https://www.limetry.org"]) {
       const response = await request(app)
@@ -95,5 +95,25 @@ describe("Ask Limetry chat routes", () => {
       .set("Origin", "https://evil.example")
       .set("Access-Control-Request-Method", "POST")
     expect(response.status).toBe(403)
+  })
+
+  it("requires bearer auth when LIMETRY_ASSISTANT_PUBLIC is false", async () => {
+    clearCorpusCache()
+    const app = createAssistantApp(testEnv({
+      LIMETRY_ASSISTANT_PUBLIC: "false",
+      LIMETRY_ASSISTANT_BEARER_TOKEN: "test-secret",
+    }))
+    const denied = await request(app)
+      .post("/api/chat")
+      .send({ message: "How do I self-host Limetry?" })
+    expect(denied.status).toBe(401)
+    expect(denied.body.error).toBe("assistant_auth_required")
+
+    const allowed = await request(app)
+      .post("/api/chat")
+      .set("Authorization", "Bearer test-secret")
+      .send({ message: "How do I self-host Limetry?" })
+    expect(allowed.status).toBe(200)
+    expect(allowed.body.ok).toBe(true)
   })
 })

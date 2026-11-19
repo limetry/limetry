@@ -2,8 +2,8 @@
 /**
  * Builds docs/assistant/corpus/assistant-corpus.json from Limetry markdown sources.
  *
- * Usage (from repo root or packages/server):
- *   yarn workspace @limetry/server assistant:ingest
+ * Usage (from repo root):
+ *   yarn workspace @limetry/assistant assistant:ingest
  *
  * Optional Cloud/enterprise docs:
  *   LIMETRY_ASSISTANT_EXTRA_ROOTS=../limetry-enterprise yarn workspace @limetry/assistant assistant:ingest

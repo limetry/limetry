@@ -2,6 +2,10 @@
  * Environment for Ask Limetry (`@limetry/assistant`).
  */
 
+import { existsSync } from "node:fs"
+import { homedir } from "node:os"
+import { join } from "node:path"
+
 import { z } from "zod"
 
 function emptyStringToUndefined(value: unknown): unknown {
@@ -19,10 +23,16 @@ export const assistantEnvSchema = z.object({
   LIMETRY_ASSISTANT_BACKEND: z.enum(["memory", "pgvector", "bedrock-kb"]).default("memory"),
   LIMETRY_ASSISTANT_CORPUS_PATH: z.string().min(1).default("docs/assistant/corpus/assistant-corpus.json"),
   LIMETRY_ASSISTANT_EXTRA_ROOTS: z.preprocess(emptyStringToUndefined, z.string().optional()),
+  /**
+   * When true (default), chat is anonymous behind the CORS allowlist.
+   * When false, require `Authorization: Bearer <LIMETRY_ASSISTANT_BEARER_TOKEN>`.
+   */
   LIMETRY_ASSISTANT_PUBLIC: z
     .enum(["true", "false"])
     .default("true")
     .transform((value) => value === "true"),
+  /** Shared secret for non-public mode (`Authorization: Bearer …`). */
+  LIMETRY_ASSISTANT_BEARER_TOKEN: z.preprocess(emptyStringToUndefined, z.string().optional()),
   LIMETRY_ASSISTANT_CORS_ORIGINS: z.preprocess(emptyStringToUndefined, z.string().optional()),
   LIMETRY_ASSISTANT_MODEL: z.preprocess(emptyStringToUndefined, z.string().optional()),
   LIMETRY_BEDROCK_KB_ID: z.preprocess(emptyStringToUndefined, z.string().optional()),
@@ -65,23 +75,34 @@ export function loadAssistantEnv(
 }
 
 /**
- * True when Bedrock auth is available (IAM chain, Lambda role, or Bedrock API key).
+ * True when the AWS SDK default credential chain is likely to resolve.
  *
- * Deployed Lambda should rely on the execution role only — do not set
- * `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` in Pulumi. Locally prefer
- * `AWS_PROFILE`, or `AWS_BEARER_TOKEN_BEDROCK` as a Bedrock-only substitute.
+ * Covers explicit keys/profile/Lambda/container/web-identity env, Bedrock API
+ * keys, and the usual `~/.aws/credentials` / `~/.aws/config` files used when
+ * `AWS_PROFILE` is unset. Not a guarantee — Converse still catches auth errors.
  *
  * @param env - Assistant env.
  * @returns Whether Bedrock calls are likely to authenticate.
  */
 export function hasAwsCredentials(env: AssistantEnv): boolean {
-  return Boolean(
+  if (
     env.AWS_BEARER_TOKEN_BEDROCK
     || env.AWS_ACCESS_KEY_ID
     || env.AWS_PROFILE
     || env.AWS_EXECUTION_ENV
     || env.AWS_LAMBDA_FUNCTION_NAME
     || process.env.AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
-    || process.env.AWS_CONTAINER_CREDENTIALS_FULL_URI,
-  )
+    || process.env.AWS_CONTAINER_CREDENTIALS_FULL_URI
+    || process.env.AWS_WEB_IDENTITY_TOKEN_FILE
+    || process.env.AWS_ROLE_ARN
+  ) {
+    return true
+  }
+  try {
+    const home = process.env.HOME || process.env.USERPROFILE || homedir()
+    return existsSync(join(home, ".aws", "credentials"))
+      || existsSync(join(home, ".aws", "config"))
+  } catch {
+    return false
+  }
 }
