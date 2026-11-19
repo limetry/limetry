@@ -37,6 +37,15 @@ export type AssistantEnv = {
   AWS_LAMBDA_FUNCTION_NAME?: string
   DATABASE_URL?: string
   ASSISTANT_PORT: number
+  CONTACT_PROVIDER?: string
+  BREVO_API_KEY?: string
+  BREVO_FROM_EMAIL?: string
+  BREVO_FROM_NAME?: string
+  BREVO_CONTACT_TO?: string
+  RESEND_API_KEY?: string
+  RESEND_FROM_EMAIL?: string
+  RESEND_FROM_NAME?: string
+  RESEND_CONTACT_TO?: string
 }
 
 const ajv = new Ajv({
@@ -115,6 +124,15 @@ export function loadAssistantEnv(
     AWS_LAMBDA_FUNCTION_NAME: data.AWS_LAMBDA_FUNCTION_NAME as string | undefined,
     DATABASE_URL: data.DATABASE_URL as string | undefined,
     ASSISTANT_PORT: Number(portRaw ?? 3815),
+    CONTACT_PROVIDER: data.CONTACT_PROVIDER as string | undefined,
+    BREVO_API_KEY: data.BREVO_API_KEY as string | undefined,
+    BREVO_FROM_EMAIL: data.BREVO_FROM_EMAIL as string | undefined,
+    BREVO_FROM_NAME: data.BREVO_FROM_NAME as string | undefined,
+    BREVO_CONTACT_TO: data.BREVO_CONTACT_TO as string | undefined,
+    RESEND_API_KEY: data.RESEND_API_KEY as string | undefined,
+    RESEND_FROM_EMAIL: data.RESEND_FROM_EMAIL as string | undefined,
+    RESEND_FROM_NAME: data.RESEND_FROM_NAME as string | undefined,
+    RESEND_CONTACT_TO: data.RESEND_CONTACT_TO as string | undefined,
   }
 }
 

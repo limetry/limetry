@@ -3,8 +3,8 @@
  */
 
 export {
-  DEFAULT_BEDROCK_MODEL_ID,
   canUseBedrockConverse,
+  DEFAULT_BEDROCK_MODEL_ID,
   generateWithBedrockConverse,
   resolveBedrockModelId,
   streamWithBedrockConverse,

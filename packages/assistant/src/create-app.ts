@@ -6,12 +6,13 @@ import swagger from "@fastify/swagger"
 import swaggerUi from "@fastify/swagger-ui"
 import Fastify, { type FastifyInstance } from "fastify"
 
+import { createContactRoutes } from "./contact/routes.js"
 import type { AssistantEnv } from "./env.js"
 import { createChatRoutes } from "./http-routes.js"
 import { healthJsonSchema } from "./schemas.js"
 
 /**
- * Builds the Ask Limetry HTTP app (`/api/assistant*`, health, OpenAPI).
+ * Builds the Ask Limetry HTTP app (`/api/assistant*`, `/api/contact`, health, OpenAPI).
  *
  * @param env - Validated assistant env.
  * @returns Configured Fastify instance (call `ready()` before inject/listen).
@@ -35,11 +36,14 @@ export async function createAssistantApp(
       info: {
         title: "Ask Limetry",
         description:
-          "Product assistant for Limetry (open-source) and Limetry Cloud. "
-          + "Served same-origin at https://limetry.org/api/assistant.",
+          "Product assistant and contact form for Limetry (open-source) and Limetry Cloud. "
+          + "Served same-origin at https://limetry.org/api/assistant and /api/contact.",
         version: "1.0.0",
       },
-      tags: [{ name: "assistant", description: "Docs Q&A" }],
+      tags: [
+        { name: "assistant", description: "Docs Q&A" },
+        { name: "contact", description: "Public contact form" },
+      ],
       components: {
         securitySchemes: {
           bearerAuth: {
@@ -72,6 +76,7 @@ export async function createAssistantApp(
   )
 
   await createChatRoutes(app, env)
+  await createContactRoutes(app, env)
 
   app.setNotFoundHandler(async (request, reply) => {
     if (request.url.startsWith("/api")) {
