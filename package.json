@@ -69,7 +69,6 @@
     "typecheck": "tsx scripts/run-workspaces.ts typecheck --exclude limetry --exclude @limetry/skill",
     "releasekit:status": "releasekit status",
     "build:assistant": "yarn workspace @limetry/assistant build",
-    "build:email": "yarn workspace @limetry/email build",
     "build:api": "yarn workspace @limetry/api build",
     "build:api:lambda": "yarn workspace @limetry/assistant assistant:ingest && yarn workspace @limetry/api build:lambda",
     "dev:api": "yarn workspace @limetry/api dev",

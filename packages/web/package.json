@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^2.23.0",
-    "@limetry/email": "workspace:*",
+    "@limetry/api": "workspace:*",
     "@limetry/preflight": "^1.2.92",
     "@limetry/sdk": "^1.2.92",
     "@limetry/ui": "^1.2.92",

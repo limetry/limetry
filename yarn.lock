@@ -2745,7 +2745,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@limetry/api@workspace:packages/api":
+"@limetry/api@workspace:*, @limetry/api@workspace:packages/api":
   version: 0.0.0-use.local
   resolution: "@limetry/api@workspace:packages/api"
   dependencies:
@@ -2753,7 +2753,6 @@ __metadata:
     "@fastify/swagger": "npm:^9.9.5"
     "@fastify/swagger-ui": "npm:^6.1.4"
     "@limetry/assistant": "workspace:*"
-    "@limetry/email": "workspace:*"
     "@types/aws-lambda": "npm:^8.10.163"
     "@types/node": "npm:^26.4.1"
     esbuild: "npm:^0.28.2"
@@ -2852,16 +2851,6 @@ __metadata:
     drizzle-orm: "npm:^0.45.2"
     pg: "npm:^8.23.0"
     tsx: "npm:^4.20.0"
-    typescript: "npm:^5.8.2"
-    vitest: "npm:4.1.11"
-  languageName: unknown
-  linkType: soft
-
-"@limetry/email@workspace:*, @limetry/email@workspace:packages/email":
-  version: 0.0.0-use.local
-  resolution: "@limetry/email@workspace:packages/email"
-  dependencies:
-    "@types/node": "npm:^26.4.1"
     typescript: "npm:^5.8.2"
     vitest: "npm:4.1.11"
   languageName: unknown
@@ -3042,7 +3031,7 @@ __metadata:
   resolution: "@limetry/web@workspace:packages/web"
   dependencies:
     "@dotenvx/dotenvx": "npm:^2.23.0"
-    "@limetry/email": "workspace:*"
+    "@limetry/api": "workspace:*"
     "@limetry/preflight": "npm:^1.2.92"
     "@limetry/sdk": "npm:^1.2.92"
     "@limetry/ui": "npm:^1.2.92"

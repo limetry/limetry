@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js",
+      "default": "./dist/client/index.js"
     }
   },
   "scripts": {
@@ -26,7 +31,6 @@
     "@fastify/swagger": "^9.9.5",
     "@fastify/swagger-ui": "^6.1.4",
     "@limetry/assistant": "workspace:*",
-    "@limetry/email": "workspace:*",
     "fastify": "^5.12.8"
   },
   "devDependencies": {

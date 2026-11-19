@@ -1,12 +1,11 @@
 /**
- * Fastify route: public `POST /api/contact` via `@limetry/email` providers.
+ * Fastify route: public `POST /api/contact` via in-package contact providers.
  */
 
-import {
-  createContactProvider,
-  parseContactMessage,
-} from "@limetry/email"
 import { errorJsonSchema } from "@limetry/assistant"
+
+import { createContactProvider } from "./contact/index.js"
+import { parseContactMessage } from "./contact/validate.js"
 import type { FastifyInstance, FastifyPluginAsync } from "fastify"
 
 const contactBodyJsonSchema = {

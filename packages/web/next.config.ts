@@ -81,7 +81,7 @@ const config: NextConfig = {
   serverExternalPackages: ["pino", "@limetry/preflight"],
   // Transpile only the drawer subpath graph from @limetry/ui (DOM implementation).
   // Do not pull the RN-first main barrel into this package.
-  transpilePackages: ["@limetry/ui", "@limetry/email"],
+  transpilePackages: ["@limetry/ui", "@limetry/api"],
   ...(staticExport
     ? {
       output: "export" as const,

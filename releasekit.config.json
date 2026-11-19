@@ -50,10 +50,6 @@
     },
     {
       "type": "packageJson",
-      "path": "packages/email/package.json"
-    },
-    {
-      "type": "packageJson",
       "path": "packages/api/package.json"
     }
   ],
