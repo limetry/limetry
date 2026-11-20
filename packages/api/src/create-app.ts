@@ -13,7 +13,7 @@ import Fastify, { type FastifyInstance } from "fastify"
 
 import { createChatRoutes } from "./assistant-routes.js"
 import { createContactRoutes } from "./contact-routes.js"
-import { prefersHtml, renderAskApiStatusHtml } from "./status-html.js"
+import { prefersHtml, renderAskApiStatusHtml } from "./presentation/status-html.js"
 
 /**
  * Builds the public HTTP app (`/api/assistant*`, `/api/contact`, health, OpenAPI).

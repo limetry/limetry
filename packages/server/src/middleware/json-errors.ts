@@ -1,51 +1,15 @@
-import { existsSync, readFileSync } from "node:fs"
-import { dirname, join } from "node:path"
-import { fileURLToPath } from "node:url"
+/**
+ * JSON error helpers for evaluate API routes (plus Accept-aware HTML fallback).
+ */
 
-import type { ErrorRequestHandler, RequestHandler, Response } from "express"
+import type { ErrorRequestHandler, RequestHandler } from "express"
+
+import { prefersHtml, sendStatusHtml } from "../presentation/status-html.js"
 
 /** JSON error body shared by the evaluate API. */
 export type ApiErrorBody = {
   error: string
   message?: string
-}
-
-function prefersHtml(acceptHeader: string | undefined): boolean {
-  if (!acceptHeader) {
-    return false
-  }
-  const accept = acceptHeader.toLowerCase()
-  const html = accept.indexOf("text/html")
-  if (html < 0) {
-    return false
-  }
-  const json = accept.indexOf("application/json")
-  if (json < 0) {
-    return true
-  }
-  return html < json
-}
-
-function resolvePublicStatusPage(fileName: "404.html" | "500.html"): string | null {
-  const candidates = [
-    join(process.cwd(), "public", fileName),
-    join(dirname(fileURLToPath(import.meta.url)), "../../public", fileName),
-  ]
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) {
-      return candidate
-    }
-  }
-  return null
-}
-
-function sendStatusHtml(response: Response, status: 404 | 500, fileName: "404.html" | "500.html"): boolean {
-  const filePath = resolvePublicStatusPage(fileName)
-  if (!filePath) {
-    return false
-  }
-  response.status(status).type("html").send(readFileSync(filePath, "utf8"))
-  return true
 }
 
 /**
