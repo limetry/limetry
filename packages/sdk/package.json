@@ -13,7 +13,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "build-info.json"
   ],
   "publishConfig": {
     "access": "public",
