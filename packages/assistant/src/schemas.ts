@@ -72,10 +72,11 @@ export const errorJsonSchema = {
 export const healthJsonSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["ok", "service"],
+  required: ["ok", "service", "version"],
   properties: {
     ok: { type: "boolean", const: true },
     service: { type: "string", const: "ask-limetry" },
+    version: { type: "string", minLength: 1 },
   },
 } as const
 

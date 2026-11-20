@@ -8,9 +8,15 @@
  * @packageDocumentation
  */
 
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+
+import { seedDevVersionEnv } from "@limetry/preflight"
+
 import { loadDotenv } from "./load-dotenv.js"
 
 loadDotenv()
+seedDevVersionEnv(resolve(dirname(fileURLToPath(import.meta.url)), "../../.."))
 
 import { startServer } from "./create-app.js"
 import { loadEnv } from "./env.js"

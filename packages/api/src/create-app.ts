@@ -8,6 +8,7 @@ import {
   type AssistantEnv,
   healthJsonSchema,
 } from "@limetry/assistant"
+import { AppVersion } from "@limetry/sdk"
 import Fastify, { type FastifyInstance } from "fastify"
 
 import { createChatRoutes } from "./assistant-routes.js"
@@ -33,13 +34,20 @@ export async function createApiApp(
     },
   })
 
+  const appVersion = AppVersion()
+
   await app.register(swagger, {
     openapi: {
       info: {
         title: "Limetry public API",
-        description:
-          "Limetry API for limetry.org.",
+        description: `Limetry API for limetry.org. App ${appVersion}`,
         version: "1.0.0",
+        "x-limetry-app-version": appVersion,
+      } as {
+        title: string
+        description: string
+        version: string
+        "x-limetry-app-version": string
       },
       tags: [
         { name: "assistant", description: "Docs Q&A" },
@@ -73,7 +81,11 @@ export async function createApiApp(
         response: { 200: healthJsonSchema },
       },
     },
-    async () => ({ ok: true as const, service: "ask-limetry" as const }),
+    async () => ({
+      ok: true as const,
+      service: "ask-limetry" as const,
+      version: appVersion,
+    }),
   )
 
   await createChatRoutes(app, env)

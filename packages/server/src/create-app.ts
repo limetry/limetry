@@ -184,7 +184,30 @@ function readSwaggerPage(publicDir: string, specPath: string): string {
   if (!existsSync(swaggerPage)) {
     return ""
   }
-  return readFileSync(swaggerPage, "utf8").replace('url: "/openapi.yaml"', `url: "${specPath}"`)
+  return readFileSync(swaggerPage, "utf8")
+    .replaceAll("__APP_VERSION__", AppVersion())
+    .replace('url: "/openapi.yaml"', `url: "${specPath}"`)
+}
+
+/**
+ * Injects the product AppVersion into a served OpenAPI JSON document.
+ *
+ * @param raw - File contents of openapi.json.
+ * @returns JSON string with `info.x-limetry-app-version` set.
+ */
+function withAppVersionOpenApiJson(raw: string): string {
+  try {
+    const document = JSON.parse(raw) as {
+      info?: Record<string, unknown>
+    }
+    document.info = {
+      ...(document.info ?? {}),
+      "x-limetry-app-version": AppVersion(),
+    }
+    return `${JSON.stringify(document, null, 2)}\n`
+  } catch {
+    return raw
+  }
 }
 
 /**
@@ -288,7 +311,7 @@ export function createApp(options: CreateAppOptions): Express {
         response.status(404).json({ error: "openapi_json_missing" })
         return
       }
-      response.type("json").send(readFileSync(filePath, "utf8"))
+      response.type("json").send(withAppVersionOpenApiJson(readFileSync(filePath, "utf8")))
     }
 
     app.get("/openapi.json", serveOpenApiJson)

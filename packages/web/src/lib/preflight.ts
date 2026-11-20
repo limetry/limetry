@@ -15,7 +15,7 @@ import {
   resolvePublicListenUrl,
   runPreflight,
 } from "@limetry/preflight"
-import { AppBuild } from "@limetry/sdk"
+import { AppVersion } from "@limetry/sdk"
 
 import { loadWebEnv, type WebEnv } from "./env"
 import { describeResolvedOrigin, resolveWebOrigins } from "./public-origins"
@@ -137,7 +137,7 @@ export async function runWebPreflight(source: NodeJS.ProcessEnv = process.env): 
   const telemetry = collectConfiguredTelemetry(source)
   return runPreflight({
     product: "Limetry Web",
-    appVersion: AppBuild().label,
+    appVersion: AppVersion(),
     env: source,
     envChecks: [...collectWebEnvChecks(env, source), ...telemetry.envChecks],
     configuration: [...webConfigurationLines(env, source), ...telemetry.configuration],

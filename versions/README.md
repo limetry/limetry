@@ -25,20 +25,25 @@ for example `>=1.2.0 <1.3.0`.
 
 ## Build (deploy counter)
 
-`build-info.json` at the repo root holds a monotonic **build** integer used in
-footers and preflight (`AppBuild().label`, e.g. `v1.2.94 · 1847`). The build
-increments on parent `yarn release` and deploy-only flows
+`build-info.json` at the repo root holds a monotonic **build** integer. Runtime
+`AppVersion()` renders:
+
+- Deploy / production: `vA.B.C-X` (X = build)
+- Local development: `vA.B.C-dev-Y` (Y = commits since last push, seeded by
+  `seedDevVersionEnv` in `@limetry/preflight`)
+
+The build increments on parent `yarn release` and deploy-only flows
 (`yarn deploy:aws` → `releasekit build --increment`) **without** a new git tag.
 
 | Field | Role |
 |--------|------|
 | `version` | Mirror of platform semver |
-| `build` | Footer unique id (always increments on release/deploy) |
+| `build` | Deploy suffix X in `vA.B.C-X` |
 | `contentHash` | Hash of `versionGate.paths` — gates the next platform bump |
 | `gitSha` / `builtAt` | Traceability |
 
 OSS mirrors root `build-info.json` into `packages/sdk/build-info.json` (for
-`AppBuild`) and `packages/web/public/build-info.json` during align / deploy.
+`AppVersion`) and `packages/web/public/build-info.json` during align / deploy.
 
 ## Schemas
 

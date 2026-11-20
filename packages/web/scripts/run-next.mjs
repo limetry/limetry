@@ -16,9 +16,8 @@ const preferredDefault = Number(process.env.LIMETRY_DEV_PORT_DEFAULT || "3800")
 const nextArgs = process.argv.slice(2)
 
 async function main() {
-  const { isProductionRuntime, isTestEnv, resolveDevListenPort } = await import(
-    "@limetry/preflight"
-  )
+  const { isProductionRuntime, isTestEnv, resolveDevListenPort, seedDevVersionEnv } =
+    await import("@limetry/preflight")
 
   const preferredRaw = process.env[preferredEnvKey] || process.env.PORT
   const preferred = preferredRaw ? Number(preferredRaw) : preferredDefault
@@ -38,6 +37,7 @@ async function main() {
 
   process.env.PORT = String(hop.port)
   process.env[preferredEnvKey] = String(hop.port)
+  seedDevVersionEnv(path.resolve(appDir, "../.."))
 
   const nextBin = require.resolve("next/dist/bin/next")
   const child = spawn(process.execPath, [nextBin, ...nextArgs, "-p", String(hop.port)], {

@@ -134,11 +134,14 @@ describe("landing page", () => {
     const json = await request(app).get("/openapi.json")
     expect(json.status).toBe(200)
     expect(json.body.openapi).toMatch(/^3\./)
+    expect(json.body.info?.["x-limetry-app-version"]).toBe(AppVersion())
 
     const swagger = await request(app).get("/openapi")
     expect(swagger.status).toBe(200)
     expect(swagger.text).toContain("swagger-ui")
     expect(swagger.text).toContain("/openapi.yaml")
+    expect(swagger.text).toContain(AppVersion())
+    expect(swagger.text).not.toContain("__APP_VERSION__")
 
     const versionedYaml = await request(app).get("/v1/openapi.yaml")
     expect(versionedYaml.status).toBe(200)
@@ -147,10 +150,12 @@ describe("landing page", () => {
     const versionedJson = await request(app).get("/v1/openapi.json")
     expect(versionedJson.status).toBe(200)
     expect(versionedJson.body.openapi).toMatch(/^3\./)
+    expect(versionedJson.body.info?.["x-limetry-app-version"]).toBe(AppVersion())
 
     const versionedSwagger = await request(app).get("/v1/docs")
     expect(versionedSwagger.status).toBe(200)
     expect(versionedSwagger.text).toContain("swagger-ui")
     expect(versionedSwagger.text).toContain("/v1/openapi.yaml")
+    expect(versionedSwagger.text).toContain(AppVersion())
   })
 })

@@ -17,6 +17,7 @@
  */
 
 export { connectivityIcon, envCheck } from "./checks.js"
+export { countCommitsSincePush, seedDevVersionEnv } from "./dev-version.js"
 export { annotated, listEffectiveDotenvFiles } from "./dotenv-files.js"
 export {
   isNextBuildPhase,
