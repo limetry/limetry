@@ -5,7 +5,8 @@
  * Run via `yarn workspace @limetry/server sync:openapi`.
  */
 
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { spawnSync } from "node:child_process"
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -113,5 +114,22 @@ writeFileSync(
     `<!-- generated:api-paths -->\n${landingPathRows}\n              <!-- /generated:api-paths -->`,
   ),
 )
+
+const statusPageScript = join(
+  serverRoot,
+  "../../../limetry-enterprise/packages/infra/scripts/api-status-page.mjs",
+)
+if (existsSync(statusPageScript)) {
+  const statusResult = spawnSync(
+    process.execPath,
+    [statusPageScript, publicDir, "--product", "oss"],
+    { stdio: "inherit" },
+  )
+  if (statusResult.status !== 0) {
+    console.warn("api-status-page.mjs failed; keeping existing 404.html/500.html if present")
+  }
+} else {
+  console.warn(`Status page script missing at ${statusPageScript}`)
+}
 
 console.log("Synced OpenAPI → packages/server/public/openapi.{yaml,json}")

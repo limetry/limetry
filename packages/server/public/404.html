@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Limetry API — 404</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var key = "limetry-theme";
+        var stored = null;
+        try {
+          var parts = document.cookie.split("; ");
+          for (var i = 0; i < parts.length; i++) {
+            var eq = parts[i].indexOf("=");
+            if (eq < 0) continue;
+            if (parts[i].slice(0, eq) !== key) continue;
+            var cv = decodeURIComponent(parts[i].slice(eq + 1));
+            if (cv === "light" || cv === "dark" || cv === "system") { stored = cv; break; }
+          }
+        } catch (e) {}
+        if (!stored) {
+          try { stored = window.localStorage.getItem(key); } catch (e) {}
+        }
+        var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var useDark = stored === "dark" || (stored !== "light" && systemDark);
+        document.documentElement.classList.toggle("dark", useDark);
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222 47% 11%;
+      --muted-foreground: 215 16% 47%;
+      --border: 214 32% 91%;
+      --primary: 160 84% 39%;
+      --primary-foreground: 0 0% 100%;
+      --card: 0 0% 100%;
+      --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    html.dark {
+      --background: 222 47% 6%;
+      --foreground: 210 40% 98%;
+      --muted-foreground: 215 20% 65%;
+      --border: 217 33% 18%;
+      --primary: 160 84% 39%;
+      --primary-foreground: 222 47% 6%;
+      --card: 222 47% 9%;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: var(--font-sans);
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: hsl(var(--primary)); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .page { position: relative; min-height: 100vh; overflow: hidden; }
+    .mesh {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(600px 400px at 10% 0%, hsl(var(--primary) / 0.14), transparent 60%),
+        radial-gradient(500px 360px at 90% 20%, hsl(190 80% 45% / 0.1), transparent 55%),
+        radial-gradient(700px 500px at 50% 100%, hsl(var(--primary) / 0.06), transparent 50%);
+    }
+    .accent {
+      pointer-events: none;
+      position: absolute;
+      opacity: 0.045;
+      background: #10b981;
+      -webkit-mask: url(/limetry-icon.svg) center / contain no-repeat;
+      mask: url(/limetry-icon.svg) center / contain no-repeat;
+    }
+    html.dark .accent { background: #34d399; opacity: 0.035; }
+    .a1 { width: 280px; height: 280px; top: 96px; left: -110px; transform: rotate(-18deg); }
+    .a2 { width: 220px; height: 220px; top: 420px; right: -92px; transform: rotate(22deg); }
+    .a3 { width: 340px; height: 340px; bottom: 80px; left: 90px; transform: rotate(8deg); }
+    .a4 { width: 180px; height: 180px; bottom: -62px; right: 32px; transform: rotate(-28deg); }
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 5rem 1.25rem;
+    }
+    .code {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: hsl(var(--primary));
+    }
+    h1 {
+      margin: 0.75rem 0 0;
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .lead, .hint {
+      margin: 1rem 0 0;
+      color: hsl(var(--muted-foreground));
+    }
+    .hint { font-size: 0.925rem; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2.5rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 0.5rem;
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+    .btn-primary:hover { text-decoration: none; opacity: 0.92; }
+    .btn-ghost {
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+    }
+    .btn-ghost:hover { text-decoration: none; }
+    .path {
+      margin-top: 1.5rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="mesh" aria-hidden="true"></div>
+    <div class="accent a1" aria-hidden="true"></div>
+    <div class="accent a2" aria-hidden="true"></div>
+    <div class="accent a3" aria-hidden="true"></div>
+    <div class="accent a4" aria-hidden="true"></div>
+    <main class="shell">
+      <p class="code">404</p>
+      <h1>404 — Endpoint not in the policy catalog</h1>
+      <p class="lead">We evaluated this path against the published API surface. Verdict: DENY. Reason: no matching route — this URL is not part of the Limetry API.</p>
+      <p class="hint">Check the path and method, open the OpenAPI docs, or call GET /health. API clients should expect JSON { "error": "not_found" } on unknown /v1 routes.</p>
+      <p class="path" id="req-path" hidden></p>
+      <div class="actions">
+        <a class="btn btn-primary" href="/">API home</a>
+        <a class="btn btn-ghost" href="https://api.limetry.org/openapi">OpenAPI docs</a>
+        <a class="btn btn-ghost" href="https://limetry.org">limetry.org</a>
+      </div>
+    </main>
+  </div>
+  <script>
+    (function () {
+      try {
+        var el = document.getElementById("req-path");
+        if (!el) return;
+        var path = window.location.pathname + window.location.search;
+        if (path && path !== "/404.html" && path !== "/500.html") {
+          el.hidden = false;
+          el.textContent = "Requested: " + path;
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

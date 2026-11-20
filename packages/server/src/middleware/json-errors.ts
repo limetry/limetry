@@ -1,9 +1,51 @@
-import type { ErrorRequestHandler, RequestHandler } from "express"
+import { existsSync, readFileSync } from "node:fs"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
+
+import type { ErrorRequestHandler, RequestHandler, Response } from "express"
 
 /** JSON error body shared by the evaluate API. */
 export type ApiErrorBody = {
   error: string
   message?: string
+}
+
+function prefersHtml(acceptHeader: string | undefined): boolean {
+  if (!acceptHeader) {
+    return false
+  }
+  const accept = acceptHeader.toLowerCase()
+  const html = accept.indexOf("text/html")
+  if (html < 0) {
+    return false
+  }
+  const json = accept.indexOf("application/json")
+  if (json < 0) {
+    return true
+  }
+  return html < json
+}
+
+function resolvePublicStatusPage(fileName: "404.html" | "500.html"): string | null {
+  const candidates = [
+    join(process.cwd(), "public", fileName),
+    join(dirname(fileURLToPath(import.meta.url)), "../../public", fileName),
+  ]
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate
+    }
+  }
+  return null
+}
+
+function sendStatusHtml(response: Response, status: 404 | 500, fileName: "404.html" | "500.html"): boolean {
+  const filePath = resolvePublicStatusPage(fileName)
+  if (!filePath) {
+    return false
+  }
+  response.status(status).type("html").send(readFileSync(filePath, "utf8"))
+  return true
 }
 
 /**
@@ -67,9 +109,21 @@ export const jsonApiErrorHandler: ErrorRequestHandler = (err, request, response,
 }
 
 /**
- * Catch-all for unmatched JSON API routes.
+ * Catch-all for unmatched routes (JSON for API clients, branded HTML for browsers).
  */
 export const jsonApiNotFoundHandler: RequestHandler = (request, response) => {
+  if (isJsonApiPath(request.path) && !prefersHtml(request.headers.accept)) {
+    sendApiError(
+      response,
+      404,
+      "not_found",
+      "No matching API route. See GET /openapi.json or the landing page at /.",
+    )
+    return
+  }
+  if (prefersHtml(request.headers.accept) && sendStatusHtml(response, 404, "404.html")) {
+    return
+  }
   if (isJsonApiPath(request.path)) {
     sendApiError(response, 404, "not_found")
     return

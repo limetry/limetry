@@ -13,6 +13,7 @@ import Fastify, { type FastifyInstance } from "fastify"
 
 import { createChatRoutes } from "./assistant-routes.js"
 import { createContactRoutes } from "./contact-routes.js"
+import { prefersHtml, renderAskApiStatusHtml } from "./status-html.js"
 
 /**
  * Builds the public HTTP app (`/api/assistant*`, `/api/contact`, health, OpenAPI).
@@ -92,10 +93,40 @@ export async function createApiApp(
   await createContactRoutes(app)
 
   app.setNotFoundHandler(async (request, reply) => {
-    if (request.url.startsWith("/api")) {
-      return reply.status(404).send({ error: "not_found" })
+    const path = request.url.split("?")[0] ?? request.url
+    if (prefersHtml(request.headers.accept)) {
+      return reply
+        .status(404)
+        .type("text/html; charset=utf-8")
+        .send(renderAskApiStatusHtml("not-found", path))
     }
-    return reply.status(404).send({ error: "not_found" })
+    return reply.status(404).send({
+      error: "not_found",
+      message:
+        "No matching route on the limetry.org public API. "
+        + "See POST /api/assistant, POST /api/contact, or /api/assistant/docs.",
+      path,
+    })
+  })
+
+  app.setErrorHandler(async (error, request, reply) => {
+    if (typeof request.log?.error === "function") {
+      request.log.error(error)
+    } else {
+      console.error(error)
+    }
+    const path = request.url.split("?")[0] ?? request.url
+    if (prefersHtml(request.headers.accept)) {
+      return reply
+        .status(500)
+        .type("text/html; charset=utf-8")
+        .send(renderAskApiStatusHtml("error", path))
+    }
+    return reply.status(500).send({
+      error: "internal_error",
+      message: "Unexpected failure while handling this request.",
+      path,
+    })
   })
 
   return app
