@@ -11,6 +11,8 @@ import type {
   ContactProviderId,
 } from "./types.js"
 
+export { createBrevoContactProvider } from "./brevo.js"
+export { createResendContactProvider } from "./resend.js"
 export type {
   ContactAdapterFactory,
   ContactMailConfig,
@@ -19,9 +21,6 @@ export type {
   ContactProviderId,
   ContactSendResult,
 } from "./types.js"
-
-export { createBrevoContactProvider } from "./brevo.js"
-export { createResendContactProvider } from "./resend.js"
 
 /** Default adapter registry (Brevo + Resend). */
 export const defaultContactAdapters: Record<
