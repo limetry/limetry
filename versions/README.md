@@ -16,9 +16,10 @@ scripts. The runtime `AppVersion()` helper reads the package `package.json`
 (no stamped `app-version.ts`).
 
 Platform semver bumps **only when** configured product paths change
-(`versionGate.paths` in the parent releasekit config). Marketing sites,
-`packages/ui`, static `public/` HTML, and `**/presentation/**` status/landing
-helpers are ignored so landing/404 chrome can ship as build-only. Git tags
+(`versionGate.paths` in the parent releasekit config). The gate hashes API
+kernels and route/service cores — not `create-app` shells, marketing sites,
+`packages/ui`, static `public/` HTML, or `**/presentation/**`. Landing/404
+chrome and import-sort on app factories ship as build-only. Git tags
 (`v1.2.N`) are created only when semver actually bumps.
 
 A release is compatible with other product versions on the same minor line,
