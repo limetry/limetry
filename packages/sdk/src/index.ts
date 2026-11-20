@@ -11,10 +11,10 @@
 export {
   APP_VERSION,
   AppVersion,
-  formatAppVersionLabel,
-  resolveAppVersion,
   type AppVersionChannel,
   type AppVersionInfo,
+  formatAppVersionLabel,
+  resolveAppVersion,
 } from "./app-version.js"
 export { COMPATIBILITY } from "./compatibility.js"
 export type { PolicyEngine } from "./engine/policy-engine.js"
