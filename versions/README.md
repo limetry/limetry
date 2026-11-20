@@ -44,8 +44,9 @@ The build increments on parent `yarn release` and deploy-only flows
 | `contentHash` | Hash of `versionGate.paths` — gates the next platform bump |
 | `gitSha` / `builtAt` | Traceability |
 
-OSS mirrors root `build-info.json` into `packages/sdk/build-info.json` (for
-`AppVersion`) and `packages/web/public/build-info.json` during align / deploy.
+`AppVersion()` embeds root `build-info.json` into the SDK at build/align time
+(`scripts/embed-sdk-build-info.mjs` → gitignored `build-info.generated.ts`).
+Do not commit package-local copies.
 
 ## Schemas
 

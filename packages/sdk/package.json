@@ -13,8 +13,7 @@
     }
   },
   "files": [
-    "dist",
-    "build-info.json"
+    "dist"
   ],
   "publishConfig": {
     "access": "public",
@@ -26,9 +25,12 @@
     "directory": "packages/sdk"
   },
   "scripts": {
+    "prebuild": "node ../../scripts/embed-sdk-build-info.mjs",
     "build": "tsc -p tsconfig.json",
+    "pretest": "node ../../scripts/embed-sdk-build-info.mjs",
     "test": "vitest run",
     "test:critical-coverage": "vitest run src/privacy/redact.test.ts src/policy/slim-policy.test.ts --coverage",
+    "pretypecheck": "node ../../scripts/embed-sdk-build-info.mjs",
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "devDependencies": {

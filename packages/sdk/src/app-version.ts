@@ -1,16 +1,17 @@
 /**
  * Product version label for CLIs, footers, health, and preflight.
  *
- * - Deploy / production: `vA.B.C-X` where X is `build-info.json` build.
+ * - Deploy / production: `vA.B.C-X` where X is repo-root `build-info.json` build.
  * - Local development: `vA.B.C-dev-Y` where Y is commits since last push
  *   (`LIMETRY_DEV_COMMITS` / `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*`, seeded by
  *   `@limetry/preflight` `seedDevVersionEnv`).
  *
- * In the monorepo, root `package.json` / `build-info.json` match the stamped
- * SDK copies. On npm, this package's own manifests are the source of truth.
+ * Root `build-info.json` is the only committed SoT. `build-info.generated.ts`
+ * is embedded at SDK build/align time so published `@limetry/sdk` carries the
+ * same values without a second JSON file in git.
  */
 
-import buildInfo from "../build-info.json" with { type: "json" }
+import buildInfo from "./build-info.generated.js"
 import packageJson from "../package.json" with { type: "json" }
 
 /**

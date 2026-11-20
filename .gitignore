@@ -18,6 +18,8 @@ packages/assistant/lambda-bundle
 packages/web/out
 # Derived from versions/compatibility.json at build / parent align time
 packages/web/public/compatibility.json
+# Embedded from repo-root build-info.json at SDK build / parent align time
+packages/sdk/src/build-info.generated.ts
 packages/infra/bin
 packages/wasm/pkg
 docs/api
