@@ -1,9 +1,9 @@
 /**
  * Pure helpers for limetry release versioning: parse/format semver
  * `x.y.z[-beta.N|-dev.branch.N]` strings, compute bumps, and parse
- * `yarn release` CLI flags.
+ * release CLI flags (consumed by limetry-workspace / CI).
  *
- * Used by release helpers, CI beta stamps, and unit tests. No I/O.
+ * Used by parent align helpers, CI beta stamps, and unit tests. No I/O.
  */
 
 /** Semver-style bump selected for a release. */

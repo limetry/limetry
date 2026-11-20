@@ -156,11 +156,12 @@ Docs: [Architecture and data dictionary](packages/web/content/docs/server/archit
 
 ## Publishing npm packages
 
-Every successful `yarn release` from a clean Yarn Berry checkout publishes all
-eight public packages at the version in the root `package.json`. The release pushes one `v<version>` tag;
+Every successful release from **limetry-workspace** (`yarn release` /
+`yarn release:aws`) tags this repo and publishes all eight public packages at
+the version in the root `package.json`. The release pushes one `v<version>` tag;
 that tag triggers a single GitHub Actions workflow which builds, tests, and
 publishes the packages in dependency order. AWS releases push the tag only after
-the deploy succeeds.
+the deploy succeeds. Do not run releasekit from this checkout.
 
 Publishable packages are `sdk`, `cli`, `mcp`, `preflight`, `ci`, `shopify`,
 `sql`, and `ui`. The server, web app, infra, mobile app, shared workspace, and
@@ -178,7 +179,7 @@ Trusted Publishing via GitHub Actions OIDC; no npm write token or `NPM_TOKEN`
 Actions secret is needed. npm generates provenance. Root and publishable
 package versions are the same semver (`1.2.42`). Publishable packages list
 `@limetry/*` dependencies as `^semver` in git so `npm publish` needs no manifest
-rewrite (`yarn sync-version` keeps those ranges in sync).
+rewrite (parent `yarn sync-version` / align keeps those ranges in sync).
 
 ### Configure npm Trusted Publishing
 

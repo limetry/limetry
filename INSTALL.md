@@ -135,12 +135,14 @@ Publishing configured for each package. Do not add an npm write token or
 publishes every package, whether its source changed or not.
 
 ```bash
+# From limetry-workspace/ (not this repo)
 yarn release
+# or: yarn release:aws
 ```
 
-Run releases from a Yarn-installed checkout. Publishing itself is performed by
-npm Trusted Publishing in GitHub Actions; maintainers do not need an npm token
-locally.
+Releases are orchestrated only from the private **limetry-workspace** parent.
+Publishing itself is performed by npm Trusted Publishing in GitHub Actions;
+maintainers do not need an npm token locally.
 
 For a failed/partial publish, run **Actions → Build and publish all @limetry
 packages → Run workflow** on `main`. Package versions already present on npm are
@@ -151,8 +153,8 @@ npm requires Node 22.14+ and npm 11.5.1+ for Trusted Publishing; the workflow
 uses Node 24 and npm 11.5.1. npm generates provenance automatically. Release
 versions are stable semver (`1.2.42`) in the root manifest and in every
 publishable package.json on `main`, with `@limetry/*` dependencies as `^semver`
-(updated by `yarn sync-version`). Feature-branch deploys use an ephemeral
-`next-patch-beta.N` and do not change those committed versions. Local
+(updated by parent `yarn sync-version` / align). Feature-branch deploys use an
+ephemeral `next-patch-beta.N` and do not change those committed versions. Local
 maintainer publish:
 
 ```bash
@@ -206,7 +208,8 @@ requirements (`USE_POSTGRES_STORE=true`, unique `JWT_SECRET` / `LIMETRY_BEARER_T
 `DECISION_HMAC_SECRET`, and a non-loopback `DATABASE_URL`). Pulumi injects those keys from stack
 secrets — see the Core Pulumi project in
 [limetry-enterprise/packages/infra](https://github.com/limetry/limetry-enterprise)
-(`projects/core`). AWS deploys run from that checkout with `yarn release:aws`.
+(`projects/core`). AWS deploys run from **limetry-workspace** with
+`yarn release:aws` or `yarn deploy:aws` (which call enterprise `deploy:infra:*`).
 
 ## Distribution Roadmap
 

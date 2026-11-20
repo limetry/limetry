@@ -5,16 +5,15 @@ Limetry has three version lines.
 ## Product (platform semver)
 
 Packages, websites, and the Cloud checkout share one semver (`1.2.x`).
-Only product-source changes bump this number. Feature-branch
-`yarn release:aws` (from **limetry-enterprise**) and `deploy-infra.yml` stamp
-an ephemeral `next-patch-beta.N` for the deploy, then restore version files
-so the PR keeps the last stable version.
+Only product-source changes bump this number. Feature-branch AWS deploys
+(`deploy-infra.yml`) stamp an ephemeral `next-patch-beta.N`, then restore
+version files so the PR keeps the last stable version.
 
-Product versioning is driven by **releasekit**. Dual-stack releases and
-`align-product-version` run from the private **limetry-workspace** parent so
-this public repo stays free of release orchestration. The runtime
-`AppVersion()` helper reads the package `package.json` (no stamped
-`app-version.ts`).
+Product versioning is driven by **releasekit** from the private
+**limetry-workspace** parent only (`yarn release` / `yarn release:aws` /
+`yarn deploy:aws`). This public repo has no releasekit config or release
+scripts. The runtime `AppVersion()` helper reads the package `package.json`
+(no stamped `app-version.ts`).
 
 Platform semver bumps **only when** configured product paths change
 (`versionGate.paths` in the parent releasekit config). Pure marketing / site
@@ -28,8 +27,8 @@ for example `>=1.2.0 <1.3.0`.
 
 `build-info.json` at the repo root holds a monotonic **build** integer used in
 footers and preflight (`AppBuild().label`, e.g. `v1.2.94 · 1847`). The build
-increments on `releasekit release` and on deploy-only flows
-(`releasekit build --increment` / `yarn deploy:aws`) **without** a new git tag.
+increments on parent `yarn release` and deploy-only flows
+(`yarn deploy:aws` → `releasekit build --increment`) **without** a new git tag.
 
 | Field | Role |
 |--------|------|
