@@ -11,8 +11,8 @@
  * same values without a second JSON file in git.
  */
 
-import buildInfo from "./build-info.generated.js"
 import packageJson from "../package.json" with { type: "json" }
+import buildInfo from "./build-info.generated.js"
 
 /**
  * Bare product semver from package.json (e.g. `1.2.92`).
