@@ -52,7 +52,7 @@ export function Logo({
         className="h-8 w-8 shrink-0 object-contain"
       />
       {variant === "wordmark" ? (
-        <span className="bg-linear-to-r from-[#21b263] to-[#27A1D2] bg-clip-text font-sans text-[1.35rem] font-bold tracking-tight text-transparent">
+        <span className="bg-gradient-to-r bg-linear-to-r from-[#21b263] to-[#27A1D2] bg-clip-text font-sans text-[1.35rem] font-bold tracking-tight text-transparent">
           Limetry
         </span>
       ) : null}
