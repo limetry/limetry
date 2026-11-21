@@ -1,7 +1,7 @@
 {
-  "version": "1.2.96",
-  "build": 4,
-  "builtAt": "2026-11-21T03:40:25.491Z",
-  "contentHash": "sha256:e5dba68c65c816eafd298eaa2598bc08888f27e144e9094ce23b55c03e460c52",
-  "gitSha": "ff863b9"
+  "version": "1.2.97",
+  "build": 5,
+  "builtAt": "2026-11-21T18:16:46.533Z",
+  "contentHash": "sha256:d35c4768d9cead48df96017f153b42f21f37aef305f6fa949aa0d3f1023e6895",
+  "gitSha": "839c6f1"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@limetry/api",
-  "version": "1.2.96",
+  "version": "1.2.97",
   "private": true,
   "description": "Limetry.org public HTTP API (Ask Limetry + contact) for local and Lambda",
   "type": "module",
@@ -30,9 +30,9 @@
     "@fastify/aws-lambda": "^6.4.2",
     "@fastify/swagger": "^9.9.5",
     "@fastify/swagger-ui": "^6.1.4",
-    "@limetry/assistant": "^1.2.96",
-    "@limetry/preflight": "^1.2.96",
-    "@limetry/sdk": "^1.2.96",
+    "@limetry/assistant": "^1.2.97",
+    "@limetry/preflight": "^1.2.97",
+    "@limetry/sdk": "^1.2.97",
     "fastify": "^5.12.8"
   },
   "devDependencies": {
