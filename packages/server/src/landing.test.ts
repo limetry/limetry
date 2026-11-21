@@ -57,6 +57,8 @@ describe("landing page", () => {
       expect(response.text).toContain(`${AppVersion()}`)
       expect(response.text).not.toContain("__APP_VERSION__")
       expect(response.text).not.toContain("__WEB_ORIGIN__")
+      expect(response.text).not.toContain("__GITHUB_URL__")
+      expect(response.text).not.toContain(">Health</a>")
       expect(response.text).toContain("https://dev.limetry.org/docs/quick-start")
       expect(response.text).toContain('href="/openapi"')
       expect(response.text).toContain("Agent action governance — evaluate, allow, deny, and audit tool calls before they land.")

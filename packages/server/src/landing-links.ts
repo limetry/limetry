@@ -1,8 +1,11 @@
 /**
  * Resolves marketing-site links injected into the API landing HTML.
  *
- * Docs live on the OSS marketing origin (`limetry.org`), not the Cloud portal
- * (`limetry.com`). Prefer explicit env so Vercel and AWS can diverge by stack.
+ * Docs live on the OSS marketing origin (`limetry.org`), not Limetry Cloud
+ * (`app.limetry.com`). Origins come from env (`NEXT_PUBLIC_WEB_URL`,
+ * `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_GITHUB_URL`, …). Deployed API hostnames
+ * stamp the same placeholders via infra `stamp-api-landing.mjs` before S3 sync
+ * (Lambdas set `serveLanding: false`).
  */
 
 /**

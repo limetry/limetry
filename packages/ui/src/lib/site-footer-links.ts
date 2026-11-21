@@ -72,6 +72,34 @@ function trimOrigin(value: string): string {
 }
 
 /**
+ * True when a URL hostname is part of the Limetry product family.
+ *
+ * `*.limetry.org` / `*.limetry.com` (and local loopback) open same-window.
+ *
+ * @param href - Absolute or relative href.
+ * @returns Whether the link should stay in the current tab.
+ */
+function isLimetryFamilyHref(href: string): boolean {
+  if (!/^https?:\/\//i.test(href)) {
+    return true
+  }
+  try {
+    const hostname = new URL(href).hostname.toLowerCase()
+    return (
+      hostname === "limetry.org"
+      || hostname.endsWith(".limetry.org")
+      || hostname === "limetry.com"
+      || hostname.endsWith(".limetry.com")
+      || hostname === "localhost"
+      || hostname === "127.0.0.1"
+      || hostname === "::1"
+    )
+  } catch {
+    return false
+  }
+}
+
+/**
  * Builds an OSS marketing href (relative on the OSS site, absolute elsewhere).
  *
  * @param path - Absolute path beginning with `/`.
@@ -85,9 +113,10 @@ function ossHref(
   if (input.ossLinksRelative) {
     return { href: path }
   }
+  const href = `${trimOrigin(input.ossWebOrigin)}${path}`
   return {
-    href: `${trimOrigin(input.ossWebOrigin)}${path}`,
-    external: true,
+    href,
+    ...(isLimetryFamilyHref(href) ? {} : { external: true }),
   }
 }
 
@@ -121,13 +150,15 @@ export function buildSiteFooterLinks(input: BuildSiteFooterLinksInput): SiteFoot
     product.push({
       href: cloudApp,
       label: "Limetry Cloud",
-      external: true,
+      ...(isLimetryFamilyHref(cloudApp) ? {} : { external: true }),
     })
   }
   product.push({
     href: input.openApiHref,
     label: "OpenAPI",
-    ...(openApiExternal ? { external: true } : {}),
+    ...(openApiExternal && !isLimetryFamilyHref(input.openApiHref)
+      ? { external: true }
+      : {}),
   })
 
   return {
@@ -145,7 +176,9 @@ export function buildSiteFooterLinks(input: BuildSiteFooterLinksInput): SiteFoot
       {
         href: input.openApiHref,
         label: "Swagger UI",
-        ...(openApiExternal ? { external: true } : {}),
+        ...(openApiExternal && !isLimetryFamilyHref(input.openApiHref)
+          ? { external: true }
+          : {}),
       },
     ],
     legal: {
