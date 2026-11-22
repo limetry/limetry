@@ -357,6 +357,21 @@ export const COMPATIBILITY = ${withTrailingCommas(JSON.stringify(document, null,
 }
 
 /**
+ * Python source that publishes {@link CompatibilityDocument} from the limetry package.
+ *
+ * The document uses only JSON strings/objects, so `JSON.stringify` is valid Python.
+ *
+ * @param document - Compatibility document.
+ * @returns Module source ending in a newline.
+ */
+export function formatCompatibilityPythonModule(document: CompatibilityDocument): string {
+  return (
+    `"""Product, package, website, and schema compatibility for this release."""\n\n`
+    + `COMPATIBILITY = ${JSON.stringify(document, null, 4)}\n`
+  )
+}
+
+/**
  * Sidecar source for a schema version const.
  *
  * @param constName - Exported const identifier.
@@ -478,6 +493,7 @@ export function publishCompatibility(input: {
   document: CompatibilityDocument
   jsonPaths: readonly string[]
   modulePath?: string
+  pythonModulePath?: string
 }): string[] {
   const json = `${JSON.stringify(input.document, null, 2)}\n`
   const written: string[] = []
@@ -497,6 +513,17 @@ export function publishCompatibility(input: {
       mkdirSync(dirname(input.modulePath), { recursive: true })
       writeFileSync(input.modulePath, source)
       written.push(input.modulePath)
+    }
+  }
+  if (input.pythonModulePath) {
+    const source = formatCompatibilityPythonModule(input.document)
+    const current = existsSync(input.pythonModulePath)
+      ? readFileSync(input.pythonModulePath, "utf8")
+      : ""
+    if (current !== source) {
+      mkdirSync(dirname(input.pythonModulePath), { recursive: true })
+      writeFileSync(input.pythonModulePath, source)
+      written.push(input.pythonModulePath)
     }
   }
   return written

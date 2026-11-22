@@ -37,6 +37,10 @@ export const COMPATIBILITY = {
       "version": "1.2.100",
       "compatible": ">=1.2.0 <1.3.0",
     },
+    "limetry": {
+      "version": "1.2.100",
+      "compatible": ">=1.2.0 <1.3.0",
+    },
   },
   "websites": {
     "@limetry/web": {

@@ -1,4 +1,4 @@
 # pip install -e ../../packages/sdk-python
-limetry>=1.2.99
+limetry>=1.2.100
 httpx>=0.27
 pytest>=8.0
