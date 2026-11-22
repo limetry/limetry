@@ -52,4 +52,15 @@ describe("AppVersion", () => {
     expect(local.channel).toBe("dev")
     expect(local.label).toBe(`v${local.version}-dev-5`)
   })
+
+  it("prefers baked NEXT_PUBLIC_LIMETRY_APP_VERSION over channel detection", () => {
+    const release = resolveAppVersion({
+      NODE_ENV: "development",
+      NEXT_PUBLIC_LIMETRY_APP_VERSION: "v1.2.98-7",
+    })
+    expect(release.channel).toBe("release")
+    expect(release.label).toBe("v1.2.98-7")
+    expect(release.version).toBe("1.2.98")
+    expect(release.build).toBe(7)
+  })
 })

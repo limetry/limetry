@@ -78,10 +78,14 @@ function isDevChannel(env: NodeJS.ProcessEnv): boolean {
   if (env.LIMETRY_FORCE_DEV_VERSION === "1") {
     return true
   }
-  if (env.LIMETRY_ENV === "production") {
+  if (env.LIMETRY_ENV === "production" || env.LIMETRY_STATIC_EXPORT === "1") {
     return false
   }
-  if (env.NODE_ENV === "production" || env.NODE_ENV === "test") {
+  // Direct `process.env.NODE_ENV` so bundlers can inline; bag lookup alone is
+  // empty in many browser builds and incorrectly selects the `dev` channel.
+  const nodeEnv = env.NODE_ENV
+    || (typeof process !== "undefined" ? process.env?.NODE_ENV : undefined)
+  if (nodeEnv === "production" || nodeEnv === "test") {
     return false
   }
   return true
@@ -97,6 +101,20 @@ function readDevCommits(env: NodeJS.ProcessEnv): number {
   return 0
 }
 
+function readPublicAppVersionLabel(env: NodeJS.ProcessEnv): string | undefined {
+  const candidates = [
+    env.LIMETRY_APP_VERSION,
+    env.NEXT_PUBLIC_LIMETRY_APP_VERSION,
+    env.EXPO_PUBLIC_LIMETRY_APP_VERSION,
+  ]
+  for (const raw of candidates) {
+    if (raw && raw.trim()) {
+      return raw.trim()
+    }
+  }
+  return undefined
+}
+
 /**
  * Resolves platform version + build/channel details for footers and health.
  *
@@ -104,6 +122,34 @@ function readDevCommits(env: NodeJS.ProcessEnv): number {
  * @returns Structured version info.
  */
 export function resolveAppVersion(env: NodeJS.ProcessEnv = process.env): AppVersionInfo {
+  const publicLabel = readPublicAppVersionLabel(env)
+  if (publicLabel) {
+    const releaseMatch = /^v([0-9]+(?:\.[0-9]+)*)-([0-9]+)$/.exec(publicLabel)
+    if (releaseMatch) {
+      return {
+        version: releaseMatch[1]!,
+        build: Number(releaseMatch[2]),
+        channel: "release",
+        label: publicLabel,
+      }
+    }
+    const devMatch = /^v([0-9]+(?:\.[0-9]+)*)-dev-([0-9]+)$/.exec(publicLabel)
+    if (devMatch) {
+      return {
+        version: devMatch[1]!,
+        build: readBuild(),
+        channel: "dev",
+        label: publicLabel,
+      }
+    }
+    return {
+      version: readPlatformVersion(),
+      build: readBuild(),
+      channel: isDevChannel(env) ? "dev" : "release",
+      label: publicLabel,
+    }
+  }
+
   const version = readPlatformVersion()
   const build = readBuild()
   const channel: AppVersionChannel = isDevChannel(env) ? "dev" : "release"
