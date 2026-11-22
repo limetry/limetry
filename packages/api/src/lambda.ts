@@ -35,11 +35,13 @@ async function resolveHandler(): Promise<ProxyHandler> {
   }
   const env = loadAssistantEnv()
   const app = await createApiApp(env)
-  await app.ready()
-  cachedApp = app
+  // Register `@fastify/aws-lambda` before `ready()` — it decorates the request
+  // and throws FST_ERR_DEC_AFTER_START if the app has already started.
   const proxy = awsLambdaFastify(app, {
     binaryMimeTypes: ["application/octet-stream"],
   })
+  await app.ready()
+  cachedApp = app
   cachedHandler = async (event, context) => {
     const result = await proxy(event, context)
     return result as APIGatewayProxyStructuredResultV2
