@@ -13,6 +13,7 @@ describe("landing links", () => {
   it("prefers NEXT_PUBLIC_WEB_URL for Docs origin", () => {
     expect(
       resolveLandingWebOrigin({
+        NODE_ENV: "test",
         NEXT_PUBLIC_WEB_URL: "https://dev.limetry.org/",
       }),
     ).toBe("https://dev.limetry.org")
@@ -21,6 +22,7 @@ describe("landing links", () => {
   it("falls back to LIMETRY_WEB_URL when NEXT_PUBLIC_WEB_URL is unset", () => {
     expect(
       resolveLandingWebOrigin({
+        NODE_ENV: "test",
         LIMETRY_WEB_URL: "https://staging.limetry.org",
       }),
     ).toBe("https://staging.limetry.org")
@@ -60,7 +62,7 @@ describe("landing links", () => {
   it("strips Cloud blocks when launch is closed", () => {
     const html = stripHiddenLaunchBlocks(
       "<!-- launching-soon:cloud --><a>Try Limetry Cloud</a><!-- /launching-soon:cloud -->",
-      {},
+      { NODE_ENV: "test" },
     )
     expect(html).toBe("")
   })
@@ -68,7 +70,7 @@ describe("landing links", () => {
   it("keeps Cloud blocks when launch is open", () => {
     const html = stripHiddenLaunchBlocks(
       "<!-- launching-soon:cloud --><a>Try Limetry Cloud</a><!-- /launching-soon:cloud -->",
-      { NEXT_PUBLIC_IS_CLOUD_ENABLED: "true" },
+      { NODE_ENV: "test", NEXT_PUBLIC_IS_CLOUD_ENABLED: "true" },
     )
     expect(html).toContain("Try Limetry Cloud")
   })
