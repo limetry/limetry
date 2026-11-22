@@ -7,6 +7,7 @@
   "workspaces": [
     "packages/*",
     "!packages/pulumi-neon",
+    "!packages/sdk-python",
     "examples/*"
   ],
   "scripts": {

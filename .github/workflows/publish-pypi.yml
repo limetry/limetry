@@ -1,0 +1,92 @@
+name: Build and publish limetry (PyPI)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build and test Python SDK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: packages/sdk-python/pyproject.toml
+
+      - name: Embed build info
+        run: python packages/sdk-python/scripts/embed_build_info.py
+
+      - name: Install SDK
+        run: python -m pip install -e "packages/sdk-python[dev]"
+
+      - name: Test SDK
+        run: python -m pytest packages/sdk-python/tests -q
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build
+          python -m build packages/sdk-python
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-sdk-dist
+          if-no-files-found: error
+          path: packages/sdk-python/dist/*
+
+  publish:
+    name: Publish limetry to PyPI
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Embed build info
+        run: python packages/sdk-python/scripts/embed_build_info.py
+
+      - name: Read package version
+        id: version
+        run: |
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('packages/sdk-python/pyproject.toml','rb'))['project']['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version already published
+        id: check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/limetry/${{ steps.version.outputs.version }}/json" || true)
+          if [ "$STATUS" = "200" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Version ${{ steps.version.outputs.version }} already on PyPI; skipping."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          python -m pip install build
+          python -m build packages/sdk-python
+
+      - name: Publish to PyPI
+        if: steps.check.outputs.skip != 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/sdk-python/dist
