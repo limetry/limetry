@@ -171,7 +171,7 @@ export function TurnstileInvisibleMount({
   return (
     <div
       ref={containerRef}
-      className="h-0 w-0 absolute overflow-hidden opacity-0"
+      className="size-0 absolute overflow-hidden opacity-0"
       aria-hidden
     />
   )

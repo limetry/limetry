@@ -16,7 +16,7 @@ export type { ContactFormFields, ContactFormProps } from "./contact-form.types"
 type SubmitState = "idle" | "submitting" | "success" | "error"
 
 const fieldClassName = cn(
-  "rounded-xl border-border bg-background px-4 py-3 text-sm w-full border",
+  "border-border bg-background rounded-xl px-4 py-3 text-sm w-full border",
   "text-foreground shadow-sm transition outline-none",
   "placeholder:text-muted-foreground",
   "focus-visible:border-primary/50 focus-visible:ring-primary/25 focus-visible:ring-2",
@@ -96,8 +96,8 @@ export function ContactForm({
     return (
       <div className={className} role="status" aria-live="polite">
         <p className="
-          rounded-xl border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium
-          text-foreground border
+          text-foreground rounded-xl border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm
+          font-medium border
         ">
           Message sent. We&apos;ll get back to you soon.
         </p>
@@ -122,7 +122,7 @@ export function ContactForm({
         <div className="space-y-2">
           <label
             htmlFor={`${idPrefix}-name`}
-            className="text-sm font-medium text-foreground"
+            className="text-foreground text-sm font-medium"
           >
             Name
           </label>
@@ -143,7 +143,7 @@ export function ContactForm({
         <div className="space-y-2">
           <label
             htmlFor={`${idPrefix}-email`}
-            className="text-sm font-medium text-foreground"
+            className="text-foreground text-sm font-medium"
           >
             Email
           </label>
@@ -165,10 +165,10 @@ export function ContactForm({
           <div className="space-y-2">
             <label
               htmlFor={`${idPrefix}-company`}
-              className="text-sm font-medium text-foreground"
+              className="text-foreground text-sm font-medium"
             >
               Company
-              <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+              <span className="text-muted-foreground ml-1 font-normal">(optional)</span>
             </label>
             <input
               id={`${idPrefix}-company`}
@@ -186,7 +186,7 @@ export function ContactForm({
         <div className={`space-y-2 ${compact ? "sm:col-span-2" : ""}`}>
           <label
             htmlFor={`${idPrefix}-message`}
-            className="text-sm font-medium text-foreground"
+            className="text-foreground text-sm font-medium"
           >
             Message
           </label>
@@ -230,9 +230,9 @@ export function ContactForm({
             disabled={state === "submitting"}
             className={cn(
               "rounded-xl inline-flex w-full items-center justify-center whitespace-nowrap",
-              "bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground",
-              "shadow-lg shadow-primary/25 transition-all",
-              "hover:-translate-y-0.5 hover:bg-primary/90",
+              "bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold",
+              "shadow-primary/25 shadow-lg transition-all",
+              "hover:bg-primary/90 hover:-translate-y-0.5",
               "disabled:pointer-events-none disabled:opacity-60",
               "sm:w-auto",
             )}
