@@ -1,9 +1,12 @@
 /**
  * Fastify app factory for Limetry.org public API (`@limetry/api`).
+ *
+ * OpenAPI JSON is served from this app; Swagger UI lives on the static site at
+ * `/openapi/assistant/` (CDN assets) so the Lambda bundle does not need
+ * `@fastify/swagger-ui` static files.
  */
 
 import swagger from "@fastify/swagger"
-import swaggerUi from "@fastify/swagger-ui"
 import {
   type AssistantEnv,
   healthJsonSchema,
@@ -14,6 +17,12 @@ import Fastify, { type FastifyInstance } from "fastify"
 import { createChatRoutes } from "./assistant-routes.js"
 import { createContactRoutes } from "./contact-routes.js"
 import { prefersHtml, renderAskApiStatusHtml } from "./presentation/status-html.js"
+
+/** Marketing-site Swagger UI path (outside CloudFront `/api*` → Lambda). */
+export const PUBLIC_API_SWAGGER_PATH = "/openapi/assistant/"
+
+/** Canonical OpenAPI JSON path on the public API. */
+export const PUBLIC_API_OPENAPI_JSON_PATH = "/api/assistant/openapi.json"
 
 /**
  * Builds the public HTTP app (`/api/assistant*`, `/api/contact`, health, OpenAPI).
@@ -68,11 +77,6 @@ export async function createApiApp(
     },
   })
 
-  await app.register(swaggerUi, {
-    routePrefix: "/api/assistant/docs",
-    staticCSP: true,
-  })
-
   app.get(
     "/health",
     {
@@ -92,6 +96,40 @@ export async function createApiApp(
   await createChatRoutes(app, env)
   await createContactRoutes(app)
 
+  app.get(
+    PUBLIC_API_OPENAPI_JSON_PATH,
+    {
+      schema: {
+        tags: ["assistant"],
+        summary: "OpenAPI 3 document (JSON)",
+        hide: true,
+      },
+    },
+    async () => app.swagger(),
+  )
+
+  // Compat with the former @fastify/swagger-ui JSON path.
+  app.get(
+    "/api/assistant/docs/json",
+    {
+      schema: {
+        hide: true,
+      },
+    },
+    async (_request, reply) => reply.redirect(PUBLIC_API_OPENAPI_JSON_PATH, 302),
+  )
+
+  // Old UI path → static-site Swagger (CDN); keeps bookmarks working.
+  app.get(
+    "/api/assistant/docs",
+    {
+      schema: {
+        hide: true,
+      },
+    },
+    async (_request, reply) => reply.redirect(PUBLIC_API_SWAGGER_PATH, 302),
+  )
+
   app.setNotFoundHandler(async (request, reply) => {
     const path = request.url.split("?")[0] ?? request.url
     if (prefersHtml(request.headers.accept)) {
@@ -104,7 +142,7 @@ export async function createApiApp(
       error: "not_found",
       message:
         "No matching route on the limetry.org public API. "
-        + "See POST /api/assistant, POST /api/contact, or /api/assistant/docs.",
+        + `See POST /api/assistant, POST /api/contact, or ${PUBLIC_API_SWAGGER_PATH}.`,
       path,
     })
   })

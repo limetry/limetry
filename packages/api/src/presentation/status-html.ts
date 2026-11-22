@@ -23,7 +23,7 @@ export function renderAskApiStatusHtml(kind: StatusHtmlKind, path?: string): str
     : "Something tripped over its own tool call while handling this request. "
       + "This is our fault, not a policy deny from your rules."
   const hint = isNotFound
-    ? "Use POST /api/assistant or POST /api/contact, check /api/assistant/docs, "
+    ? "Use POST /api/assistant or POST /api/contact, check /openapi/assistant/, "
       + "or open limetry.org. API clients receive JSON { \"error\": \"not_found\" }."
     : "Retry shortly, or contact hello@limetry.com with the path and time."
   const pathBlock = path
@@ -61,7 +61,7 @@ a.ghost{border:1px solid #e2e8f0;color:#0f172a}
 ${pathBlock}
 <div class="actions">
 <a class="btn primary" href="/">Back to limetry.org</a>
-<a class="btn ghost" href="/api/assistant/docs">API docs</a>
+<a class="btn ghost" href="/openapi/assistant/">API docs</a>
 <a class="btn ghost" href="/contact">Contact</a>
 </div>
 </main>

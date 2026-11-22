@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Limetry — Public API (Ask Limetry + contact)</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+  <style>
+    body { margin: 0; background: #f8fafc; }
+    .topbar { display: none; }
+    .swagger-ui .info .title { font-family: "Geist", Inter, system-ui, sans-serif; }
+    .limetry-version-bar {
+      font-family: "Geist", Inter, system-ui, sans-serif;
+      font-size: 0.8125rem;
+      color: #475569;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.625rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      align-items: center;
+    }
+    .limetry-version-bar a {
+      color: #059669;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .limetry-version-bar a:hover { text-decoration: underline; }
+    .limetry-version-bar code {
+      font-size: 0.8125rem;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <div class="limetry-version-bar">
+    <span>Limetry public API on limetry.org</span>
+    <a href="/">Home</a>
+    <a href="/api/assistant/openapi.json">OpenAPI JSON</a>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" crossorigin></script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: "/api/assistant/openapi.json",
+      dom_id: "#swagger-ui",
+      deepLinking: true,
+      presets: [SwaggerUIBundle.presets.apis],
+      layout: "BaseLayout",
+    })
+  </script>
+</body>
+</html>

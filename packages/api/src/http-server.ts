@@ -20,4 +20,5 @@ const port = env.ASSISTANT_PORT
 await app.listen({ port, host: "127.0.0.1" })
 console.log(`[api] Limetry public API listening on http://127.0.0.1:${port} (${AppVersion()})`)
 console.log("[api] POST /api/assistant, /api/assistant/stream, /api/contact")
-console.log(`[api] OpenAPI UI http://127.0.0.1:${port}/api/assistant/docs`)
+console.log(`[api] OpenAPI JSON http://127.0.0.1:${port}/api/assistant/openapi.json`)
+console.log("[api] Swagger UI (static site) /openapi/assistant/")

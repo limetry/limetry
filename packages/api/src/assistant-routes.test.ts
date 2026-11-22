@@ -90,16 +90,30 @@ describe("Ask Limetry chat routes", () => {
     expect(response.statusCode).toBe(400)
   })
 
-  it("serves OpenAPI JSON", async () => {
+  it("serves OpenAPI JSON and redirects legacy docs paths", async () => {
     const app = await buildApp()
     const response = await app.inject({
       method: "GET",
-      url: "/api/assistant/docs/json",
+      url: "/api/assistant/openapi.json",
     })
     expect(response.statusCode).toBe(200)
     const body = response.json()
     expect(body.openapi).toMatch(/^3\./)
     expect(body.paths["/api/assistant"]).toBeTruthy()
+
+    const legacyJson = await app.inject({
+      method: "GET",
+      url: "/api/assistant/docs/json",
+    })
+    expect(legacyJson.statusCode).toBe(302)
+    expect(legacyJson.headers.location).toBe("/api/assistant/openapi.json")
+
+    const legacyUi = await app.inject({
+      method: "GET",
+      url: "/api/assistant/docs",
+    })
+    expect(legacyUi.statusCode).toBe(302)
+    expect(legacyUi.headers.location).toBe("/openapi/assistant/")
   })
 
   it("requires bearer auth when LIMETRY_ASSISTANT_PUBLIC is false", async () => {

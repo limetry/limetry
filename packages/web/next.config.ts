@@ -121,12 +121,16 @@ const config: NextConfig = {
             destination: `${assistantOrigin}/api/assistant/stream`,
           },
           {
+            source: "/api/assistant/openapi.json",
+            destination: `${assistantOrigin}/api/assistant/openapi.json`,
+          },
+          {
             source: "/api/assistant/docs",
             destination: `${assistantOrigin}/api/assistant/docs`,
           },
           {
-            source: "/api/assistant/docs/:path*",
-            destination: `${assistantOrigin}/api/assistant/docs/:path*`,
+            source: "/api/assistant/docs/json",
+            destination: `${assistantOrigin}/api/assistant/docs/json`,
           },
           {
             source: "/api/contact",

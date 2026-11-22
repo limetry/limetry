@@ -168,10 +168,13 @@ async function readChatJson(
 ): Promise<AssistantChatClientResponse & { error?: string, message?: string }> {
   const contentType = response.headers.get("content-type") || ""
   const raw = await response.text()
+  const localHint = process.env.NODE_ENV === "development"
+    ? " Is `yarn dev:api` running on :3815?"
+    : ""
   if (!contentType.includes("application/json")) {
     throw new Error(
       response.ok
-        ? "Ask Limetry returned a non-JSON response. Is `yarn dev:api` running on :3815?"
+        ? `Ask Limetry returned a non-JSON response.${localHint}`
         : `Ask Limetry unavailable (${response.status})`,
     )
   }
@@ -179,7 +182,7 @@ async function readChatJson(
     return JSON.parse(raw) as AssistantChatClientResponse & { error?: string, message?: string }
   } catch {
     throw new Error(
-      `Ask Limetry returned invalid JSON (${response.status}). Is \`yarn dev:api\` running on :3815?`,
+      `Ask Limetry returned invalid JSON (${response.status}).${localHint}`,
     )
   }
 }
