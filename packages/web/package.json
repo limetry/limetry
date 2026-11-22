@@ -1,6 +1,6 @@
 {
   "name": "@limetry/web",
-  "version": "1.2.99",
+  "version": "1.2.100",
   "private": true,
   "packageManager": "yarn@4.13.0",
   "type": "module",
@@ -15,10 +15,10 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^2.23.0",
-    "@limetry/api": "^1.2.99",
-    "@limetry/preflight": "^1.2.99",
-    "@limetry/sdk": "^1.2.99",
-    "@limetry/ui": "^1.2.99",
+    "@limetry/api": "^1.2.100",
+    "@limetry/preflight": "^1.2.100",
+    "@limetry/sdk": "^1.2.100",
+    "@limetry/ui": "^1.2.100",
     "@sentry/nextjs": "^10",
     "framer-motion": "^12.43.0",
     "fumadocs-core": "^16.15.7",
