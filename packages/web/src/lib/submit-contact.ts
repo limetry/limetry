@@ -10,6 +10,7 @@ export type ContactSubmitFields = {
   company?: string
   message: string
   source: string
+  turnstileToken?: string
 }
 
 /**
@@ -42,6 +43,7 @@ export async function submitContactMessage(
       message: input.message,
       source: input.source,
       ...(input.company ? { company: input.company } : {}),
+      ...(input.turnstileToken ? { turnstileToken: input.turnstileToken } : {}),
     },
     config: {
       formspreeFormId: process.env.NEXT_PUBLIC_FORMSPREE_FORM_ID,
