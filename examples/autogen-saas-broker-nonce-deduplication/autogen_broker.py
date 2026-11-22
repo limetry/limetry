@@ -2,15 +2,15 @@
 Simulated AutoGen-style SaaS broker exercising Limetry action governance.
 
 This is a dependency-light simulation: the AutoGen SDK is not installed or
-used. The broker upserts an ActionPolicy, then evaluates ActionIntents for
-allow/deny (cost ceiling + resource allowlist). Replay protection for evaluate
-requests is handled by the Limetry server (`intent_id` + issued_at window).
+used. The broker uses the official `limetry` Python SDK to upsert an
+ActionPolicy, then evaluate ActionIntents for allow/deny.
 """
 import datetime
 import os
 import uuid
 
 import httpx
+from limetry import RemotePolicyEngine
 
 POLICY_ID = "66666666-6666-4666-8666-666666666666"
 AGENT_ID = "autogen_saas_broker"
@@ -44,34 +44,24 @@ class AutoGenSaaSPurchaser:
     http_client: httpx.Client = None,
   ):
     self.policy_id = policy_id
-    self.base_url = (base_url or os.getenv("LIMETRY_BASE_URL") or "http://localhost:3810").rstrip("/")
-    self.api_key = api_key or os.getenv("LIMETRY_API_KEY") or "replace-with-secure-bearer-token"
+    resolved_base = (base_url or os.getenv("LIMETRY_BASE_URL") or "http://localhost:3810").rstrip("/")
+    resolved_key = api_key or os.getenv("LIMETRY_API_KEY") or "replace-with-secure-bearer-token"
+    self.engine = RemotePolicyEngine(
+      api_key=resolved_key,
+      base_url=resolved_base,
+      client=http_client,
+    )
+    self.base_url = self.engine.base_url
+    self.api_key = resolved_key
     self.agent_id = AGENT_ID
     self.http_client = http_client
     self._policy_ready = False
 
-  def _headers(self) -> dict:
-    return {
-      "Authorization": f"Bearer {self.api_key}",
-      "Content-Type": "application/json",
-    }
-
   def ensure_policy(self) -> None:
     if self._policy_ready:
       return
-    client = self.http_client or httpx.Client()
-    owns_client = self.http_client is None
-    try:
-      response = client.put(
-        f"{self.base_url}/v1/policies/{self.policy_id}",
-        json={"tenant_id": "default", "policy": {**ACTION_POLICY, "policy_id": self.policy_id}},
-        headers=self._headers(),
-      )
-      response.raise_for_status()
-      self._policy_ready = True
-    finally:
-      if owns_client:
-        client.close()
+    self.engine.upsert_policy({**ACTION_POLICY, "policy_id": self.policy_id})
+    self._policy_ready = True
 
   def submit_renewal_intent(
     self,
@@ -101,22 +91,7 @@ class AutoGenSaaSPurchaser:
     }
 
     try:
-      client = self.http_client or httpx.Client()
-      owns_client = self.http_client is None
-      try:
-        res = client.post(
-          f"{self.base_url}/v1/policy/evaluate",
-          json={
-            "tenant_id": "default",
-            "policy_id": self.policy_id,
-            "intent": intent,
-          },
-          headers=self._headers(),
-        )
-        return res.json()
-      finally:
-        if owns_client:
-          client.close()
+      return self.engine.evaluate_action(intent)  # type: ignore[arg-type]
     except Exception as error:
       return {"ok": False, "approved": False, "error": str(error)}
 

@@ -1,5 +1,5 @@
-import pytest
 import httpx
+import pytest
 from agent import ACTION_POLICY, RemotePolicyEngine, simulate_agent_provision_request
 
 
@@ -23,14 +23,20 @@ async def test_approves_t3_micro_infrastructure_deployment():
     "receipt": {"decision": "allow", "sig": "ab" * 32},
   }
 
-  async def mock_request(method, url, **kwargs):
-    return MockResponse(mock_data if method == "POST" else {"ok": True}, 200)
+  async def mock_put(*args, **kwargs):
+    return MockResponse({"ok": True}, 200)
+
+  async def mock_post(*args, **kwargs):
+    return MockResponse(mock_data, 200)
 
   async with httpx.AsyncClient() as client:
-    client.request = mock_request
-    client.put = lambda *args, **kwargs: mock_request("PUT", *args, **kwargs)
-    client.post = lambda *args, **kwargs: mock_request("POST", *args, **kwargs)
-    engine = RemotePolicyEngine(client=client)
+    client.put = mock_put
+    client.post = mock_post
+    engine = RemotePolicyEngine(
+      api_key="mock-bearer-token",
+      base_url="http://localhost:3810",
+      client=client,
+    )
 
     result = await simulate_agent_provision_request("t3.micro", "alice", engine)
     assert result["ok"] is True
@@ -58,7 +64,11 @@ async def test_blocks_g5_4xlarge_infrastructure_deployment():
   async with httpx.AsyncClient() as client:
     client.put = mock_put
     client.post = mock_post
-    engine = RemotePolicyEngine(client=client)
+    engine = RemotePolicyEngine(
+      api_key="mock-bearer-token",
+      base_url="http://localhost:3810",
+      client=client,
+    )
 
     result = await simulate_agent_provision_request("g5.4xlarge", "bob", engine)
     assert result["ok"] is False
@@ -76,8 +86,12 @@ async def test_handles_remote_engine_http_error():
   async with httpx.AsyncClient() as client:
     client.put = mock_put
     client.post = mock_post
-    engine = RemotePolicyEngine(client=client)
+    engine = RemotePolicyEngine(
+      api_key="mock-bearer-token",
+      base_url="http://localhost:3810",
+      client=client,
+    )
 
     with pytest.raises(RuntimeError) as exc_info:
       await simulate_agent_provision_request("t3.micro", "charlie", engine)
-    assert "Limetry evaluation failed (500)" in str(exc_info.value)
+    assert "Limetry remote engine error (500)" in str(exc_info.value)

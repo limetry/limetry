@@ -1,8 +1,13 @@
+"""
+LangChain-style Python agent that evaluates provision intents with Limetry.
+
+Uses the official `limetry` Python SDK (AsyncRemotePolicyEngine). This is a
+dependency-light simulation: the LangChain SDK is not installed or used.
+"""
 import datetime
-import os
 import uuid
 
-import httpx
+from limetry import AsyncRemotePolicyEngine, EngineLoadError
 
 POLICY_ID = "22222222-2222-4222-8222-222222222222"
 AGENT_ID = "agent_aws_slack"
@@ -28,52 +33,14 @@ RESOURCE_COST_MAP = {
   "g5.4xlarge": 2000,
 }
 
-
-class RemotePolicyEngine:
-  """
-  Python client for Limetry action governance over HTTP.
-  Upserts an ActionPolicy, then evaluates ActionIntents.
-  """
-
-  def __init__(self, api_key: str = None, base_url: str = None, client: httpx.AsyncClient = None):
-    self.api_key = api_key or os.getenv("LIMETRY_API_KEY") or "mock-bearer-token"
-    self.base_url = (base_url or os.getenv("LIMETRY_BASE_URL") or "http://localhost:3810").rstrip("/")
-    self.client = client or httpx.AsyncClient()
-
-  def _headers(self) -> dict:
-    return {
-      "Authorization": f"Bearer {self.api_key}",
-      "Content-Type": "application/json",
-    }
-
-  async def upsert_policy(self, policy: dict) -> None:
-    response = await self.client.put(
-      f"{self.base_url}/v1/policies/{policy['policy_id']}",
-      json={"tenant_id": "default", "policy": policy},
-      headers=self._headers(),
-    )
-    if response.status_code not in (200, 201):
-      raise RuntimeError(f"Limetry policy upsert failed ({response.status_code}): {response.text}")
-
-  async def evaluate_policy(self, intent: dict) -> dict:
-    url = f"{self.base_url}/v1/policy/evaluate"
-    payload = {
-      "tenant_id": "default",
-      "policy_id": intent["policy_id"],
-      "intent": intent,
-    }
-
-    response = await self.client.post(url, json=payload, headers=self._headers())
-    if response.status_code != 200:
-      raise RuntimeError(f"Limetry evaluation failed ({response.status_code}): {response.text}")
-
-    return response.json()
+# Re-export for tests that construct the engine directly.
+RemotePolicyEngine = AsyncRemotePolicyEngine
 
 
 async def simulate_agent_provision_request(
   resource_type: str,
   user: str,
-  engine: RemotePolicyEngine,
+  engine: AsyncRemotePolicyEngine,
 ) -> dict:
   """
   Simulates a Python AI agent building a deployment plan.
@@ -101,7 +68,10 @@ async def simulate_agent_provision_request(
   }
 
   await engine.upsert_policy(ACTION_POLICY)
-  result = await engine.evaluate_policy(intent)
+  try:
+    result = await engine.evaluate_action(intent)  # type: ignore[arg-type]
+  except EngineLoadError as error:
+    raise RuntimeError(str(error)) from error
   return {
     "ok": bool(result.get("approved")),
     "approved": result.get("approved"),

@@ -1,8 +1,8 @@
 """
 LangGraph agent that evaluates sensitive actions through Limetry.
 
-Uses the real LangGraph SDK (StateGraph). Nodes draft an ActionIntent, call
-POST /v1/policy/evaluate, optionally POST /v1/actions/record, and branch on
+Uses the real LangGraph SDK (StateGraph) and the official `limetry` Python SDK.
+Nodes draft an ActionIntent, call evaluate, optionally record, and branch on
 allow/deny. No payment rail settlement runs in this example.
 """
 import datetime
@@ -12,6 +12,7 @@ from typing import Any, Optional, TypedDict
 
 import httpx
 from langgraph.graph import END, START, StateGraph
+from limetry import RemotePolicyEngine
 
 POLICY_ID = "77777777-7777-4777-8777-777777777777"
 AGENT_ID = "langgraph_procurement_agent"
@@ -35,52 +36,38 @@ ACTION_POLICY = {
 
 class LimetryClient:
   """
-  Thin httpx wrapper for Limetry action-governance endpoints.
+  Thin wrapper around limetry.RemotePolicyEngine for graph nodes.
   """
 
-  def __init__(self, base_url: str = None, api_key: str = None, http_client: httpx.Client = None):
-    self.base_url = (base_url or os.getenv("LIMETRY_BASE_URL") or "http://localhost:3810").rstrip("/")
-    self.api_key = api_key or os.getenv("LIMETRY_API_KEY") or "replace-with-secure-bearer-token"
-    self.http_client = http_client or httpx.Client()
-
-  def _headers(self) -> dict:
-    return {
-      "Authorization": f"Bearer {self.api_key}",
-      "Content-Type": "application/json",
-    }
+  def __init__(
+    self,
+    base_url: str = None,
+    api_key: str = None,
+    http_client: httpx.Client = None,
+  ):
+    resolved_base = (base_url or os.getenv("LIMETRY_BASE_URL") or "http://localhost:3810").rstrip("/")
+    resolved_key = api_key or os.getenv("LIMETRY_API_KEY") or "replace-with-secure-bearer-token"
+    self.engine = RemotePolicyEngine(
+      api_key=resolved_key,
+      base_url=resolved_base,
+      tenant_id=TENANT_ID,
+      client=http_client,
+    )
+    self.base_url = self.engine.base_url
+    self.api_key = resolved_key
 
   def upsert_policy(self, policy: dict) -> None:
-    response = self.http_client.put(
-      f"{self.base_url}/v1/policies/{policy['policy_id']}",
-      json={"tenant_id": TENANT_ID, "policy": policy},
-      headers=self._headers(),
-    )
-    response.raise_for_status()
+    self.engine.upsert_policy(policy)
 
   def evaluate_intent(self, intent: dict) -> dict:
-    response = self.http_client.post(
-      f"{self.base_url}/v1/policy/evaluate",
-      json={
-        "tenant_id": TENANT_ID,
-        "policy_id": intent["policy_id"],
-        "intent": intent,
-      },
-      headers=self._headers(),
-    )
-    return response.json()
+    return self.engine.evaluate_action(intent)  # type: ignore[arg-type]
 
   def record_action(self, intent: dict, decision_id: str, outcome: str) -> None:
-    response = self.http_client.post(
-      f"{self.base_url}/v1/actions/record",
-      json={
-        "tenant_id": TENANT_ID,
-        "intent": intent,
-        "decision_id": decision_id,
-        "outcome": outcome,
-      },
-      headers=self._headers(),
+    self.engine.record_action(
+      intent,  # type: ignore[arg-type]
+      decision_id=decision_id,
+      outcome=outcome,
     )
-    response.raise_for_status()
 
 
 class ActionState(TypedDict, total=False):
