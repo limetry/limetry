@@ -57,7 +57,7 @@ export function Badge({
   className,
 }: BadgeProps): React.JSX.Element {
   return (
-    <View className={cn("self-start rounded-full px-2.5 py-1", variantStyles[variant], className)}>
+    <View className={cn("px-2.5 py-1 self-start rounded-full", variantStyles[variant], className)}>
       <Text className={cn("text-xs font-medium", textVariantStyles[variant])}>
         {children}
       </Text>

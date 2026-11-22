@@ -132,7 +132,7 @@ export function HowItWorks(): React.JSX.Element {
     <section className="py-20 sm:py-28" id="how-it-works">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">How it works</p>
+          <p className="text-sm font-semibold tracking-widest text-primary uppercase">How it works</p>
           <h2 className="mt-3 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             Every tool call gets an outcome
           </h2>
@@ -149,7 +149,11 @@ export function HowItWorks(): React.JSX.Element {
         <div
           role="tablist"
           aria-label="Agent verticals"
-          className="mx-auto mt-10 flex w-full max-w-xl flex-col gap-1 rounded-xl border border-border bg-muted/40 p-1 sm:flex-row sm:flex-wrap sm:justify-center"
+          className="
+            mx-auto mt-10 flex w-full max-w-xl flex-col gap-1 rounded-xl border border-border
+            bg-muted/40 p-1
+            sm:flex-row sm:flex-wrap sm:justify-center
+          "
         >
           {VERTICALS.map((vertical) => {
             const selected = vertical.id === active.id
@@ -163,7 +167,7 @@ export function HowItWorks(): React.JSX.Element {
                 aria-controls={`how-vertical-panel-${vertical.id}`}
                 tabIndex={selected ? 0 : -1}
                 onClick={() => setActiveId(vertical.id)}
-                className={`flex-1 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm transition-colors ${
+                className={`flex-1 rounded-lg px-4 py-2.5 text-sm whitespace-nowrap transition-colors ${
                   selected
                     ? "bg-background font-semibold text-foreground shadow-sm"
                     : "font-medium text-muted-foreground hover:text-foreground"
@@ -193,11 +197,16 @@ export function HowItWorks(): React.JSX.Element {
                   key={item.title}
                   className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
                 >
-                  <span className={`w-fit rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.className}`}>
+                  <span
+                    className={
+                      `w-fit rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.className}
+                      `
+                    }
+                  >
                     {style.label}
                   </span>
                   <h3 className="mt-4 font-bold text-foreground">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+                  <p className="mt-2 text-sm/relaxed text-muted-foreground">{item.body}</p>
                 </article>
               )
             })}
@@ -207,10 +216,13 @@ export function HowItWorks(): React.JSX.Element {
         <div className="mt-10 text-center">
           <Link
             href={active.href}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80"
+            className="
+              inline-flex items-center gap-2 text-sm font-semibold text-primary
+              hover:text-primary/80
+            "
           >
             Open the {active.label} example
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>

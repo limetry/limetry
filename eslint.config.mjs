@@ -9,6 +9,23 @@ import globals from "globals"
 import tseslint from "typescript-eslint"
 
 /**
+ * Shared better-tailwindcss wrapping options.
+ *
+ * `preferSingleLine` keeps short class strings on one line; longer strings and
+ * template ternaries wrap with 2-space indent matching the repo style.
+ * Core ESLint `indent` is disabled for JSX/TSX so it does not fight this rule.
+ */
+const betterTailwindLineWrapping = [
+  "error",
+  {
+    indent: 2,
+    printWidth: 100,
+    preferSingleLine: true,
+    group: "newLine",
+  },
+]
+
+/**
  * Limetry OSS — single root flat ESLint config for packages, examples, and scripts.
  * Style rules match the workspace standard (double quotes, no semis, import sort,
  * no inline comments). Prefer typed product env + TSDoc over ambient process.env.
@@ -64,6 +81,12 @@ export default tseslint.config(
       },
     },
     rules: {
+      ...betterTailwind.configs["stylistic-error"].rules,
+      "better-tailwindcss/enforce-consistent-line-wrapping": betterTailwindLineWrapping,
+      /**
+       * Custom design tokens / NativeWind class names are intentional; keep
+       * unknown-class reporting off while still enforcing wrap + order.
+       */
       "better-tailwindcss/no-unknown-classes": "off",
       "better-tailwindcss/no-restricted-classes": "off",
       "comma-dangle": ["error", "always-multiline"],
@@ -109,6 +132,12 @@ export default tseslint.config(
       "react/no-unescaped-entities": "off",
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
+      /**
+       * Core `indent` conflicts with better-tailwindcss multiline class strings
+       * and template-literal ternaries inside `className`. Defer to
+       * `enforce-consistent-line-wrapping` (indent: 2) for those.
+       */
+      "indent": "off",
     },
   },
   {
@@ -140,6 +169,21 @@ export default tseslint.config(
   },
   {
     files: [
+      "packages/ui/**/*.js",
+      "packages/ui/**/*.jsx",
+      "packages/ui/**/*.mjs",
+      "packages/ui/**/*.ts",
+      "packages/ui/**/*.tsx",
+    ],
+    settings: {
+      "better-tailwindcss": {
+        entryPoint: "packages/ui/src/global.css",
+        tailwindConfig: "packages/ui/tailwind.config.ts",
+      },
+    },
+  },
+  {
+    files: [
       "packages/web/**/*.js",
       "packages/web/**/*.jsx",
       "packages/web/**/*.mjs",
@@ -153,6 +197,9 @@ export default tseslint.config(
     settings: {
       next: {
         rootDir: "packages/web/",
+      },
+      "better-tailwindcss": {
+        entryPoint: "packages/web/src/app/globals.css",
       },
     },
     rules: {

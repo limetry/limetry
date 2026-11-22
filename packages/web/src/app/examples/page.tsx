@@ -44,11 +44,16 @@ function ExampleCard({ example }: { example: ExampleConfig }): React.JSX.Element
   return (
     <Link
       href={`/examples/${example.slug}`}
-      className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5"
+      className="
+        group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition-all
+        hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md
+      "
     >
       <div className="flex items-center justify-between gap-2">
         <span
-          className={`rounded-lg border px-2 py-0.5 text-xs font-semibold ${LANG_COLORS[example.lang] ?? "bg-muted text-muted-foreground border-border"}`}
+          className={`rounded-lg border px-2 py-0.5 text-xs font-semibold ${LANG_COLORS[example.lang] ?? `
+            border-border bg-muted text-muted-foreground
+          `}`}
         >
           {example.lang}
         </span>
@@ -60,12 +65,12 @@ function ExampleCard({ example }: { example: ExampleConfig }): React.JSX.Element
       <h2 className="mt-4 font-semibold text-foreground transition-colors group-hover:text-primary">
         {example.name}
       </h2>
-      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-2 line-clamp-3 text-sm/relaxed text-muted-foreground">
         {example.description}
       </p>
       <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
         View example
-        <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="size-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </span>
@@ -88,7 +93,7 @@ export default function ExamplesPage(): React.JSX.Element {
       <main className="flex-1 py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary">Examples & Templates</p>
+            <p className="text-sm font-semibold tracking-widest text-primary uppercase">Examples & Templates</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               Integration examples
             </h1>
@@ -140,10 +145,15 @@ export default function ExamplesPage(): React.JSX.Element {
               href={githubPath("/tree/main/examples")}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-muted hover:shadow-md"
+              className="
+                inline-flex items-center gap-2 rounded-xl border border-border bg-background px-6
+                py-3 text-sm font-semibold whitespace-nowrap text-foreground shadow-sm
+                transition-all
+                hover:bg-muted hover:shadow-md
+              "
             >
               View all examples on GitHub
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </Link>

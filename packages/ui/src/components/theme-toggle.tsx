@@ -26,7 +26,12 @@ export function ThemeToggle({
       accessibilityLabel={isDark ? "Switch to light mode" : "Switch to dark mode"}
       accessibilityRole="button"
       className={cn(
-        "h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white active:opacity-80 dark:border-slate-700 dark:bg-slate-900",
+        `
+          h-10 w-10 rounded-xl border-slate-200 bg-white
+          dark:border-slate-700 dark:bg-slate-900
+          items-center justify-center border
+          active:opacity-80
+        `,
         className,
       )}
       onPress={onToggle}

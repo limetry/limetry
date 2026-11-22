@@ -14,10 +14,10 @@ export function SiteFooter({
   discordHref,
 }: SiteFooterProps): React.JSX.Element {
   return (
-    <View className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-      <View className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <View className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          <View className="col-span-2 max-w-xs md:col-span-1">
+    <View className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 border-t">
+      <View className="max-w-7xl px-4 py-12 sm:px-6 lg:px-8 mx-auto w-full">
+        <View className="gap-8 md:grid-cols-4 grid grid-cols-2">
+          <View className="max-w-xs md:col-span-1 col-span-2">
             <LinkComponent href="/" className="inline-flex">
               {brand}
             </LinkComponent>
@@ -48,11 +48,16 @@ export function SiteFooter({
           <FooterColumn title="Open Source" links={links.opensource} LinkComponent={LinkComponent} />
           <FooterColumn title="Docs" links={links.docs} LinkComponent={LinkComponent} />
         </View>
-        <View className="mt-10 flex-col items-center justify-between gap-4 border-t border-slate-200 pt-8 sm:flex-row dark:border-slate-800">
+        <View className="
+          mt-10 gap-4 border-slate-200 pt-8
+          sm:flex-row
+          dark:border-slate-800
+          flex-col items-center justify-between border-t
+        ">
           <Text className="text-sm text-slate-500 dark:text-slate-400">
             {`Copyright © ${new Date().getFullYear()} Limetry`}
           </Text>
-          <View className="flex-row flex-wrap items-center gap-4">
+          <View className="gap-4 flex-row flex-wrap items-center">
             <FooterLinkRow link={links.legal.privacy} LinkComponent={LinkComponent} />
             <FooterLinkRow link={links.legal.terms} LinkComponent={LinkComponent} />
             {version ? (

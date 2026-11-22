@@ -168,22 +168,33 @@ export function SiteHeader({
     <>
       <header
         className={cn(
-          "sticky top-0 z-50 w-full border-b transition-transform duration-200 ease-out will-change-transform",
+          `
+            top-0 ease-out sticky z-50 w-full border-b transition-transform duration-200
+            will-change-transform
+          `,
           scrollHide
-            ? "border-border/40 bg-background/55 backdrop-blur-xl supports-backdrop-filter:bg-background/45"
+            ? `
+              border-border/40 bg-background/55 backdrop-blur-xl
+              supports-backdrop-filter:bg-background/45
+            `
             : "border-border/60 bg-background/95 backdrop-blur-xl",
           scrollHide && scrollHidden && !menuOpen ? "-translate-y-full" : "translate-y-0",
           className,
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <div className="flex min-w-0 items-center gap-6 md:gap-8">
+        <div className="
+          h-16 max-w-7xl gap-4 px-4
+          sm:px-6
+          lg:px-8
+          mx-auto flex items-center justify-between
+        ">
+          <div className="min-w-0 gap-6 md:gap-8 flex items-center">
             <NavLink href={brandHref} className="flex shrink-0 items-center">
               {brand}
             </NavLink>
 
             {showDesktopNav ? (
-              <nav className="hidden min-w-0 items-center gap-4 md:flex md:gap-5 xl:gap-6">
+              <nav className="min-w-0 gap-4 md:flex md:gap-5 xl:gap-6 hidden items-center">
                 {items.map((item) => {
                   const active = isDesktopItemActive(pathname, item.href)
                   return (
@@ -196,7 +207,11 @@ export function SiteHeader({
                       }}
                       ariaCurrent={active ? "page" : undefined}
                       className={cn(
-                        "font-sans whitespace-nowrap text-sm transition-colors hover:text-foreground",
+                        `
+                          font-sans text-sm
+                          hover:text-foreground
+                          whitespace-nowrap transition-colors
+                        `,
                         active
                           ? "font-semibold text-emerald-600 dark:text-emerald-400"
                           : "font-medium text-muted-foreground",
@@ -210,15 +225,19 @@ export function SiteHeader({
             ) : null}
           </div>
 
-          <div className="hidden shrink-0 flex-nowrap items-center gap-2 md:flex">
+          <div className="gap-2 md:flex hidden shrink-0 flex-nowrap items-center">
             {desktopActions}
           </div>
 
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="gap-1 md:hidden flex items-center">
             {mobileActions}
             <button
               type="button"
-              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="
+                rounded-lg p-2 text-muted-foreground
+                hover:bg-muted hover:text-foreground
+                flex items-center justify-center
+              "
               onClick={() => {
                 setMenuOpen(!menuOpen)
               }}

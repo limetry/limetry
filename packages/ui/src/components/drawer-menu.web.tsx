@@ -153,15 +153,18 @@ function DrawerNavItem({
   if (hasChildren && item.children) {
     const open = expanded || branchActive
     return (
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-stretch gap-1">
+      <div className="gap-0.5 flex flex-col">
+        <div className="gap-1 flex items-stretch">
           <LinkComponent
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "relative flex min-w-0 flex-1 items-center justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+              `
+                min-w-0 gap-3 rounded-xl px-3 py-2.5 text-sm font-medium relative flex flex-1
+                items-center justify-start transition-colors
+              `,
               depth > 0 && "pl-3",
-              highlighted && depth > 0 && "border-l-2 border-emerald-500",
+              highlighted && depth > 0 && "border-emerald-500 border-l-2",
               highlighted
                 ? "bg-emerald-500/15 text-emerald-500"
                 : ancestorActive
@@ -181,7 +184,12 @@ function DrawerNavItem({
             aria-expanded={open}
             aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}
             className={cn(
-              "rounded-xl px-2.5 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800",
+              `
+                rounded-xl px-2.5 text-slate-500
+                hover:bg-slate-100
+                dark:hover:bg-slate-800
+                transition-colors
+              `,
               (ancestorActive || highlighted) && "text-emerald-500",
             )}
             onClick={() => {
@@ -192,7 +200,11 @@ function DrawerNavItem({
           </button>
         </div>
         {open ? (
-          <div className="ml-3 flex flex-col gap-0.5 border-l border-slate-200 pl-2 dark:border-slate-700">
+          <div className="
+            ml-3 gap-0.5 border-slate-200 pl-2
+            dark:border-slate-700
+            flex flex-col border-l
+          ">
             {item.children.map((child) => (
               <DrawerNavItem
                 key={`${child.href}-${child.label}`}
@@ -216,9 +228,12 @@ function DrawerNavItem({
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "relative flex items-center justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+        `
+          gap-3 rounded-xl px-3 py-2.5 text-sm font-medium relative flex items-center justify-start
+          transition-colors
+        `,
         depth > 0 && "py-2 text-[13px]",
-        highlighted && depth > 0 && "border-l-2 border-emerald-500",
+        highlighted && depth > 0 && "border-emerald-500 border-l-2",
         highlighted
           ? "bg-emerald-500/15 text-emerald-500"
           : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
@@ -313,19 +328,27 @@ export function DrawerMenu({
 
   return (
     <div
-      className="limetry-mobile-drawer pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-end overflow-hidden"
+      className="
+        limetry-mobile-drawer inset-x-0 bottom-0 pointer-events-none fixed z-40 flex justify-end
+        overflow-hidden
+      "
       style={{ top: topOffset }}
       aria-hidden={!open}
     >
       <nav
         inert={!open}
         className={cn(
-          "pointer-events-auto flex h-full w-72 max-w-[85vw] shrink-0 flex-col items-stretch gap-1 overflow-y-auto overscroll-y-contain border-l border-slate-200 bg-white p-4 shadow-xl transition-transform duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900",
+          `
+            w-72 gap-1 border-slate-200 bg-white p-4 shadow-xl ease-in-out
+            dark:border-slate-800 dark:bg-slate-900
+            pointer-events-auto flex h-full max-w-[85vw] shrink-0 flex-col items-stretch
+            overflow-y-auto overscroll-y-contain border-l transition-transform duration-300
+          `,
           open ? "translate-x-0" : "translate-x-full",
           className,
         )}
       >
-        <div className="flex flex-col items-stretch gap-1">
+        <div className="gap-1 flex flex-col items-stretch">
           {items.map((item) => (
             <DrawerNavItem
               key={`${item.href}-${item.label}`}
@@ -341,7 +364,7 @@ export function DrawerMenu({
             />
           ))}
         </div>
-        {footer ? <div className="mt-auto flex flex-col items-stretch gap-2 pt-4">{footer}</div> : null}
+        {footer ? <div className="gap-2 pt-4 mt-auto flex flex-col items-stretch">{footer}</div> : null}
       </nav>
     </div>
   )

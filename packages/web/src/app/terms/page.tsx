@@ -29,15 +29,22 @@ export default function TermsPage(): React.JSX.Element {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="relative flex-1 overflow-hidden py-16 sm:py-24">
-        <IconAccent className="-right-40 top-16 h-110 w-110 opacity-[0.05] rotate-12" />
+        <IconAccent className="top-16 -right-40 size-110 rotate-12 opacity-[0.05]" />
         <article className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">Legal</p>
+          <p className="text-sm font-semibold tracking-widest text-primary uppercase">Legal</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             Terms of Service
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">Last updated: July 21, 2026</p>
 
-          <div className="prose prose-neutral mt-10 max-w-none dark:prose-invert prose-headings:font-bold prose-p:text-muted-foreground prose-li:text-muted-foreground">
+          <div className="
+            prose-neutral
+            dark:prose-invert
+            prose mt-10 max-w-none
+            prose-headings:font-bold
+            prose-p:text-muted-foreground
+            prose-li:text-muted-foreground
+          ">
             <h2>Agreement</h2>
             <p>
               By using Limetry open-source software or this website, you agree to these terms. If

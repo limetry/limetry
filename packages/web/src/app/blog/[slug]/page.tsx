@@ -65,7 +65,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="mb-8">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="
+                inline-flex items-center gap-1.5 text-sm font-semibold text-primary
+                transition-colors
+                hover:text-primary/80
+              "
             >
               ← Back to blog
             </Link>
@@ -73,17 +77,26 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               {post.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
+                  className="
+                    rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs
+                    font-semibold text-primary
+                  "
                 >
                   {tag}
                 </span>
               ))}
-              <span className="text-xs text-muted-foreground ml-auto">{post.readTime}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{post.readTime}</span>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">{post.date}</p>
           </div>
 
-          <article className="prose max-w-none prose-headings:tracking-tight prose-h1:text-3xl prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-a:text-primary">
+          <article className="
+            prose max-w-none
+            prose-headings:tracking-tight
+            prose-h1:text-3xl
+            prose-h2:border-b prose-h2:border-border prose-h2:pb-2
+            prose-a:text-primary
+          ">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
           </article>
 
@@ -96,13 +109,22 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/docs/quick-start"
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90"
+                className="
+                  inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm
+                  font-semibold whitespace-nowrap text-primary-foreground shadow-md transition-all
+                  hover:bg-primary/90
+                "
               >
                 Quick start
               </Link>
               <Link
                 href={siteUrls.github}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-border bg-background px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary/40"
+                className="
+                  inline-flex items-center justify-center rounded-xl border border-border
+                  bg-background px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-foreground
+                  transition-all
+                  hover:border-primary/40
+                "
               >
                 View on GitHub
               </Link>

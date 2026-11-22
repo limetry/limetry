@@ -39,7 +39,8 @@ export function Logo({
   return (
     <View
       accessibilityLabel={label}
-      className={`flex-row items-center gap-2 ${variant === "mark" ? "h-8 w-8" : "h-8"} ${className ?? ""}`}
+      className={`gap-2 flex-row items-center ${variant === "mark" ? "h-8 w-8" : "h-8"} ${className ?? ""}
+      `}
     >
       {iconSource ? (
         <Image
@@ -50,7 +51,7 @@ export function Logo({
         />
       ) : null}
       {variant === "wordmark" ? (
-        <Text className="font-sans text-[1.35rem] font-bold tracking-tight text-[#21b263]">
+        <Text className="font-sans font-bold tracking-tight text-[1.35rem] text-[#21b263]">
           Limetry
         </Text>
       ) : null}

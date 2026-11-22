@@ -24,18 +24,27 @@ export default function PricingRedirectPage(): React.JSX.Element {
 
   if (!isLaunchOpen()) {
     return (
-      <main className="mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
+      <main className="
+        mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4
+        text-center
+      ">
         <p className="text-sm text-muted-foreground">Returning home…</p>
       </main>
     )
   }
 
   return (
-    <main className="mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
+    <main className="
+      mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center
+    ">
       <p className="text-sm text-muted-foreground">Opening Limetry Cloud…</p>
       <a
         href={cloudHref("/pricing")}
-        className="text-sm font-semibold text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
+        className="
+          text-sm font-semibold text-emerald-600 underline
+          hover:text-emerald-500
+          dark:text-emerald-400
+        "
       >
         Continue to {siteUrls.cloudWeb.replace(/^https?:\/\//, "")}/pricing
       </a>

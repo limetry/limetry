@@ -104,7 +104,18 @@ function SendIcon(): React.JSX.Element {
  */
 function AssistantMarkdown({ content }: { content: string }): React.JSX.Element {
   return (
-    <div className="ask-limetry-markdown prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mb-2 prose-headings:mt-3 prose-pre:my-2 prose-code:text-[0.85em]">
+    <div className="
+      ask-limetry-markdown
+      dark:prose-invert
+      prose max-w-none prose-sm
+      prose-headings:mt-3 prose-headings:mb-2
+      prose-p:my-2
+      prose-code:text-[0.85em]
+      prose-pre:my-2
+      prose-ol:my-2
+      prose-ul:my-2
+      prose-li:my-0.5
+    ">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>
         {content}
       </ReactMarkdown>
@@ -228,7 +239,7 @@ export function AskLimetryChat(): React.JSX.Element {
   }
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-end p-4 sm:p-5">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-60 flex justify-end p-4 sm:p-5">
       <div className="pointer-events-auto flex flex-col items-end gap-3">
         {open ? (
           <section
@@ -236,9 +247,15 @@ export function AskLimetryChat(): React.JSX.Element {
             role="dialog"
             aria-modal="false"
             aria-label="Ask Limetry"
-            className="ask-limetry-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/10 dark:shadow-black/40"
+            className="
+              ask-limetry-panel flex w-[min(100vw-2rem,24rem)] flex-col overflow-hidden rounded-2xl
+              border border-border bg-card shadow-2xl shadow-black/10
+              dark:shadow-black/40
+            "
           >
-            <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+            <header className="
+              flex items-center justify-between gap-3 border-b border-border px-4 py-3
+            ">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold tracking-tight text-foreground">
                   Ask Limetry
@@ -250,7 +267,11 @@ export function AskLimetryChat(): React.JSX.Element {
               <button
                 type="button"
                 onClick={close}
-                className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
+                className="
+                  inline-flex size-8 items-center justify-center rounded-full text-muted-foreground
+                  transition
+                  hover:bg-muted/70 hover:text-foreground
+                "
                 aria-label="Close chat"
               >
                 <CloseIcon />
@@ -259,11 +280,11 @@ export function AskLimetryChat(): React.JSX.Element {
 
             <div
               ref={listRef}
-              className="flex max-h-[min(28rem,55vh)] min-h-[16rem] flex-col gap-3 overflow-y-auto px-3 py-3"
+              className="flex max-h-[min(28rem,55vh)] min-h-64 flex-col gap-3 overflow-y-auto p-3"
             >
               {turns.length === 0 ? (
                 <div className="space-y-3 px-1 py-2">
-                  <p className="text-sm leading-relaxed text-muted-foreground">
+                  <p className="text-sm/relaxed text-muted-foreground">
                     Ask how to use, deploy, or understand Limetry and Limetry Cloud. I answer conversationally and cite the docs.
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -273,7 +294,12 @@ export function AskLimetryChat(): React.JSX.Element {
                         type="button"
                         disabled={busy}
                         onClick={() => void send(prompt)}
-                        className="rounded-full border border-border bg-muted px-2.5 py-1 text-left text-xs text-foreground/80 transition hover:border-primary/50 hover:bg-primary/10 hover:text-foreground disabled:opacity-50"
+                        className="
+                          rounded-full border border-border bg-muted px-2.5 py-1 text-left text-xs
+                          text-foreground/80 transition
+                          hover:border-primary/50 hover:bg-primary/10 hover:text-foreground
+                          disabled:opacity-50
+                        "
                       >
                         {prompt}
                       </button>
@@ -288,8 +314,8 @@ export function AskLimetryChat(): React.JSX.Element {
                   className={`flex ${turn.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${turn.role === "user"
-                      ? "whitespace-pre-wrap rounded-br-md bg-primary text-primary-foreground"
+                    className={`max-w-[92%] rounded-2xl px-3 py-2 text-sm/relaxed ${turn.role === "user"
+                      ? "rounded-br-md bg-primary whitespace-pre-wrap text-primary-foreground"
                       : "rounded-bl-md border border-border bg-muted text-foreground"
                     }`}
                   >
@@ -303,7 +329,10 @@ export function AskLimetryChat(): React.JSX.Element {
                         )
                     ) : turn.content}
                     {turn.sources && turn.sources.length > 0 ? (
-                      <ul className="mt-2 space-y-1 border-t border-border/40 pt-2 text-[11px] text-muted-foreground">
+                      <ul className="
+                        mt-2 space-y-1 border-t border-border/40 pt-2 text-[11px]
+                        text-muted-foreground
+                      ">
                         {turn.sources.slice(0, 4).map((source) => {
                           const href = resolveSourceHref(source)
                           const label = assistantCitationLabel(source)
@@ -332,7 +361,10 @@ export function AskLimetryChat(): React.JSX.Element {
 
               {busy && turns[turns.length - 1]?.role !== "assistant" ? (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl rounded-bl-md border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
+                  <div className="
+                    rounded-2xl rounded-bl-md border border-border bg-muted px-3 py-2 text-xs
+                    text-muted-foreground
+                  ">
                     Thinking…
                   </div>
                 </div>
@@ -349,10 +381,16 @@ export function AskLimetryChat(): React.JSX.Element {
                 void send(input)
               }}
             >
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-2 py-1.5 focus-within:border-primary/50">
+              <div className="
+                flex items-center gap-2 rounded-xl border border-border bg-background px-2 py-1.5
+                focus-within:border-primary/50
+              ">
                 <input
                   ref={inputRef}
-                  className="min-w-0 flex-1 bg-transparent px-1.5 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                  className="
+                    min-w-0 flex-1 bg-transparent p-1.5 text-sm text-foreground outline-none
+                    placeholder:text-muted-foreground
+                  "
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="Ask about Limetry…"
@@ -362,7 +400,12 @@ export function AskLimetryChat(): React.JSX.Element {
                 <button
                   type="submit"
                   disabled={busy || !input.trim()}
-                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+                  className="
+                    inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary
+                    text-primary-foreground transition
+                    hover:opacity-90
+                    disabled:opacity-40
+                  "
                   aria-label="Send message"
                 >
                   <SendIcon />
@@ -378,7 +421,11 @@ export function AskLimetryChat(): React.JSX.Element {
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
           aria-label={open ? "Close Ask Limetry" : "Ask Limetry"}
-          className="ask-limetry-fab inline-flex size-12 items-center justify-center rounded-full hover:scale-[1.03] active:scale-[0.98]"
+          className="
+            ask-limetry-fab inline-flex size-12 items-center justify-center rounded-full
+            hover:scale-[1.03]
+            active:scale-[0.98]
+          "
         >
           {open ? <CloseIcon /> : <ChatIcon />}
         </button>

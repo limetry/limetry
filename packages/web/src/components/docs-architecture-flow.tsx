@@ -73,25 +73,34 @@ function stageToneClass(tone: FlowStage["tone"]): string {
 export function ArchitectureFlow(): React.JSX.Element {
   return (
     <figure
-      className="not-prose my-6 overflow-hidden rounded-xl border border-border bg-gradient-to-b from-muted/50 to-background p-4 sm:p-6"
+      className="
+        not-prose my-6 overflow-hidden rounded-xl border border-border bg-linear-to-b from-muted/50
+        to-background p-4
+        sm:p-6
+      "
       aria-label="Limetry evaluation architecture"
     >
       <ol className="m-0 flex list-none flex-col gap-3 p-0 md:flex-row md:items-stretch md:gap-0">
         {STAGES.map((stage, index) => (
-          <li key={stage.title} className="flex min-w-0 flex-1 flex-col md:flex-row md:items-stretch">
+          <li key={stage.title} className="
+            flex min-w-0 flex-1 flex-col
+            md:flex-row md:items-stretch
+          ">
             <div
               className={[
                 "flex h-full flex-1 flex-col justify-center rounded-lg border px-4 py-3 shadow-sm",
                 stageToneClass(stage.tone),
               ].join(" ")}
             >
-              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="
+                text-[0.65rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase
+              ">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="mt-1 text-base font-semibold text-foreground">
                 {stage.title}
               </span>
-              <span className="mt-1 text-sm leading-snug text-muted-foreground">
+              <span className="mt-1 text-sm/snug text-muted-foreground">
                 {stage.detail}
               </span>
             </div>
@@ -109,19 +118,19 @@ export function ArchitectureFlow(): React.JSX.Element {
       </ol>
 
       <figcaption className="mt-5 border-t border-border/70 pt-4">
-        <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="m-0 text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
           Inside the evaluation server
         </p>
-        <ul className="mt-3 m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-3">
+        <ul className="m-0 mt-3 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-3">
           {SERVER_PANELS.map((panel) => (
             <li
               key={panel.title}
-              className="rounded-lg border border-border/80 bg-background/80 px-3 py-3"
+              className="rounded-lg border border-border/80 bg-background/80 p-3"
             >
               <span className="block text-sm font-medium text-foreground">
                 {panel.title}
               </span>
-              <span className="mt-1 block text-xs leading-snug text-muted-foreground">
+              <span className="mt-1 block text-xs/snug text-muted-foreground">
                 {panel.detail}
               </span>
             </li>
@@ -129,7 +138,7 @@ export function ArchitectureFlow(): React.JSX.Element {
         </ul>
         <p className="mt-3 mb-0 text-xs text-muted-foreground">
           Full intent is used for policy matching. Audit stores a scrubbed projection
-          (<code className="rounded bg-muted px-1 py-0.5 text-[0.7rem]">minimal</code> by
+          (<code className="rounded-sm bg-muted px-1 py-0.5 text-[0.7rem]">minimal</code> by
           default). Optional Redis covers nonce, throttle, and JWT revocation across instances.
         </p>
       </figcaption>

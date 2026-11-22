@@ -150,7 +150,11 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
               target="_blank"
               rel="noopener noreferrer"
               onClick={dismissSearch}
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="
+                flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium
+                whitespace-nowrap text-muted-foreground transition-colors
+                hover:bg-muted hover:text-foreground
+              "
             >
               <GitHubIcon className="size-4" />
               <span className="hidden xl:inline">GitHub</span>
@@ -164,7 +168,11 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
                   dismissSearch()
                   window.location.assign(cloudHref())
                 }}
-                className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-emerald-400 hover:to-cyan-400 hover:shadow-md"
+                className="
+                  rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-4 py-1.5 text-sm
+                  font-semibold whitespace-nowrap text-white shadow-sm transition-all
+                  hover:from-emerald-400 hover:to-cyan-400 hover:shadow-md
+                "
               >
                 Cloud →
               </Link>
@@ -191,7 +199,11 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
-              className="whitespace-nowrap rounded-lg border border-border px-3 py-2 text-center text-sm font-medium hover:bg-muted"
+              className="
+                rounded-lg border border-border px-3 py-2 text-center text-sm font-medium
+                whitespace-nowrap
+                hover:bg-muted
+              "
             >
               GitHub
             </Link>
@@ -203,7 +215,10 @@ export function Nav({ docsChildren = [] }: NavProps): React.JSX.Element {
                   setMenuOpen(false)
                   window.location.assign(cloudHref())
                 }}
-                className="whitespace-nowrap rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center text-sm font-semibold text-white"
+                className="
+                  rounded-lg bg-linear-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-center
+                  text-sm font-semibold whitespace-nowrap text-white
+                "
               >
                 Cloud →
               </Link>
@@ -237,13 +252,18 @@ function SearchButton({
       aria-pressed={active}
       className={`
         inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium
-        transition-colors hover:bg-muted hover:text-foreground
+        transition-colors
+        hover:bg-muted hover:text-foreground
         ${active ? "bg-muted text-foreground" : "text-muted-foreground"}`
       }
     >
       <SearchIcon />
       <span className="hidden xl:inline">Search</span>
-      <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground xl:inline">
+      <kbd className="
+        hidden rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px]
+        text-muted-foreground
+        xl:inline
+      ">
         ⌘K
       </kbd>
     </button>

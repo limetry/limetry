@@ -33,7 +33,7 @@ export function ExamplesGrid(): React.JSX.Element {
     <section className="py-20 sm:py-28" id="examples">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">Examples</p>
+          <p className="text-sm font-semibold tracking-widest text-primary uppercase">Examples</p>
           <h2 className="mt-3 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             Where teams put Limetry in the path
           </h2>
@@ -48,20 +48,32 @@ export function ExamplesGrid(): React.JSX.Element {
             <Link
               key={ex.name}
               href={ex.href}
-              className="group flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5"
+              className="
+                group flex items-center justify-between rounded-2xl border border-border bg-card p-5
+                shadow-sm transition-all
+                hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md
+              "
             >
               <div>
-                <p className="font-semibold text-foreground transition-colors group-hover:text-primary">{ex.name}</p>
+                <p className="
+                  font-semibold text-foreground transition-colors
+                  group-hover:text-primary
+                ">{ex.name}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{ex.maturity}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className={`rounded-lg border px-2 py-0.5 text-xs font-semibold ${LANG_COLORS[ex.lang] ?? "bg-muted text-muted-foreground border-border"}`}
+                  className={`rounded-lg border px-2 py-0.5 text-xs font-semibold ${LANG_COLORS[ex.lang] ?? `
+                    border-border bg-muted text-muted-foreground
+                  `}`}
                 >
                   {ex.lang}
                 </span>
                 <svg
-                  className="h-4 w-4 text-muted-foreground transition-all group-hover:text-primary group-hover:translate-x-0.5"
+                  className="
+                    size-4 text-muted-foreground transition-all
+                    group-hover:translate-x-0.5 group-hover:text-primary
+                  "
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -77,7 +89,11 @@ export function ExamplesGrid(): React.JSX.Element {
         <div className="mt-12 text-center">
           <Link
             href="/examples"
-            className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-muted hover:shadow-md"
+            className="
+              inline-flex items-center gap-2 rounded-xl border border-border bg-background px-6 py-3
+              text-sm font-semibold whitespace-nowrap text-foreground shadow-sm transition-all
+              hover:bg-muted hover:shadow-md
+            "
           >
             Browse all examples
           </Link>

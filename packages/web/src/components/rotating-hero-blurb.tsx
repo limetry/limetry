@@ -76,7 +76,11 @@ export function RotatingHeroBlurb(): React.JSX.Element {
     >
       <h1
         aria-live="polite"
-        className="min-h-34 overflow-hidden text-4xl font-black tracking-tight text-foreground sm:min-h-30 sm:text-5xl lg:min-h-38 lg:text-6xl"
+        className="
+          min-h-34 overflow-hidden text-4xl font-black tracking-tight text-foreground
+          sm:min-h-30 sm:text-5xl
+          lg:min-h-38 lg:text-6xl
+        "
       >
         <AnimatePresence mode="wait" custom={direction}>
           <motion.span
@@ -98,7 +102,7 @@ export function RotatingHeroBlurb(): React.JSX.Element {
       <motion.p
         key={`highlight-${rotationCycle}-${itemIndex}`}
         animate={{ opacity: 1, x: 0 }}
-        className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground"
+        className="mx-auto mt-6 max-w-2xl text-lg/relaxed text-muted-foreground"
         initial={{ opacity: 0, x: direction > 0 ? 20 : -20 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >

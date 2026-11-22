@@ -55,7 +55,11 @@ export function Input({
       ) : null}
       <TextInput
         className={cn(
-          "rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100",
+          `
+            rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-900
+            dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100
+            border
+          `,
           !editable && "opacity-60",
           error && "border-red-500 dark:border-red-500",
           className,
@@ -106,7 +110,7 @@ export function TextArea({
       label={label}
       multiline
       numberOfLines={rows}
-      className={cn("min-h-[100px] py-3 font-mono text-sm", className)}
+      className={cn("py-3 font-mono text-sm min-h-[100px]", className)}
       textAlignVertical="top"
       {...props}
     />

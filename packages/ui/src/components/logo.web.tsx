@@ -38,7 +38,7 @@ export function Logo({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2",
+        "gap-2 inline-flex items-center",
         variant === "mark" ? "h-8 w-8" : "h-8",
         className,
       )}
@@ -52,7 +52,10 @@ export function Logo({
         className="h-8 w-8 shrink-0 object-contain"
       />
       {variant === "wordmark" ? (
-        <span className="bg-gradient-to-r bg-linear-to-r from-[#21b263] to-[#27A1D2] bg-clip-text font-sans text-[1.35rem] font-bold tracking-tight text-transparent">
+        <span className="
+          font-sans font-bold tracking-tight bg-linear-to-r bg-gradient-to-r from-[#21b263]
+          to-[#27A1D2] bg-clip-text text-[1.35rem] text-transparent
+        ">
           Limetry
         </span>
       ) : null}

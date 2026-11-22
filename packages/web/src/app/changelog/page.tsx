@@ -120,10 +120,10 @@ export default function ChangelogPage(): React.JSX.Element {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="relative flex-1 overflow-hidden py-16 sm:py-24">
-        <IconAccent className="-right-48 top-24 h-[460px] w-[460px] opacity-[0.05] rotate-6" />
+        <IconAccent className="top-24 -right-48 size-[460px] rotate-6 opacity-[0.05]" />
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary">Changelog</p>
+            <p className="text-sm font-semibold tracking-widest text-primary uppercase">Changelog</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               What&apos;s new in Limetry
             </h1>
@@ -135,17 +135,18 @@ export default function ChangelogPage(): React.JSX.Element {
           <ol className="relative border-l border-border pl-6">
             {ENTRIES.map((entry) => (
               <li key={`${entry.date}-${entry.title}`} className="mb-10 last:mb-0">
-                <span className="absolute -left-[5px] mt-2 h-2.5 w-2.5 rounded-full bg-primary" aria-hidden="true" />
+                <span className="absolute left-[-5px] mt-2 size-2.5 rounded-full bg-primary" aria-hidden="true" />
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${TAG_COLORS[entry.tag]}`}
+                    className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${TAG_COLORS[entry.tag]}
+                    `}
                   >
                     {entry.tag}
                   </span>
                   <time className="text-xs text-muted-foreground">{entry.date}</time>
                 </div>
                 <h2 className="mt-2 text-lg font-bold text-foreground">{entry.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{entry.description}</p>
+                <p className="mt-1 text-sm/relaxed text-muted-foreground">{entry.description}</p>
               </li>
             ))}
           </ol>

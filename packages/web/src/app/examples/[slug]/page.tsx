@@ -105,7 +105,11 @@ export default async function ExampleDetailPage({ params }: { params: Promise<{ 
           <div className="mb-8">
             <Link
               href="/examples"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="
+                inline-flex items-center gap-1.5 text-sm font-semibold text-primary
+                transition-colors
+                hover:text-primary/80
+              "
             >
               ← Back to all examples
             </Link>
@@ -113,37 +117,56 @@ export default async function ExampleDetailPage({ params }: { params: Promise<{ 
               <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                 {example.name}
               </h1>
-              <span className="rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+              <span className="
+                rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs
+                font-semibold text-primary
+              ">
                 {example.framework}
               </span>
-              <span className="rounded-lg border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+              <span className="
+                rounded-lg border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold
+                text-muted-foreground
+              ">
                 {example.lang}
               </span>
-              <span className="rounded-lg border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+              <span className="
+                rounded-lg border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold
+                text-muted-foreground
+              ">
                 {example.maturity}
               </span>
-              <span className="rounded-lg border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+              <span className="
+                rounded-lg border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold
+                text-muted-foreground
+              ">
                 {example.tested ? "automated tests" : "schema / manual"}
               </span>
             </div>
-            <p className="mt-3 text-lg text-muted-foreground max-w-3xl leading-relaxed">
+            <p className="mt-3 max-w-3xl text-lg/relaxed text-muted-foreground">
               {example.description}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               Source folder:{" "}
-              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+              <code className="rounded-sm bg-muted px-1.5 py-0.5 text-xs">
                 {example.folder.startsWith("archive/") ? example.folder : `examples/${example.folder}`}
               </code>
             </p>
           </div>
 
           {readmeContent ? (
-            <section className="mb-12 rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
-              <div className="mb-4 pb-3 border-b border-border flex items-center justify-between">
+            <section className="mb-12 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+              <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
                 <h2 className="text-lg font-bold text-foreground">Documentation & Guide</h2>
                 <span className="text-xs text-muted-foreground">README.md</span>
               </div>
-              <article className="prose max-w-none prose-headings:tracking-tight prose-h1:text-2xl prose-h2:text-xl prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-a:text-primary dark:prose-invert">
+              <article className="
+                dark:prose-invert
+                prose max-w-none
+                prose-headings:tracking-tight
+                prose-h1:text-2xl
+                prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-h2:text-xl
+                prose-a:text-primary
+              ">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={createExampleMarkdownComponents(example.folder)}

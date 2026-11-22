@@ -18,7 +18,7 @@ function FooterAnchor({
     <LinkComponent
       href={link.href}
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
     >
       {link.label}
     </LinkComponent>
@@ -36,20 +36,24 @@ export function SiteFooter({
   className,
 }: SiteFooterProps): JSX.Element {
   return (
-    <footer className={cn("border-t border-border bg-card", className)}>
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          <div className="col-span-2 md:col-span-1">
+    <footer className={cn("border-border bg-card border-t", className)}>
+      <div className="max-w-7xl px-4 py-12 sm:px-6 lg:px-8 mx-auto">
+        <div className="gap-8 md:grid-cols-4 grid grid-cols-2">
+          <div className="md:col-span-1 col-span-2">
             <LinkComponent href="/" className="inline-flex items-center" ariaCurrent={undefined}>
               {brand}
             </LinkComponent>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{links.blurb}</p>
             {contactHref || discordHref ? (
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="mt-4 gap-2 flex flex-col">
                 {contactHref ? (
                   <LinkComponent
                     href={contactHref}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="
+                      text-sm text-muted-foreground
+                      hover:text-foreground
+                      transition-colors
+                    "
                   >
                     Contact
                   </LinkComponent>
@@ -59,7 +63,11 @@ export function SiteFooter({
                     href={discordHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="
+                      text-sm text-muted-foreground
+                      hover:text-foreground
+                      transition-colors
+                    "
                   >
                     Discord
                   </LinkComponent>
@@ -71,9 +79,13 @@ export function SiteFooter({
           <FooterColumn title="Open Source" links={links.opensource} LinkComponent={LinkComponent} />
           <FooterColumn title="Docs" links={links.docs} LinkComponent={LinkComponent} />
         </div>
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
+        <div className="
+          mt-10 gap-4 border-border pt-8
+          sm:flex-row
+          flex flex-col items-center justify-between border-t
+        ">
           <p className="text-sm text-muted-foreground">Copyright © {new Date().getFullYear()} Limetry</p>
-          <div className="flex items-center gap-4">
+          <div className="gap-4 flex items-center">
             <FooterAnchor link={links.legal.privacy} LinkComponent={LinkComponent} />
             <FooterAnchor link={links.legal.terms} LinkComponent={LinkComponent} />
             {version ? (

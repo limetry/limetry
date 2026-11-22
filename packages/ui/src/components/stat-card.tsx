@@ -60,7 +60,7 @@ export function StatCard({
   return (
     <View
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900",
+        "rounded-2xl border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 border",
         className,
       )}
     >

@@ -44,7 +44,7 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps): React.JSX.Ele
     return (
       <span
         aria-hidden="true"
-        className={`inline-flex h-9 w-9 shrink-0 rounded-xl border border-transparent ${className}`}
+        className={`inline-flex size-9 shrink-0 rounded-xl border border-transparent ${className}`}
       />
     )
   }

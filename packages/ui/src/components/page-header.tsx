@@ -43,8 +43,12 @@ export function PageHeader({
 }: PageHeaderProps): React.JSX.Element {
   return (
     <View className={cn("mb-6 flex-row items-start justify-between", className)}>
-      <View className="flex-1 pr-4">
-        <Text className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-3xl">
+      <View className="pr-4 flex-1">
+        <Text className="
+          text-2xl font-bold tracking-tight text-slate-900
+          dark:text-slate-100
+          md:text-3xl
+        ">
           {title}
         </Text>
         {description ? (
@@ -86,9 +90,13 @@ export function EmptyState({
   action,
 }: EmptyStateProps): React.JSX.Element {
   return (
-    <View className="items-center rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 dark:border-slate-700 dark:bg-slate-900">
+    <View className="
+      rounded-2xl border-slate-200 bg-white px-6 py-16
+      dark:border-slate-700 dark:bg-slate-900
+      items-center border border-dashed
+    ">
       <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</Text>
-      <Text className="mt-2 max-w-sm text-center text-sm text-slate-500 dark:text-slate-400">
+      <Text className="mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400 text-center">
         {description}
       </Text>
       {action ? <View className="mt-6">{action}</View> : null}
@@ -133,7 +141,7 @@ export function AlertBanner({
   variant = "info",
 }: AlertBannerProps): React.JSX.Element {
   return (
-    <View className={cn("mb-4 rounded-xl border px-4 py-3", alertStyles[variant])}>
+    <View className={cn("mb-4 rounded-xl px-4 py-3 border", alertStyles[variant])}>
       <Text className={cn("text-sm font-medium", alertTextStyles[variant])}>
         {message}
       </Text>

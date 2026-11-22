@@ -31,7 +31,11 @@ export function Card({ children, className, ...props }: CardProps): React.JSX.El
   return (
     <View
       className={cn(
-        "rounded-2xl min-h-[88px] border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900",
+        `
+          rounded-2xl border-slate-200 bg-white p-5
+          dark:border-slate-800 dark:bg-slate-900
+          min-h-[88px] border
+        `,
         className,
       )}
       {...props}
@@ -77,7 +81,7 @@ export function CardHeader({
 }: CardHeaderProps): React.JSX.Element {
   return (
     <View className={cn("mb-4 flex-row items-start justify-between", className)}>
-      <View className="flex-1 pr-3">
+      <View className="pr-3 flex-1">
         <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</Text>
         {description ? (
           <Text className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</Text>

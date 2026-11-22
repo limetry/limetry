@@ -146,7 +146,7 @@ export function SiteSearchDialog({
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 top-16 z-40"
+      className="fixed inset-x-0 top-16 bottom-0 z-40"
       role="dialog"
       aria-modal="true"
       aria-labelledby={inputId}
@@ -158,10 +158,17 @@ export function SiteSearchDialog({
         onClick={close}
       />
 
-      <div className="pointer-events-none absolute inset-x-0 top-6 flex justify-center px-4 sm:top-10 md:top-[12vh]">
-        <div className="pointer-events-auto w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/20">
+      <div className="
+        pointer-events-none absolute inset-x-0 top-6 flex justify-center px-4
+        sm:top-10
+        md:top-[12vh]
+      ">
+        <div className="
+          pointer-events-auto w-full max-w-xl overflow-hidden rounded-2xl border border-border
+          bg-card shadow-2xl shadow-black/20
+        ">
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <SearchGlyph className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <SearchGlyph className="size-4 shrink-0 text-muted-foreground" />
             <label htmlFor={inputId} className="sr-only">
               Search Limetry
             </label>
@@ -173,12 +180,19 @@ export function SiteSearchDialog({
                 setQuery(event.target.value)
               }}
               placeholder="Search docs, examples, blog, and site…"
-              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              className="
+                min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none
+                placeholder:text-muted-foreground
+              "
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
             />
-            <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">
+            <kbd className="
+              hidden rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px]
+              text-muted-foreground
+              sm:inline
+            ">
               Esc
             </kbd>
           </div>
@@ -199,7 +213,10 @@ export function SiteSearchDialog({
             ) : null}
             {grouped.map((group) => (
               <div key={group.section} className="mb-2">
-                <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <p className="
+                  px-3 py-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground
+                  uppercase
+                ">
                   {group.label}
                 </p>
                 <ul className="flex flex-col gap-0.5">

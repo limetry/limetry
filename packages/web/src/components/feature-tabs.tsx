@@ -92,7 +92,7 @@ export function FeatureTabs(): React.JSX.Element {
     <section className="border-t border-border bg-muted/30 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">Same policy API everywhere</p>
+          <p className="text-sm font-semibold tracking-widest text-primary uppercase">Same policy API everywhere</p>
           <h2 className="mt-3 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             Check once. Enforce everywhere.
           </h2>
@@ -104,7 +104,10 @@ export function FeatureTabs(): React.JSX.Element {
         <div
           role="tablist"
           aria-label="Limetry surfaces"
-          className="mx-auto mt-10 flex w-full max-w-md flex-wrap justify-center gap-1 rounded-xl border border-border bg-background/80 p-1"
+          className="
+            mx-auto mt-10 flex w-full max-w-md flex-wrap justify-center gap-1 rounded-xl border
+            border-border bg-background/80 p-1
+          "
         >
           {TABS.map((t) => {
             const selected = active === t.id
@@ -118,7 +121,7 @@ export function FeatureTabs(): React.JSX.Element {
                 aria-controls={`feature-panel-${t.id}`}
                 tabIndex={selected ? 0 : -1}
                 onClick={() => setActive(t.id)}
-                className={`flex-1 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm transition-colors ${
+                className={`flex-1 rounded-lg px-4 py-2.5 text-sm whitespace-nowrap transition-colors ${
                   selected
                     ? "bg-muted font-semibold text-foreground shadow-sm"
                     : "font-medium text-muted-foreground hover:text-foreground"
@@ -135,17 +138,21 @@ export function FeatureTabs(): React.JSX.Element {
           role="tabpanel"
           id={`feature-panel-${active}`}
           aria-labelledby={`feature-tab-${active}`}
-          className="mt-10 grid grid-cols-1 gap-8 animate-fade-in lg:grid-cols-2 lg:items-center"
+          className="mt-10 grid animate-fade-in grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center"
         >
           <div>
             <h3 className="text-2xl font-black text-foreground">{tab.headline}</h3>
-            <p className="mt-4 text-muted-foreground leading-relaxed">{tab.description}</p>
+            <p className="mt-4 leading-relaxed text-muted-foreground">{tab.description}</p>
             <Link
               href={tab.cta.href}
-              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="
+                mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary
+                transition-colors
+                hover:text-primary/80
+              "
             >
               {tab.cta.label}
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Link>
@@ -153,12 +160,12 @@ export function FeatureTabs(): React.JSX.Element {
 
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
             <div className="flex items-center gap-2 border-b border-border bg-muted/60 px-4 py-3">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+              <span className="size-2.5 rounded-full bg-red-400" />
+              <span className="size-2.5 rounded-full bg-yellow-400" />
+              <span className="size-2.5 rounded-full bg-green-400" />
             </div>
-            <pre className="overflow-x-auto border-none bg-transparent p-5 text-sm leading-relaxed">
-              <code className="text-foreground/85 font-mono">{tab.code}</code>
+            <pre className="overflow-x-auto border-none bg-transparent p-5 text-sm/relaxed">
+              <code className="font-mono text-foreground/85">{tab.code}</code>
             </pre>
           </div>
         </div>

@@ -90,11 +90,14 @@ function DrawerNavItem({
     const open = expanded || branchActive
     return (
       <View className="gap-0.5">
-        <View className="flex-row items-stretch gap-1">
+        <View className="gap-1 flex-row items-stretch">
           <LinkComponent href={item.href} onPress={onNavigate}>
             <View
               className={cn(
-                "relative mb-1 min-h-11 flex-1 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
+                `
+                  mb-1 min-h-11 gap-3 rounded-xl px-3 py-2.5 relative flex-1 flex-row items-center
+                  justify-start
+                `,
                 highlighted
                   ? "bg-emerald-500/15"
                   : "",
@@ -102,14 +105,14 @@ function DrawerNavItem({
             >
               {highlighted && depth > 0 ? (
                 <View
-                  className="absolute bottom-1.5 top-1.5 w-px bg-emerald-500"
+                  className="bottom-1.5 top-1.5 bg-emerald-500 absolute w-px"
                   style={{ left: -9 }}
                 />
               ) : null}
               {item.icon && renderIcon ? renderIcon(item.icon, highlighted) : null}
               <Text
                 className={cn(
-                  "text-left text-sm font-medium",
+                  "text-sm font-medium text-left",
                   highlighted
                     ? "text-emerald-500"
                     : ancestorActive
@@ -127,15 +130,22 @@ function DrawerNavItem({
             onPress={() => {
               setExpanded((value) => !value)
             }}
-            className="min-h-11 min-w-11 items-center justify-center rounded-xl px-2.5 active:bg-slate-100 dark:active:bg-slate-800"
+            className="
+              min-h-11 min-w-11 rounded-xl px-2.5
+              active:bg-slate-100
+              dark:active:bg-slate-800
+              items-center justify-center
+            "
           >
-            <Text className={cn("text-slate-500", (ancestorActive || highlighted) && "text-emerald-500")}>
+            <Text className={cn("text-slate-500", (ancestorActive || highlighted) && `
+              text-emerald-500
+            `)}>
               {open ? "▾" : "▸"}
             </Text>
           </Pressable>
         </View>
         {open ? (
-          <View className="ml-3 border-l border-slate-200 pl-2 dark:border-slate-700">
+          <View className="ml-3 border-slate-200 pl-2 dark:border-slate-700 border-l">
             {item.children.map((child) => (
               <DrawerNavItem
                 key={`${child.href}-${child.label}`}
@@ -158,20 +168,20 @@ function DrawerNavItem({
     <LinkComponent href={item.href} onPress={onNavigate}>
       <View
         className={cn(
-          "relative mb-1 min-h-11 flex-row items-center justify-start gap-3 rounded-xl px-3 py-2.5",
+          "mb-1 min-h-11 gap-3 rounded-xl px-3 py-2.5 relative flex-row items-center justify-start",
           highlighted ? "bg-emerald-500/15" : "",
         )}
       >
         {highlighted && depth > 0 ? (
           <View
-            className="absolute bottom-1.5 top-1.5 w-px bg-emerald-500"
+            className="bottom-1.5 top-1.5 bg-emerald-500 absolute w-px"
             style={{ left: -9 }}
           />
         ) : null}
         {item.icon && renderIcon ? renderIcon(item.icon, highlighted) : null}
         <Text
           className={cn(
-            "text-left text-sm font-medium",
+            "text-sm font-medium text-left",
             depth > 0 && "text-[13px]",
             highlighted ? "text-emerald-500" : "text-slate-600 dark:text-slate-400",
           )}
@@ -232,12 +242,16 @@ export function DrawerMenu({
           />
           <View
             className={cn(
-              "h-full border-l border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900",
+              `
+                border-slate-200 bg-white p-4
+                dark:border-slate-800 dark:bg-slate-900
+                h-full border-l
+              `,
               className,
             )}
             style={{ width: "80%", maxWidth: DOCS_SIDEBAR_WIDTH, zIndex: 1 }}
           >
-            <View className="flex-1 gap-1">
+            <View className="gap-1 flex-1">
               {items.map((item) => (
                 <DrawerNavItem
                   key={`${item.href}-${item.label}`}
@@ -251,7 +265,7 @@ export function DrawerMenu({
                 />
               ))}
             </View>
-            {footer ? <View className="mt-auto items-stretch gap-2 pt-4">{footer}</View> : null}
+            {footer ? <View className="gap-2 pt-4 mt-auto items-stretch">{footer}</View> : null}
           </View>
         </View>
       </View>

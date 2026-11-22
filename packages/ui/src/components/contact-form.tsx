@@ -58,7 +58,12 @@ export function ContactForm({
   if (state === "success") {
     return (
       <View className={className} accessibilityRole="text">
-        <Text className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
+        <Text className="
+          rounded-xl border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium
+          text-slate-900
+          dark:text-slate-100
+          border
+        ">
           Message sent. We will get back to you soon.
         </Text>
       </View>
@@ -108,7 +113,11 @@ export function ContactForm({
         />
         {errorMessage ? (
           <Text
-            className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-400"
+            className="
+              rounded-lg border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700
+              dark:text-red-400
+              border
+            "
             accessibilityRole="alert"
           >
             {errorMessage}

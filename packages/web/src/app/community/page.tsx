@@ -64,14 +64,14 @@ export default function CommunityPage(): React.JSX.Element {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="relative flex-1 overflow-hidden py-16 sm:py-24">
-        <IconAccent className="-left-40 top-10 h-[420px] w-[420px] opacity-[0.05] -rotate-12" />
+        <IconAccent className="top-10 -left-40 size-[420px] -rotate-12 opacity-[0.05]" />
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary">Community</p>
+            <p className="text-sm font-semibold tracking-widest text-primary uppercase">Community</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               Build in public. Ship adapters together.
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-muted-foreground leading-relaxed">
+            <p className="mx-auto mt-3 max-w-xl leading-relaxed text-muted-foreground">
               Limetry is open source under the MIT License. Issues, discussions, and releases happen
               in public. Join Discord or Discussions when you need help wiring evaluate.
             </p>
@@ -84,13 +84,20 @@ export default function CommunityPage(): React.JSX.Element {
                 href={link.href}
                 target={link.external ? "_blank" : undefined}
                 rel={link.external ? "noopener noreferrer" : undefined}
-                className="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5"
+                className="
+                  group flex flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-sm
+                  transition-all
+                  hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md
+                "
               >
                 <div className="flex items-start justify-between">
                   <span className="text-3xl">{link.icon}</span>
                   {link.external && (
                     <svg
-                      className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary"
+                      className="
+                        size-4 text-muted-foreground transition-colors
+                        group-hover:text-primary
+                      "
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -101,8 +108,11 @@ export default function CommunityPage(): React.JSX.Element {
                   )}
                 </div>
                 <div>
-                  <h2 className="font-bold text-foreground group-hover:text-primary transition-colors">{link.title}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{link.description}</p>
+                  <h2 className="
+                    font-bold text-foreground transition-colors
+                    group-hover:text-primary
+                  ">{link.title}</h2>
+                  <p className="mt-1 text-sm/relaxed text-muted-foreground">{link.description}</p>
                 </div>
                 <span className="mt-auto text-sm font-semibold text-primary">{link.cta} →</span>
               </Link>
@@ -120,7 +130,12 @@ export default function CommunityPage(): React.JSX.Element {
               href={siteUrls.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:bg-primary/90"
+              className="
+                mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm
+                font-semibold whitespace-nowrap text-primary-foreground shadow-md shadow-primary/20
+                transition-all
+                hover:bg-primary/90
+              "
             >
               View on GitHub
             </Link>

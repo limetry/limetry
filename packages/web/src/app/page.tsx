@@ -77,7 +77,7 @@ function ValueStrip(): React.JSX.Element {
         {items.map((item) => (
           <div key={item.title}>
             <h2 className="text-lg font-bold tracking-tight text-foreground">{item.title}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+            <p className="mt-2 text-sm/relaxed text-muted-foreground">{item.body}</p>
           </div>
         ))}
       </div>
@@ -94,7 +94,10 @@ function SelfHostCallout(): React.JSX.Element {
   return (
     <section className="border-t border-border bg-card py-20 sm:py-28">
       <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+        <div className="
+          mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10
+          px-4 py-1.5 text-sm font-medium text-primary
+        ">
           Open source
         </div>
         <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
@@ -107,7 +110,11 @@ function SelfHostCallout(): React.JSX.Element {
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/docs/quick-start"
-            className="whitespace-nowrap rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/90"
+            className="
+              rounded-xl bg-primary px-6 py-3 text-sm font-semibold whitespace-nowrap
+              text-primary-foreground shadow-lg shadow-primary/25 transition-all
+              hover:-translate-y-0.5 hover:bg-primary/90
+            "
           >
             Quick start →
           </Link>
@@ -115,7 +122,11 @@ function SelfHostCallout(): React.JSX.Element {
             href={siteUrls.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="whitespace-nowrap rounded-xl border border-border px-6 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="
+              rounded-xl border border-border px-6 py-3 text-sm font-semibold whitespace-nowrap
+              text-muted-foreground transition-colors
+              hover:bg-muted hover:text-foreground
+            "
           >
             View on GitHub
           </Link>

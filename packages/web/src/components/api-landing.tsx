@@ -8,7 +8,7 @@ export function ApiLanding(): React.JSX.Element {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-5xl items-center justify-between p-4 sm:px-6 lg:px-8">
           <Link
             href={siteUrls.web}
             className="text-sm font-semibold tracking-tight text-foreground"
@@ -25,26 +25,36 @@ export function ApiLanding(): React.JSX.Element {
       </header>
       <main className="flex-1">
         <section className="mx-auto max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
-          <p className="font-mono text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
+          <p className="font-mono text-sm font-semibold tracking-[0.2em] text-emerald-600 uppercase">
             Limetry API
           </p>
-          <h1 className="mt-5 max-w-3xl text-4xl font-black tracking-tight text-foreground sm:text-6xl">
+          <h1 className="
+            mt-5 max-w-3xl text-4xl font-black tracking-tight text-foreground
+            sm:text-6xl
+          ">
             Govern agent actions before they run.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          <p className="mt-6 max-w-2xl text-lg/8 text-muted-foreground">
             The Limetry API evaluates tool calls, records signed decisions, and exposes an
             auditable control plane for your agent runtime.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link
               href="/openapi"
-              className="rounded-xl bg-linear-to-r from-emerald-500 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-sm"
+              className="
+                rounded-xl bg-linear-to-r from-emerald-500 to-cyan-500 px-5 py-3 text-sm
+                font-semibold text-white shadow-sm
+              "
             >
               OpenAPI reference →
             </Link>
             <Link
               href={`${siteUrls.web}/docs/quick-start`}
-              className="rounded-xl border border-border px-5 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted"
+              className="
+                rounded-xl border border-border px-5 py-3 text-sm font-semibold
+                text-muted-foreground
+                hover:bg-muted
+              "
             >
               Quick start
             </Link>

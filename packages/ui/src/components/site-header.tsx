@@ -58,10 +58,10 @@ export function SiteHeader({
   return (
     <>
       <View className={cn(
-        "z-20 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
+        "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 z-20 border-b",
         className,
       )}>
-        <View className="h-16 flex-row items-center justify-between px-4">
+        <View className="h-16 px-4 flex-row items-center justify-between">
           <LinkComponent
             href={brandHref}
             className="shrink-0 flex-row items-center"
@@ -69,7 +69,7 @@ export function SiteHeader({
           >
             {brand}
           </LinkComponent>
-          <View className="flex-row items-center gap-1">
+          <View className="gap-1 flex-row items-center">
             {desktopActions}
             {mobileActions}
             <Pressable
@@ -80,7 +80,10 @@ export function SiteHeader({
                 updateMenuOpen(!isMenuOpen)
               }}
             >
-              {isMenuOpen ? <XIcon className="text-slate-600 dark:text-slate-400" /> : <MenuIcon className="text-slate-600 dark:text-slate-400" />}
+              {isMenuOpen ? <XIcon className="text-slate-600 dark:text-slate-400" /> : <MenuIcon className="
+                text-slate-600
+                dark:text-slate-400
+              " />}
             </Pressable>
           </View>
         </View>
