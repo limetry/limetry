@@ -30,6 +30,12 @@ interface ChangelogEntry {
 
 const ENTRIES: ChangelogEntry[] = [
   {
+    date: "November 22, 2026",
+    title: "Python SDK (limetry) on PyPI",
+    tag: "Feature",
+    description: "Shipped the limetry Python SDK with API parity to @limetry/sdk, five new Python examples (Anthropic, FastAPI, Stripe, LlamaIndex, Bedrock), and PyPI / conda-forge publish paths.",
+  },
+  {
     date: "July 16, 2026",
     title: "Public website: docs, blog, examples, and pricing",
     tag: "Feature",
@@ -128,7 +134,7 @@ export default function ChangelogPage(): React.JSX.Element {
               What&apos;s new in Limetry
             </h1>
             <p className="mt-3 text-muted-foreground">
-              Notable releases across the TypeScript SDK, CLI, evaluation server, and MCP packages.
+              Notable releases across the TypeScript and Python SDKs, CLI, evaluation server, and MCP packages.
             </p>
           </div>
 

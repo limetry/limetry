@@ -22,8 +22,8 @@ advisory until you do. Agents can bypass Limetry if you skip that check.
 4. **Enforce** — skip or execute the tool; record `executed` / `skipped` / `blocked`.
 5. **Audit** — tail privacy-safe `policy.evaluated` and `action.recorded` events.
 
-Call evaluate from the **Limetry SDK**, **CLI** (`limetry eval`), or **MCP**
-(`limetry_evaluate`).
+Call evaluate from the **Limetry SDKs** (`@limetry/sdk` or `limetry` on PyPI),
+**CLI** (`limetry eval`), or **MCP** (`limetry_evaluate`).
 
 ## Read the architecture
 
@@ -54,6 +54,7 @@ Open source (MIT license):
 
 - `packages/server` — evaluation server (policy checks + audit)
 - `packages/sdk` — TypeScript SDK (`@limetry/sdk`)
+- `packages/sdk-python` — Python SDK (`limetry` on PyPI / conda-forge)
 - `packages/ci` — GitHub Actions CI/CD privilege gate (`@limetry/ci`)
 - `packages/shopify` — Shopify mutation firewall (`@limetry/shopify`)
 - `packages/sql` — SQL write gate MCP server (`@limetry/sql`)

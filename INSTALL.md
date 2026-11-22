@@ -8,7 +8,8 @@ channel as "available" when it actually works today.
 
 | You are a… | Install this | How |
 | --- | --- | --- |
-| Agent developer | `@limetry/sdk` | `npm install @limetry/sdk` |
+| Agent developer (TypeScript) | `@limetry/sdk` | `npm install @limetry/sdk` |
+| Agent developer (Python) | `limetry` | `pip install limetry` |
 | Terminal user | `@limetry/cli` | `npm install -g @limetry/cli` |
 | MCP user (Claude/Cursor) | `@limetry/mcp` | `npx -y @limetry/mcp` |
 | Operator (self-hosting) | `@limetry/server` | From source or Docker (`packages/server/Dockerfile`) |
@@ -19,6 +20,8 @@ channel as "available" when it actually works today.
 | --- | --- | --- |
 | Source checkout (all platforms) | **Available** | Yarn Berry 4.13 is required for repository development |
 | npm / npx | **Published** | Install published packages directly; releases use `.github/workflows/publish-npm.yml` |
+| PyPI | **Published** | `pip install limetry`; releases use `.github/workflows/publish-pypi.yml` |
+| conda-forge | **Published** | `conda install -c conda-forge limetry` (after first PyPI release; see `packages/sdk-python/conda-forge/`) |
 | Docker (server) | **Available** | `packages/server/Dockerfile` |
 | Homebrew (macOS / Linuxbrew) | Planned — next | Formula wrapping the npm package or release tarball |
 | Standalone binaries (GitHub Releases) | Planned — next | Node SEA multi-arch builds |
@@ -37,12 +40,21 @@ For an MCP host, `npx` can be replaced with `yarn dlx` or `pnpm dlx`.
 npm install -g @limetry/cli
 npm install @limetry/sdk
 npx -y @limetry/mcp
+pip install limetry
 ```
 
 For an adapter, install only what you use:
 
 ```bash
 npm install @limetry/ci @limetry/sql @limetry/shopify
+```
+
+Python agents:
+
+```bash
+pip install limetry
+# or
+conda install -c conda-forge limetry
 ```
 
 ## Build from Source (Secondary)

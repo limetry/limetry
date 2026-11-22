@@ -1,0 +1,90 @@
+---
+title: Python SDK
+description: Install limetry from PyPI, build an ActionIntent, and evaluate it against a self-run Limetry node.
+---
+
+`limetry` is the official Python SDK. Point `base_url` / `LIMETRY_BASE_URL` at
+your evaluation server. Use `LIMETRY_API_KEY` or `LIMETRY_BEARER_TOKEN`.
+
+Prefer the [TypeScript SDK](/docs/sdk/typescript) for Node adapters (`@limetry/ci`,
+`@limetry/sql`, `@limetry/shopify`).
+
+## Install
+
+```bash
+pip install limetry
+```
+
+Also available on conda-forge after the first PyPI release:
+
+```bash
+conda install -c conda-forge limetry
+```
+
+Requires Python 3.11+. For monorepo development:
+
+```bash
+pip install -e packages/sdk-python[dev]
+```
+
+## Build an ActionIntent
+
+```python
+import uuid
+from datetime import datetime, timezone
+from limetry import create_slim_action_policy, redact_action_intent
+
+policy = create_slim_action_policy(
+    agent_id="demo_agent",
+    allowed_action_types=["http_get"],
+    denied_action_types=["http_post", "deploy"],
+    blocked_resource_patterns=["https://prod.example.com/*"],
+    max_cost_minor=100,
+    audit_mode="minimal",
+)
+
+intent = {
+    "intent_id": str(uuid.uuid4()),
+    "policy_id": policy["policy_id"],
+    "agent_id": "demo_agent",
+    "action_type": "http_post",
+    "resource": "https://prod.example.com/api/charge",
+    "issued_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+}
+
+safe_for_logs = redact_action_intent(intent)
+```
+
+## Evaluate over HTTP
+
+```python
+from limetry import create_remote_engine
+
+engine = create_remote_engine(base_url="http://localhost:3810")
+decision = engine.evaluate_action(intent)
+print(decision.get("decision"))
+```
+
+Async callers can use `create_async_remote_engine()` / `AsyncRemotePolicyEngine`.
+
+`create_remote_engine()` reads `LIMETRY_API_KEY` / `LIMETRY_BEARER_TOKEN` and
+`LIMETRY_BASE_URL`.
+
+## Handle evaluate errors
+
+| Error | When |
+|---|---|
+| `PolicyViolationError` | Evaluate returned deny |
+| `EngineLoadError` | Server unreachable or non-OK HTTP |
+| `RateLimitExceededError` | Client velocity circuit breaker |
+
+## Continue
+
+<CardGroup>
+  <Card title="TypeScript SDK" href="/docs/sdk/typescript">
+    Same contract for Node agent loops and adapters.
+  </Card>
+  <Card title="Browse Python examples" href="/examples">
+    Anthropic, FastAPI, Stripe, LangGraph, and more.
+  </Card>
+</CardGroup>

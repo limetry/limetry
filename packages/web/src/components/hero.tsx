@@ -5,28 +5,9 @@
 import Link from "next/link"
 
 import { IconAccent } from "@/components/brand"
+import { HeroCodeSample } from "@/components/hero-code-sample"
 import { RotatingHeroBlurb } from "@/components/rotating-hero-blurb"
 import { siteUrls } from "@/lib/site-urls"
-
-const BADGE_CODE = `import { createRemoteEngine } from "@limetry/sdk"
-
-const engine = createRemoteEngine({
-  baseUrl: process.env.LIMETRY_BASE_URL,
-  apiKey: process.env.LIMETRY_BEARER_TOKEN,
-})
-
-const decision = await engine.evaluateAction({
-  intent_id: crypto.randomUUID(),
-  policy_id: policyId,
-  agent_id: "ci-bot",
-  action_type: "deploy",
-  resource: "github.com/acme/api@abc123",
-  issued_at: new Date().toISOString(),
-})
-
-if (!decision.ok || !decision.approved) {
-  throw new Error((decision.reasons ?? ["denied"]).join("; "))
-}`
 
 /**
  * Primary marketing hero with CTAs and an evaluate code sample.
@@ -121,27 +102,12 @@ export function Hero(): React.JSX.Element {
             ))}
           </div>
 
-          <div className="
-            mx-auto mt-14 max-w-2xl overflow-hidden rounded-2xl border border-border bg-card
-            shadow-2xl shadow-black/10
-          ">
-            <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-3">
-              <span className="size-3 rounded-full bg-red-400" />
-              <span className="size-3 rounded-full bg-yellow-400" />
-              <span className="size-3 rounded-full bg-green-400" />
-              <span className="ml-3 font-mono text-xs text-muted-foreground">evaluate.ts</span>
-            </div>
-            <pre className="
-              overflow-x-auto border-none bg-transparent p-5 text-left text-sm/relaxed
-            ">
-              <code className="text-foreground/90">{BADGE_CODE}</code>
-            </pre>
-          </div>
+          <HeroCodeSample />
 
           <p className="mx-auto mt-8 max-w-xl text-center text-xs/relaxed text-muted-foreground">
-            Open-source MCP, CLI, and Limetry SDK. Policy checks run on the
-            self-run server. Audit stores privacy-safe records by default — see data
-            minimization docs.
+            Open-source MCP, CLI, and Limetry SDKs for TypeScript (`@limetry/sdk`) and
+            Python (`limetry`). Policy checks run on the self-run server. Audit stores
+            privacy-safe records by default — see data minimization docs.
           </p>
         </div>
       </div>

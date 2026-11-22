@@ -19,6 +19,8 @@ Do not send API keys, bearer tokens, passwords, or full transcripts in
 
 Call client helpers before you log or ship telemetry yourself:
 
+TypeScript:
+
 ```typescript
 import {
   redactActionIntent,
@@ -29,6 +31,20 @@ import {
 const safe = redactActionIntent(intent)
 const forAudit = projectIntentForAudit(intent, "minimal")
 const safeDetails = redactDetails(details)
+```
+
+Python:
+
+```python
+from limetry import (
+  redact_action_intent,
+  redact_details,
+  project_intent_for_audit,
+)
+
+safe = redact_action_intent(intent)
+for_audit = project_intent_for_audit(intent, "minimal")
+safe_details = redact_details(details)
 ```
 
 <Note>
@@ -50,6 +66,16 @@ const policy = createSlimActionPolicy({
   allowedActionTypes: ["http_get", "http_post"],
   auditMode: "forensics",
 })
+```
+
+```python
+from limetry import create_slim_action_policy
+
+policy = create_slim_action_policy(
+  agent_id="ops",
+  allowed_action_types=["http_get", "http_post"],
+  audit_mode="forensics",
+)
 ```
 
 Environment default when a policy omits `audit_mode`:

@@ -20,7 +20,8 @@ extend it for CI, SQL, Shopify, and other surfaces you wire into agent loops.
 | `@limetry/sql` | Postgres/Supabase MCP write gate that owns `DATABASE_URL` |
 | `@limetry/shopify` | Admin API mutation firewall that holds the Admin token |
 
-Shared core: `@limetry/sdk`, `@limetry/server`, `@limetry/cli`, `@limetry/mcp`.
+Shared core: `@limetry/sdk` (TypeScript), `limetry` (Python on PyPI), `@limetry/server`,
+`@limetry/cli`, `@limetry/mcp`.
 
 > [!WARNING]
 > Agents can **bypass Limetry** unless your middleware or downstream resource
@@ -70,7 +71,8 @@ Agent / SDK / MCP / adapter ──→ action intent
 | Component | Path | Role |
 | --- | --- | --- |
 | Governance server | `packages/server` | Policy checks, approvals, privacy-safe audit, policies |
-| TypeScript SDK | `packages/sdk` | Limetry SDK, redact helpers, slim policies |
+| TypeScript SDK | `packages/sdk` | `@limetry/sdk` — redact helpers, slim policies |
+| Python SDK | `packages/sdk-python` | `limetry` on PyPI / conda-forge |
 | CLI | `packages/cli` | setup, policy apply, eval, approvals, audit tail |
 | MCP server | `packages/mcp` | MCP tools for Cursor / Claude Desktop |
 | CI adapter | `packages/ci` | `@limetry/ci` GitHub Action + library |
@@ -89,13 +91,14 @@ you prefer; these examples use npm.
 npm install -g @limetry/cli
 npm install @limetry/sdk
 npx -y @limetry/mcp
+pip install limetry
 ```
 
 Use [INSTALL.md](INSTALL.md) for local source development, self-hosting, and
 the distribution matrix. A cloned repository is a Yarn Berry 4.13 workspace:
 run `corepack enable` and `yarn install`, then use Yarn for its workspace
 scripts. npm, Yarn, and pnpm are interchangeable when installing the published
-packages above.
+npm packages above. Python agents use `pip install limetry` (also on conda-forge).
 
 ```bash
 corepack enable

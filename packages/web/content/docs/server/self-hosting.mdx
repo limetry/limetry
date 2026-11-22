@@ -53,10 +53,11 @@ your application already uses:
 ```bash
 npm install -g @limetry/cli
 npm install @limetry/sdk
+pip install limetry
 ```
 
 The equivalent published-package commands are `yarn add @limetry/sdk` and
-`pnpm add @limetry/sdk`.
+`pnpm add @limetry/sdk`. Python agents use `pip install limetry` (also on conda-forge).
 
 ```bash
 git clone https://github.com/limetry/limetry.git
@@ -89,6 +90,8 @@ Terminate TLS in front of the container and inject secrets from your platform.
 
 ## Point clients at the node
 
+TypeScript:
+
 ```typescript
 import { createRemoteEngine } from "@limetry/sdk"
 
@@ -104,6 +107,22 @@ const decision = await engine.evaluateAction({
   action_type: "http_post",
   resource: "https://prod.example.com/charge",
   issued_at: new Date().toISOString(),
+})
+```
+
+Python:
+
+```python
+from limetry import create_remote_engine
+
+engine = create_remote_engine(base_url="https://limetry.internal.example.com")
+decision = engine.evaluate_action({
+  "intent_id": "...",
+  "policy_id": "...",
+  "agent_id": "demo",
+  "action_type": "http_post",
+  "resource": "https://prod.example.com/charge",
+  "issued_at": "2026-07-27T12:00:00.000Z",
 })
 ```
 

@@ -1,58 +1,33 @@
 ---
 title: Call the SDK
-description: Install @limetry/sdk, build an ActionIntent, and evaluate it against a self-run Limetry node.
+description: Install the TypeScript or Python Limetry SDK, build an ActionIntent, and evaluate it against a self-run node.
 ---
 
-`@limetry/sdk` is open source. Point `baseUrl` at your evaluation server
-(`http://localhost:3810` or your origin). Use `LIMETRY_BEARER_TOKEN` unless you
-issue your own API tokens on that node.
+Limetry ships two first-party SDKs with the same evaluate contract:
 
-## Install the SDK
+| Language | Package | Install |
+| --- | --- | --- |
+| TypeScript | [`@limetry/sdk`](https://www.npmjs.com/package/@limetry/sdk) | `npm install @limetry/sdk` |
+| Python | [`limetry`](https://pypi.org/project/limetry/) | `pip install limetry` |
 
-```bash
-npm install @limetry/sdk
-```
+Point `baseUrl` / `LIMETRY_BASE_URL` at your evaluation server (`http://localhost:3810`
+or your origin). Use `LIMETRY_BEARER_TOKEN` / `LIMETRY_API_KEY` unless you issue
+your own API tokens on that node.
 
-This installs the published package, so `npm install`, `yarn add`, and
-`pnpm add` are equivalent. For local source development, use the repository's
-Yarn Berry workspace; see [INSTALL.md](https://github.com/limetry/limetry/blob/main/INSTALL.md).
+## Pick a language
 
-## Build an ActionIntent
+<CardGroup>
+  <Card title="TypeScript SDK" href="/docs/sdk/typescript">
+    `createRemoteEngine`, slim policies, and redact helpers for Node agent loops.
+  </Card>
+  <Card title="Python SDK" href="/docs/sdk/python">
+    `create_remote_engine`, sync/async clients, and the same privacy helpers.
+  </Card>
+</CardGroup>
 
-```typescript
-import type { ActionIntent, ActionPolicy } from "@limetry/sdk"
-import { createSlimActionPolicy, redactActionIntent } from "@limetry/sdk"
+## Quick evaluate
 
-const policy = createSlimActionPolicy({
-  agentId: "demo_agent",
-  allowedActionTypes: ["http_get"],
-  deniedActionTypes: ["http_post", "deploy"],
-  blockedResourcePatterns: ["https://prod.example.com/*"],
-  maxCostMinor: 100,
-  auditMode: "minimal",
-})
-
-const intent: ActionIntent = {
-  intent_id: crypto.randomUUID(),
-  policy_id: policy.policy_id,
-  agent_id: "demo_agent",
-  action_type: "http_post",
-  resource: "https://prod.example.com/api/charge",
-  issued_at: new Date().toISOString(),
-}
-
-/**
- * Evaluate with the full intent. Use redact helpers for logs / client-side telemetry.
- */
-const safeForLogs = redactActionIntent(intent)
-```
-
-<Tip>
-Send only fields needed for policy. Prefer `auditMode: "minimal"` unless you need
-forensics. See [Minimize audit data](/docs/server/data-minimization).
-</Tip>
-
-## Evaluate over HTTP
+TypeScript:
 
 ```typescript
 import { createRemoteEngine } from "@limetry/sdk"
@@ -61,21 +36,25 @@ const engine = createRemoteEngine({
   baseUrl: "http://localhost:3810",
   apiKey: process.env.LIMETRY_BEARER_TOKEN,
 })
-
 const decision = await engine.evaluateAction(intent)
 ```
 
-`createRemoteEngine()` also reads `LIMETRY_API_KEY` / `LIMETRY_BEARER_TOKEN` and `LIMETRY_BASE_URL`.
+Python:
 
-Set `LIMETRY_BASE_URL` to your evaluation server origin when it is not localhost.
+```python
+from limetry import create_remote_engine
 
-## Handle evaluate errors
+engine = create_remote_engine(base_url="http://localhost:3810")
+decision = engine.evaluate_action(intent)
+```
 
-| Error | When |
-|---|---|
-| `PolicyViolationError` | Evaluate returned deny |
-| `ApprovalRequiredError` | Evaluate returned `approval_required` |
-| `NetworkError` | Server unreachable or timed out |
+`decision` is `allow`, `deny`, or `approval_required` (plus `approved` / `reasons`).
+
+<Tip>
+Send only fields needed for policy. Prefer `auditMode: "minimal"` /
+`audit_mode="minimal"` unless you need forensics. See
+[Minimize audit data](/docs/server/data-minimization).
+</Tip>
 
 ## Continue
 

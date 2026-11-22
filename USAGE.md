@@ -10,7 +10,9 @@ and enforce outcomes at the edge. Limetry does not custody funds.
 
 **Privacy:** Evaluate uses the full intent. Audit stores a scrubbed projection. Do not put secrets or
 full chat transcripts in `metadata` / `details`. Prefer `createSlimActionPolicy({ auditMode: "minimal" })`
-and `redactDetails` / `redactActionIntent` from `@limetry/sdk`.
+and `redactDetails` / `redactActionIntent` from `@limetry/sdk`, or
+`create_slim_action_policy(audit_mode="minimal")` and `redact_details` / `redact_action_intent`
+from `limetry` (Python).
 
 ## What Limetry Helps With
 
@@ -24,7 +26,8 @@ and `redactDetails` / `redactActionIntent` from `@limetry/sdk`.
 
 | Tool | Version | Purpose |
 | --- | --- | --- |
-| [Node.js](https://nodejs.org/) | 20+ | SDK, server, CLI, MCP, optional adapters |
+| [Node.js](https://nodejs.org/) | 20+ | TypeScript SDK, server, CLI, MCP, optional adapters |
+| [Python](https://www.python.org/) | 3.11+ | Python SDK (`limetry`) |
 | Package manager for published packages | npm 10+, Yarn, or pnpm | Use the package manager you prefer |
 | Package manager for this repository | Yarn Berry 4.13 | Use Corepack and the committed Yarn workspace |
 
@@ -34,10 +37,12 @@ and `redactDetails` / `redactActionIntent` from `@limetry/sdk`.
 npm install -g @limetry/cli
 npm install @limetry/sdk
 npx -y @limetry/mcp
+pip install limetry
 ```
 
 Use the package manager you prefer; the equivalent Yarn or pnpm commands work
-the same way. The CLI is ready with `limetry setup`.
+the same way. The CLI is ready with `limetry setup`. Python agents use
+`pip install limetry` (also `conda install -c conda-forge limetry`).
 
 ## Run from source
 
@@ -76,6 +81,36 @@ echo '{"intent_id":"...","policy_id":"...","agent_id":"demo","action_type":"http
   | limetry eval
 limetry approvals list
 limetry audit tail -n 20
+```
+
+## Evaluate from Python
+
+```bash
+pip install limetry
+```
+
+```python
+from limetry import create_remote_engine, create_slim_action_policy, redact_action_intent
+import uuid
+from datetime import datetime, timezone
+
+policy = create_slim_action_policy(
+  agent_id="demo",
+  allowed_action_types=["http_get"],
+  denied_action_types=["http_post"],
+  audit_mode="minimal",
+)
+intent = {
+  "intent_id": str(uuid.uuid4()),
+  "policy_id": policy["policy_id"],
+  "agent_id": "demo",
+  "action_type": "http_post",
+  "resource": "https://prod.example.com/x",
+  "issued_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+}
+engine = create_remote_engine()
+print(engine.evaluate_action(intent))
+print(redact_action_intent(intent))
 ```
 
 ## Example adapters

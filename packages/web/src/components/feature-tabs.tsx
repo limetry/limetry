@@ -13,27 +13,17 @@ const TABS = [
     label: "SDK",
     headline: "Evaluate before the tool runs.",
     description:
-      "Call createRemoteEngine().evaluateAction from any agent loop or adapter. Every evaluation returns an outcome — allow, deny, or wait — plus reasons and a signed receipt. The server requires intent_id (UUID) and issued_at.",
+      "Call createRemoteEngine().evaluateAction (TypeScript) or create_remote_engine().evaluate_action (Python) from any agent loop. Every evaluation returns allow, deny, or wait — plus reasons and a signed receipt.",
     cta: { label: "Read SDK docs", href: "/docs/sdk" },
-    code: `import { createRemoteEngine } from "@limetry/sdk"
+    code: `// TypeScript: npm install @limetry/sdk
+import { createRemoteEngine } from "@limetry/sdk"
+const engine = createRemoteEngine()
+const decision = await engine.evaluateAction({ /* ActionIntent */ })
 
-const engine = createRemoteEngine({
-  baseUrl: process.env.LIMETRY_BASE_URL,
-  apiKey: process.env.LIMETRY_BEARER_TOKEN,
-})
-
-const decision = await engine.evaluateAction({
-  intent_id: crypto.randomUUID(),
-  policy_id: policyId,
-  agent_id: "ci-bot",
-  action_type: "deploy",
-  resource: "github.com/acme/api@abc123",
-  issued_at: new Date().toISOString(),
-})
-
-if (!decision.ok || !decision.approved) {
-  throw new Error((decision.reasons ?? ["denied"]).join("; "))
-}`,
+# Python: pip install limetry
+from limetry import create_remote_engine
+engine = create_remote_engine()
+decision = engine.evaluate_action({ ... })`,
   },
   {
     id: "cli",

@@ -1,0 +1,81 @@
+---
+title: TypeScript SDK
+description: Install @limetry/sdk, build an ActionIntent, and evaluate it against a self-run Limetry node.
+---
+
+`@limetry/sdk` is open source. Point `baseUrl` at your evaluation server
+(`http://localhost:3810` or your origin). Use `LIMETRY_BEARER_TOKEN` unless you
+issue your own API tokens on that node.
+
+Prefer the [Python SDK](/docs/sdk/python) when your agent loop is Python.
+
+## Install the SDK
+
+```bash
+npm install @limetry/sdk
+```
+
+This installs the published package, so `npm install`, `yarn add`, and
+`pnpm add` are equivalent. For local source development, use the repository's
+Yarn Berry workspace; see [INSTALL.md](https://github.com/limetry/limetry/blob/main/INSTALL.md).
+
+## Build an ActionIntent
+
+```typescript
+import type { ActionIntent, ActionPolicy } from "@limetry/sdk"
+import { createSlimActionPolicy, redactActionIntent } from "@limetry/sdk"
+
+const policy = createSlimActionPolicy({
+  agentId: "demo_agent",
+  allowedActionTypes: ["http_get"],
+  deniedActionTypes: ["http_post", "deploy"],
+  blockedResourcePatterns: ["https://prod.example.com/*"],
+  maxCostMinor: 100,
+  auditMode: "minimal",
+})
+
+const intent: ActionIntent = {
+  intent_id: crypto.randomUUID(),
+  policy_id: policy.policy_id,
+  agent_id: "demo_agent",
+  action_type: "http_post",
+  resource: "https://prod.example.com/api/charge",
+  issued_at: new Date().toISOString(),
+}
+
+const safeForLogs = redactActionIntent(intent)
+```
+
+## Evaluate over HTTP
+
+```typescript
+import { createRemoteEngine } from "@limetry/sdk"
+
+const engine = createRemoteEngine({
+  baseUrl: "http://localhost:3810",
+  apiKey: process.env.LIMETRY_BEARER_TOKEN,
+})
+
+const decision = await engine.evaluateAction(intent)
+```
+
+`createRemoteEngine()` also reads `LIMETRY_API_KEY` / `LIMETRY_BEARER_TOKEN` and `LIMETRY_BASE_URL`.
+
+## Handle evaluate errors
+
+| Error | When |
+|---|---|
+| `PolicyViolationError` | Evaluate returned deny |
+| `EngineLoadError` | Server unreachable or non-OK HTTP |
+| `RateLimitExceededError` | Client velocity circuit breaker |
+
+## Continue
+
+<CardGroup>
+  <Card title="Python SDK" href="/docs/sdk/python">
+    Same contract for Python agent loops.
+  </Card>
+  <Card title="Minimize audit data" href="/docs/server/data-minimization">
+    Audit modes and secret scrubbing.
+  </Card>
+</CardGroup>

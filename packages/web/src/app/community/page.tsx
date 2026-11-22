@@ -123,8 +123,8 @@ export default function CommunityPage(): React.JSX.Element {
           <div className="mt-12 rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center">
             <h2 className="text-lg font-bold text-foreground">Open source</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              The TypeScript SDK, CLI, MCP server, and evaluation server are MIT licensed. Star the
-              repo, open an issue, or send a PR when you find a gap.
+              The TypeScript and Python SDKs, CLI, MCP server, and evaluation server are MIT licensed.
+              Star the repo, open an issue, or send a PR when you find a gap.
             </p>
             <Link
               href={siteUrls.github}

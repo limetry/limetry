@@ -2,6 +2,8 @@
 
 TypeScript SDK for Limetry agent action governance. Evaluate an action before it runs, then record a privacy-safe audit of what happened.
 
+For Python agent loops, use [`limetry`](../sdk-python) (`pip install limetry`).
+
 ## Install
 
 ```bash

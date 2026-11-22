@@ -8,16 +8,19 @@ standards, and how to get a change merged.
 Follow the source installation in [INSTALL.md](INSTALL.md), then verify your toolchain:
 
 ```bash
-npm run test:sdk
-npm run test:server
-npm run test:cli
+yarn test:sdk
+yarn test:sdk:python
+yarn test:server
+yarn test:cli
+yarn test:examples:python
 ```
 
 ## Repository Layout
 
 | Path | Contents |
 | --- | --- |
-| `packages/sdk` | TypeScript SDK (ActionIntent + optional payment helpers) |
+| `packages/sdk` | TypeScript SDK (`@limetry/sdk`) |
+| `packages/sdk-python` | Python SDK (`limetry` on PyPI / conda-forge) |
 | `packages/server` | Action governance + telemetry HTTP API |
 | `packages/cli` | `limetry` CLI |
 | `packages/mcp` | MCP server |
@@ -25,6 +28,15 @@ npm run test:cli
 | `examples/` | Integration examples |
 
 ## Coding Standards
+
+### Python SDK
+
+- Package lives under `packages/sdk-python` (src layout, hatchling)
+- Public API mirrors `@limetry/sdk` with snake_case names
+- Runtime dependency: `httpx` only; Python ≥ 3.11
+- Run `python packages/sdk-python/scripts/embed_build_info.py` before publish
+- Tests: `pytest packages/sdk-python/tests` (also `yarn test:sdk:python`)
+- Example tests: `yarn test:examples:python`
 
 ### TypeScript
 
