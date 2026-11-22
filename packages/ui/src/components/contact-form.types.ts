@@ -8,6 +8,8 @@ export type ContactFormFields = {
   company?: string
   message: string
   source: string
+  /** Cloudflare Turnstile token (invisible widget). */
+  turnstileToken?: string
 }
 
 export type ContactFormProps = {
@@ -21,6 +23,14 @@ export type ContactFormProps = {
    * Compact layout for footer strips (two-column name/email, shorter message).
    */
   compact?: boolean
+  /**
+   * Public Turnstile sitekey. When set, an invisible challenge runs before submit.
+   */
+  turnstileSiteKey?: string
+  /**
+   * Turnstile action verified server-side (default `contact`).
+   */
+  turnstileAction?: string
   /**
    * Host-provided submit handler (posts to that site's contact API).
    */

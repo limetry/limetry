@@ -4,20 +4,22 @@
  * Shared DOM contact form for Limetry marketing sites (OSS + Cloud).
  */
 
-import { type FormEvent, type JSX, useState } from "react"
+import { type FormEvent, type JSX, useEffect, useState } from "react"
 
 import { cn } from "../lib/cn"
+import { loadTurnstileSiteKey } from "../lib/turnstile-sitekey"
 import type { ContactFormProps } from "./contact-form.types"
+import { TurnstileInvisibleMount, useInvisibleTurnstile } from "./turnstile.web"
 
 export type { ContactFormFields, ContactFormProps } from "./contact-form.types"
 
 type SubmitState = "idle" | "submitting" | "success" | "error"
 
 const fieldClassName = cn(
-  "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm",
-  "text-foreground shadow-sm outline-none transition",
+  "rounded-xl border-border bg-background px-4 py-3 text-sm w-full border",
+  "text-foreground shadow-sm transition outline-none",
   "placeholder:text-muted-foreground",
-  "focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/25",
+  "focus-visible:border-primary/50 focus-visible:ring-primary/25 focus-visible:ring-2",
 )
 
 /**
@@ -31,10 +33,29 @@ export function ContactForm({
   idPrefix = "contact",
   source = "contact-page",
   compact = false,
+  turnstileSiteKey,
+  turnstileAction = "contact",
   onSubmit,
 }: ContactFormProps): JSX.Element {
   const [state, setState] = useState<SubmitState>("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [resolvedSiteKey, setResolvedSiteKey] = useState(turnstileSiteKey || "")
+  const turnstile = useInvisibleTurnstile({
+    siteKey: resolvedSiteKey,
+    action: turnstileAction,
+  })
+
+  useEffect(() => {
+    let cancelled = false
+    void loadTurnstileSiteKey(turnstileSiteKey).then((key) => {
+      if (!cancelled && key) {
+        setResolvedSiteKey(key)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [turnstileSiteKey])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
@@ -45,12 +66,21 @@ export function ContactForm({
     const data = new FormData(form)
 
     try {
+      const siteKey = resolvedSiteKey || await loadTurnstileSiteKey(turnstileSiteKey)
+      if (!siteKey) {
+        throw new Error("Security check is unavailable — try again shortly")
+      }
+      if (siteKey !== resolvedSiteKey) {
+        setResolvedSiteKey(siteKey)
+      }
+      const turnstileToken = await turnstile.getToken(siteKey)
       await onSubmit({
         name: String(data.get("name") ?? ""),
         email: String(data.get("email") ?? ""),
         company: String(data.get("company") ?? "") || undefined,
         message: String(data.get("message") ?? ""),
         source,
+        turnstileToken,
       })
       form.reset()
       setState("success")
@@ -65,7 +95,10 @@ export function ContactForm({
   if (state === "success") {
     return (
       <div className={className} role="status" aria-live="polite">
-        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-foreground">
+        <p className="
+          rounded-xl border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium
+          text-foreground border
+        ">
           Message sent. We&apos;ll get back to you soon.
         </p>
       </div>
@@ -77,14 +110,15 @@ export function ContactForm({
       onSubmit={(event) => {
         void handleSubmit(event)
       }}
-      className={className}
+      className={cn("relative", className)}
       autoComplete="off"
       data-1p-ignore
       data-lpignore="true"
       data-bwignore
       data-form-type="other"
     >
-      <div className={compact ? "grid gap-4 sm:grid-cols-2" : "space-y-5"}>
+      {resolvedSiteKey ? <TurnstileInvisibleMount containerRef={turnstile.containerRef} /> : null}
+      <div className={compact ? "gap-4 sm:grid-cols-2 grid" : "space-y-5"}>
         <div className="space-y-2">
           <label
             htmlFor={`${idPrefix}-name`}
@@ -177,7 +211,12 @@ export function ContactForm({
         {errorMessage ? (
           <p
             className={cn(
-              "rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400",
+              `
+                rounded-lg border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium
+                text-red-600
+                dark:text-red-400
+                border
+              `,
               compact && "sm:col-span-2",
             )}
             role="alert"
@@ -190,7 +229,7 @@ export function ContactForm({
             type="submit"
             disabled={state === "submitting"}
             className={cn(
-              "inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl",
+              "rounded-xl inline-flex w-full items-center justify-center whitespace-nowrap",
               "bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground",
               "shadow-lg shadow-primary/25 transition-all",
               "hover:-translate-y-0.5 hover:bg-primary/90",
