@@ -3,6 +3,8 @@
  */
 
 import { execFileSync } from "node:child_process"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 
 import { isProductionRuntime, isTestEnv } from "./env-runtime.js"
 
@@ -10,6 +12,12 @@ const DEV_COMMIT_ENV_KEYS = [
   "LIMETRY_DEV_COMMITS",
   "NEXT_PUBLIC_LIMETRY_DEV_COMMITS",
   "EXPO_PUBLIC_LIMETRY_DEV_COMMITS",
+] as const
+
+const APP_VERSION_ENV_KEYS = [
+  "LIMETRY_APP_VERSION",
+  "NEXT_PUBLIC_LIMETRY_APP_VERSION",
+  "EXPO_PUBLIC_LIMETRY_APP_VERSION",
 ] as const
 
 /**
@@ -52,6 +60,19 @@ export function countCommitsSincePush(cwd: string): number {
  * @param env - Env bag to mutate (defaults to `process.env`).
  * @returns The seeded commit count (0 when skipped).
  */
+function readPackageVersion(cwd: string): string {
+  try {
+    const raw = readFileSync(join(cwd, "package.json"), "utf8")
+    const parsed = JSON.parse(raw) as { version?: string }
+    if (typeof parsed.version === "string" && parsed.version.trim()) {
+      return parsed.version.trim()
+    }
+  } catch {
+    // fall through
+  }
+  return "0.0.0"
+}
+
 export function seedDevVersionEnv(
   cwd: string,
   env: NodeJS.ProcessEnv = process.env,
@@ -66,6 +87,11 @@ export function seedDevVersionEnv(
 
   for (const key of DEV_COMMIT_ENV_KEYS) {
     env[key] = String(commits)
+  }
+
+  const label = `v${readPackageVersion(cwd)}-dev-${commits}`
+  for (const key of APP_VERSION_ENV_KEYS) {
+    env[key] = label
   }
   return commits
 }

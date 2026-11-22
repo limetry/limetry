@@ -77,7 +77,11 @@ export function SiteFooter({
             <FooterAnchor link={links.legal.privacy} LinkComponent={LinkComponent} />
             <FooterAnchor link={links.legal.terms} LinkComponent={LinkComponent} />
             {version ? (
-              <span className="text-sm text-muted-foreground" title="App version">
+              <span
+                className="text-sm text-muted-foreground"
+                suppressHydrationWarning
+                title="App version"
+              >
                 {version.startsWith("v") ? version : `v${version}`}
               </span>
             ) : null}
