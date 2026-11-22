@@ -142,18 +142,31 @@ export function HowItWorks(): React.JSX.Element {
           </p>
         </div>
 
-        <div className="mx-auto mt-10 flex max-w-3xl flex-wrap justify-center gap-2">
+        {/*
+          Segmented tablist — switches the panel below. Not CTA buttons: one track,
+          inset active segment, muted inactive labels.
+        */}
+        <div
+          role="tablist"
+          aria-label="Agent verticals"
+          className="mx-auto mt-10 flex w-full max-w-xl flex-col gap-1 rounded-xl border border-border bg-muted/40 p-1 sm:flex-row sm:flex-wrap sm:justify-center"
+        >
           {VERTICALS.map((vertical) => {
             const selected = vertical.id === active.id
             return (
               <button
                 key={vertical.id}
                 type="button"
+                role="tab"
+                id={`how-vertical-tab-${vertical.id}`}
+                aria-selected={selected}
+                aria-controls={`how-vertical-panel-${vertical.id}`}
+                tabIndex={selected ? 0 : -1}
                 onClick={() => setActiveId(vertical.id)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                className={`flex-1 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm transition-colors ${
                   selected
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    ? "bg-background font-semibold text-foreground shadow-sm"
+                    : "font-medium text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {vertical.label}
@@ -162,26 +175,33 @@ export function HowItWorks(): React.JSX.Element {
           })}
         </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Agent surface: <span className="font-semibold text-foreground">{active.agent}</span>
-        </p>
+        <div
+          key={active.id}
+          role="tabpanel"
+          id={`how-vertical-panel-${active.id}`}
+          aria-labelledby={`how-vertical-tab-${active.id}`}
+        >
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Agent surface: <span className="font-semibold text-foreground">{active.agent}</span>
+          </p>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {active.cases.map((item) => {
-            const style = DECISION_STYLES[item.decision]
-            return (
-              <article
-                key={item.title}
-                className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
-              >
-                <span className={`w-fit rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.className}`}>
-                  {style.label}
-                </span>
-                <h3 className="mt-4 font-bold text-foreground">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-              </article>
-            )
-          })}
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {active.cases.map((item) => {
+              const style = DECISION_STYLES[item.decision]
+              return (
+                <article
+                  key={item.title}
+                  className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
+                >
+                  <span className={`w-fit rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.className}`}>
+                    {style.label}
+                  </span>
+                  <h3 className="mt-4 font-bold text-foreground">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+                </article>
+              )
+            })}
+          </div>
         </div>
 
         <div className="mt-10 text-center">

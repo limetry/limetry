@@ -98,23 +98,45 @@ export function FeatureTabs(): React.JSX.Element {
           </h2>
         </div>
 
-        <div className="mt-10 flex flex-wrap justify-center gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setActive(t.id)}
-              className={`whitespace-nowrap rounded-lg px-5 py-2 text-sm font-semibold transition-all ${
-                active === t.id
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-background border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/*
+          Segmented tablist for SDK / CLI / MCP / server panels — not CTA buttons.
+        */}
+        <div
+          role="tablist"
+          aria-label="Limetry surfaces"
+          className="mx-auto mt-10 flex w-full max-w-md flex-wrap justify-center gap-1 rounded-xl border border-border bg-background/80 p-1"
+        >
+          {TABS.map((t) => {
+            const selected = active === t.id
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                id={`feature-tab-${t.id}`}
+                aria-selected={selected}
+                aria-controls={`feature-panel-${t.id}`}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => setActive(t.id)}
+                className={`flex-1 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm transition-colors ${
+                  selected
+                    ? "bg-muted font-semibold text-foreground shadow-sm"
+                    : "font-medium text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            )
+          })}
         </div>
 
-        <div key={active} className="mt-10 grid grid-cols-1 gap-8 animate-fade-in lg:grid-cols-2 lg:items-center">
+        <div
+          key={active}
+          role="tabpanel"
+          id={`feature-panel-${active}`}
+          aria-labelledby={`feature-tab-${active}`}
+          className="mt-10 grid grid-cols-1 gap-8 animate-fade-in lg:grid-cols-2 lg:items-center"
+        >
           <div>
             <h3 className="text-2xl font-black text-foreground">{tab.headline}</h3>
             <p className="mt-4 text-muted-foreground leading-relaxed">{tab.description}</p>
