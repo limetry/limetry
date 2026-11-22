@@ -3,13 +3,13 @@
  */
 
 import { errorJsonSchema } from "@limetry/assistant"
+import type { FastifyInstance, FastifyPluginAsync } from "fastify"
 
 import {
   contactOptionsFromEnv,
   createContactProvider,
 } from "./contact/index.js"
 import { parseContactMessage } from "./contact/validate.js"
-import type { FastifyInstance, FastifyPluginAsync } from "fastify"
 
 const contactBodyJsonSchema = {
   type: "object",

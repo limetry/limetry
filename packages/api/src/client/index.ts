@@ -2,11 +2,11 @@
  * Client-side contact-form adapters (browser / RN fetch).
  */
 
-import { normalizeProviderId } from "./types.js"
 import { brevoContactAdapter } from "./brevo.js"
+import type { ContactAdapter, ContactProviderId } from "./contact-types.js"
 import { formspreeContactAdapter } from "./formspree.js"
 import { resendContactAdapter } from "./resend.js"
-import type { ContactAdapter, ContactProviderId } from "./contact-types.js"
+import { normalizeProviderId } from "./types.js"
 
 const contactAdapters: Record<ContactProviderId, ContactAdapter> = {
   brevo: brevoContactAdapter,

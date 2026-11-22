@@ -4,8 +4,8 @@
 
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
+import { useEffect } from "react"
 
 import { PageBrandBackground } from "@/components/brand"
 import { Footer } from "@/components/footer"

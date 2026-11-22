@@ -5,22 +5,22 @@
  */
 
 export { assistantRoutes, createChatRoutes } from "./assistant-routes.js"
-export { contactRoutes, createContactRoutes } from "./contact-routes.js"
 export {
+  type ContactAdapterFactory,
+  type ContactMailConfig,
+  type ContactMessage,
   contactOptionsFromEnv,
+  type ContactProvider,
+  type ContactProviderId,
+  type ContactProviderOptions,
+  type ContactSendResult,
   createBrevoContactProvider,
   createContactProvider,
   createResendContactProvider,
   defaultContactAdapters,
   normalizeContactProviderId,
-  type ContactAdapterFactory,
-  type ContactMailConfig,
-  type ContactMessage,
-  type ContactProvider,
-  type ContactProviderId,
-  type ContactProviderOptions,
-  type ContactSendResult,
 } from "./contact/index.js"
 export { parseContactMessage } from "./contact/validate.js"
+export { contactRoutes, createContactRoutes } from "./contact-routes.js"
 export { createApiApp, createAssistantApp } from "./create-app.js"
 export { getCachedApiApp, handler } from "./lambda.js"

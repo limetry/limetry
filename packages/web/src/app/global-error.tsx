@@ -1,6 +1,7 @@
 "use client"
 
 import * as Sentry from "@sentry/nextjs"
+import Link from "next/link"
 import { useEffect } from "react"
 
 const ACCENTS = [
@@ -107,9 +108,9 @@ export default function GlobalError({
             </pre>
           ) : null}
           <p style={{ margin: "2rem 0 0" }}>
-            <a href="/" style={{ color: "#059669", fontWeight: 600 }}>
+            <Link href="/" style={{ color: "#059669", fontWeight: 600 }}>
               Back to home
-            </a>
+            </Link>
           </p>
         </main>
       </body>

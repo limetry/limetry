@@ -2,7 +2,7 @@
  * NativeWind contact form for Expo / React Native hosts.
  */
 
-import { useState, type JSX } from "react"
+import { type JSX, useState } from "react"
 import { Text, View } from "react-native"
 
 import { Button } from "./button"
