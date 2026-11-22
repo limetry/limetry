@@ -45,7 +45,7 @@ function buildNavItems(docsChildren: NavItem[]): NavItem[] {
       children: docsChildren.length > 0 ? docsChildren : undefined,
     },
     { href: "/examples", label: "Examples" },
-    { href: "/signup", label: "Get started" },
+    // { href: "/signup", label: "Get started" },
   ]
 }
 
