@@ -24,3 +24,22 @@ export { parseContactMessage } from "./contact/validate.js"
 export { contactRoutes, createContactRoutes } from "./contact-routes.js"
 export { createApiApp, createAssistantApp } from "./create-app.js"
 export { getCachedApiApp, handler } from "./lambda.js"
+export {
+  clientIpFromHeaders,
+  consumeContactRateLimit,
+  type ContactRateLimitOptions,
+} from "./turnstile/rate-limit.js"
+export {
+  TURNSTILE_DUMMY_TOKEN,
+  TURNSTILE_TEST_SECRET_PASS,
+  TURNSTILE_TEST_SITEKEY_INVISIBLE,
+} from "./turnstile/keys.js"
+export {
+  isTurnstileTestSecret,
+  parseTurnstileHostnames,
+  resolveTurnstileSecret,
+  type TurnstileVerifyInput,
+  type TurnstileVerifyResult,
+  verifyTurnstileToken,
+} from "./turnstile/verify.js"
+export { resolveTurnstileSiteKey } from "./client/turnstile.js"

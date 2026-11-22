@@ -10,6 +10,15 @@ import {
   createContactProvider,
 } from "./contact/index.js"
 import { parseContactMessage } from "./contact/validate.js"
+import {
+  clientIpFromHeaders,
+  consumeContactRateLimit,
+} from "./turnstile/rate-limit.js"
+import {
+  parseTurnstileHostnames,
+  resolveTurnstileSecret,
+  verifyTurnstileToken,
+} from "./turnstile/verify.js"
 
 const contactBodyJsonSchema = {
   type: "object",
@@ -21,6 +30,7 @@ const contactBodyJsonSchema = {
     company: { type: "string", maxLength: 160 },
     message: { type: "string", minLength: 10, maxLength: 5_000 },
     source: { type: "string", maxLength: 80 },
+    turnstileToken: { type: "string", maxLength: 2048 },
   },
 } as const
 
@@ -51,12 +61,35 @@ export const contactRoutes: FastifyPluginAsync = async (app) => {
         response: {
           200: contactSuccessJsonSchema,
           400: errorJsonSchema,
+          403: errorJsonSchema,
           412: errorJsonSchema,
+          429: errorJsonSchema,
           502: errorJsonSchema,
         },
       },
     },
     async (request, reply) => {
+      const ip = clientIpFromHeaders(
+        request.headers as Record<string, string | string[] | undefined>,
+      )
+      const rate = consumeContactRateLimit({ key: `contact:${ip}` })
+      if (!rate.allowed) {
+        reply.header("Retry-After", String(rate.retryAfterSec))
+        return reply.status(429).send({ error: "Too many contact attempts — try again shortly" })
+      }
+
+      const body = request.body as Record<string, unknown> | undefined
+      const turnstile = await verifyTurnstileToken({
+        token: body?.turnstileToken,
+        secret: resolveTurnstileSecret(process.env),
+        expectedAction: "contact",
+        expectedHostnames: parseTurnstileHostnames(process.env.TURNSTILE_HOSTNAMES),
+        remoteIp: ip === "unknown" ? undefined : ip,
+      })
+      if (!turnstile.ok) {
+        return reply.status(turnstile.status).send({ error: turnstile.error })
+      }
+
       const parsed = parseContactMessage(request.body)
       if (!parsed.ok) {
         return reply.status(400).send({ error: parsed.error })

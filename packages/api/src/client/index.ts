@@ -35,3 +35,9 @@ export type {
 } from "./contact-types.js"
 export type { EmailProviderResult } from "./types.js"
 export { normalizeProviderId } from "./types.js"
+export {
+  resolveTurnstileSiteKey,
+  TURNSTILE_DUMMY_TOKEN,
+  TURNSTILE_TEST_SECRET_PASS,
+  TURNSTILE_TEST_SITEKEY_INVISIBLE,
+} from "./turnstile.js"
