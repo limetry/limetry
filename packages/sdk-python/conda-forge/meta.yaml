@@ -5,7 +5,7 @@
   (or let the regenerator bot track PyPI).
 #}
 {% set name = "limetry" %}
-{% set version = "1.2.103" %}
+{% set version = "1.2.104-beta.3" %}
 
 package:
   name: {{ name|lower }}

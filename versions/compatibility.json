@@ -1,48 +1,48 @@
 {
-  "product": "1.2.103",
-  "compatibleProduct": ">=1.2.0 <1.3.0",
+  "product": "1.2.104-beta.3",
+  "compatibleProduct": ">=1.2.0 <1.3.0 || 1.2.104-beta.3",
   "packages": {
     "@limetry/ci": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "@limetry/cli": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "@limetry/mcp": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "@limetry/preflight": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "@limetry/sdk": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "@limetry/shopify": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "@limetry/sql": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "@limetry/ui": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     },
     "limetry": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     }
   },
   "websites": {
     "@limetry/web": {
-      "version": "1.2.103",
-      "compatible": ">=1.2.0 <1.3.0"
+      "version": "1.2.104-beta.3",
+      "compatible": ">=1.2.0 <1.3.0 || 1.2.104-beta.3"
     }
   },
   "schemas": {

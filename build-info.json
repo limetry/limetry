@@ -1,7 +1,7 @@
 {
-  "version": "1.2.103",
-  "build": 3,
-  "builtAt": "2026-11-23T17:51:35.373Z",
-  "contentHash": "sha256:611ad12918b36e3a4b8bef91d3fa91c1a9e0036cb7622d257021e5c12d692572",
-  "gitSha": "0d8c6d6"
+  "version": "1.2.104-beta.3",
+  "build": 1,
+  "builtAt": "2026-11-23T23:21:07.282Z",
+  "contentHash": "sha256:570c7f10ec5d0587d145abeecb40c27f29ba400b76c94e86e19acf43f090bbe4",
+  "gitSha": "3f46ea3"
 }
