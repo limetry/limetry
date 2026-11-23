@@ -39,7 +39,7 @@ export default function ContactPage(): React.JSX.Element {
             Product questions, self-hosting help, Cloud workspaces, or partnerships — send a
             message. We&apos;ll point you to the right docs or plan.
           </p>
-          <div className="mt-10 rounded-2xl border border-border bg-card/60 p-6 shadow-sm sm:p-8">
+          <div className="mt-10 rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-sm sm:p-8 dark:border-slate-700/80 dark:bg-slate-900/80">
             <ContactForm source="contact-page" />
           </div>
         </div>

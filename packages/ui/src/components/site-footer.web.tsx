@@ -36,7 +36,13 @@ export function SiteFooter({
   className,
 }: SiteFooterProps): JSX.Element {
   return (
-    <footer className={cn("border-border bg-card border-t", className)}>
+    <footer
+      className={cn(
+        // Explicit light/dark fills — NativeWind bakes `bg-card` to white on Expo web.
+        "border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
+        className,
+      )}
+    >
       <div className="max-w-7xl px-4 py-12 sm:px-6 lg:px-8 mx-auto">
         <div className="gap-8 md:grid-cols-4 grid grid-cols-2">
           <div className="md:col-span-1 col-span-2">

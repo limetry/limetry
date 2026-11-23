@@ -16,10 +16,13 @@ export type { ContactFormFields, ContactFormProps } from "./contact-form.types"
 type SubmitState = "idle" | "submitting" | "success" | "error"
 
 const fieldClassName = cn(
-  "border-border bg-background rounded-xl px-4 py-3 text-sm w-full border",
-  "text-foreground shadow-sm transition outline-none",
-  "placeholder:text-muted-foreground",
-  "focus-visible:border-primary/50 focus-visible:ring-primary/25 focus-visible:ring-2",
+  // Explicit slate fills so Expo web dark mode is not stuck on baked `bg-background`.
+  "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm",
+  "text-slate-900 outline-none transition-[border-color,box-shadow] duration-150",
+  "placeholder:text-slate-400",
+  "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500",
+  "focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/25",
+  "dark:focus-visible:border-emerald-400 dark:focus-visible:ring-emerald-400/25",
 )
 
 /**
@@ -96,8 +99,8 @@ export function ContactForm({
     return (
       <div className={className} role="status" aria-live="polite">
         <p className="
-          text-foreground rounded-xl border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm
-          font-medium border
+          rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm
+          font-medium text-slate-900 dark:text-slate-100
         ">
           Message sent. We&apos;ll get back to you soon.
         </p>
@@ -122,7 +125,7 @@ export function ContactForm({
         <div className="space-y-2">
           <label
             htmlFor={`${idPrefix}-name`}
-            className="text-foreground text-sm font-medium"
+            className="text-sm font-medium text-slate-900 dark:text-slate-100"
           >
             Name
           </label>
@@ -143,7 +146,7 @@ export function ContactForm({
         <div className="space-y-2">
           <label
             htmlFor={`${idPrefix}-email`}
-            className="text-foreground text-sm font-medium"
+            className="text-sm font-medium text-slate-900 dark:text-slate-100"
           >
             Email
           </label>
@@ -165,10 +168,10 @@ export function ContactForm({
           <div className="space-y-2">
             <label
               htmlFor={`${idPrefix}-company`}
-              className="text-foreground text-sm font-medium"
+              className="text-sm font-medium text-slate-900 dark:text-slate-100"
             >
               Company
-              <span className="text-muted-foreground ml-1 font-normal">(optional)</span>
+              <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">(optional)</span>
             </label>
             <input
               id={`${idPrefix}-company`}
@@ -186,7 +189,7 @@ export function ContactForm({
         <div className={`space-y-2 ${compact ? "sm:col-span-2" : ""}`}>
           <label
             htmlFor={`${idPrefix}-message`}
-            className="text-foreground text-sm font-medium"
+            className="text-sm font-medium text-slate-900 dark:text-slate-100"
           >
             Message
           </label>
@@ -229,10 +232,10 @@ export function ContactForm({
             type="submit"
             disabled={state === "submitting"}
             className={cn(
-              "rounded-xl inline-flex w-full items-center justify-center whitespace-nowrap",
-              "bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold",
-              "shadow-primary/25 shadow-lg transition-all",
-              "hover:bg-primary/90 hover:-translate-y-0.5",
+              "inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl",
+              "bg-emerald-600 px-6 py-3 text-sm font-semibold text-white",
+              "shadow-lg shadow-emerald-600/25 transition-all",
+              "hover:-translate-y-0.5 hover:bg-emerald-500",
               "disabled:pointer-events-none disabled:opacity-60",
               "sm:w-auto",
             )}
