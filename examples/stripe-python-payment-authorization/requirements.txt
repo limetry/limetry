@@ -1,5 +1,5 @@
 # pip install -e ../../packages/sdk-python
-limetry>=1.2.102
+limetry>=1.2.103
 httpx>=0.27
 pytest>=8.0
 # optional: stripe>=11.0
