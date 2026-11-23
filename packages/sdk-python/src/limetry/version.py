@@ -1,4 +1,4 @@
-"""Product version label for CLIs, footers, health, and preflight."""
+"""Product version labels for packages, health, and website footers."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ class AppVersionInfo(TypedDict):
     build: int
     channel: AppVersionChannel
     label: str
+    footer_label: str
 
 
 _DEV_COMMIT_ENV_KEYS = (
@@ -40,7 +41,20 @@ def format_app_version_label(
     channel: AppVersionChannel,
     dev_commits: int,
 ) -> str:
-    """Format a version label from resolved version/build/channel inputs."""
+    """Format the package/CLI version label (no build in release channel)."""
+    if channel == "dev":
+        return f"v{version}-dev-{dev_commits}"
+    return f"v{version}"
+
+
+def format_app_footer_version_label(
+    *,
+    version: str,
+    build: int,
+    channel: AppVersionChannel,
+    dev_commits: int,
+) -> str:
+    """Format the website footer version label (includes build in release)."""
     if channel == "dev":
         return f"v{version}-dev-{dev_commits}"
     return f"v{version}-{build}"
@@ -68,7 +82,15 @@ def _is_dev_channel(env: Mapping[str, str]) -> bool:
     node_env = env.get("NODE_ENV")
     if node_env in ("production", "test"):
         return False
-    return True
+    # Published packages with unset NODE_ENV are release. Only explicit local
+    # signals select the `-dev-Y` channel.
+    if node_env == "development":
+        return True
+    for key in _DEV_COMMIT_ENV_KEYS:
+        raw = env.get(key)
+        if raw and re.fullmatch(r"\d+", raw):
+            return True
+    return False
 
 
 def _read_dev_commits(env: Mapping[str, str]) -> int:
@@ -87,26 +109,76 @@ def _read_public_app_version_label(env: Mapping[str, str]) -> str | None:
     return None
 
 
+def _labels_for_parts(
+    *,
+    version: str,
+    build: int,
+    channel: AppVersionChannel,
+    dev_commits: int,
+) -> tuple[str, str]:
+    return (
+        format_app_version_label(
+            version=version,
+            build=build,
+            channel=channel,
+            dev_commits=dev_commits,
+        ),
+        format_app_footer_version_label(
+            version=version,
+            build=build,
+            channel=channel,
+            dev_commits=dev_commits,
+        ),
+    )
+
+
 def resolve_app_version(env: Mapping[str, str] | None = None) -> AppVersionInfo:
     """Resolve structured AppVersionInfo from env and embedded build-info."""
     source = env if env is not None else os.environ
     public_label = _read_public_app_version_label(source)
     if public_label:
-        release_match = re.fullmatch(r"v(\d+\.\d+\.\d+)-(\d+)", public_label)
-        if release_match:
+        legacy_release_match = re.fullmatch(r"v(\d+(?:\.\d+)*)-(\d+)", public_label)
+        if legacy_release_match:
+            version = legacy_release_match.group(1)
+            build = int(legacy_release_match.group(2))
+            label, footer_label = _labels_for_parts(
+                version=version,
+                build=build,
+                channel="release",
+                dev_commits=0,
+            )
             return {
-                "version": release_match.group(1),
-                "build": int(release_match.group(2)),
+                "version": version,
+                "build": build,
                 "channel": "release",
-                "label": public_label,
+                "label": label,
+                "footer_label": footer_label,
             }
-        dev_match = re.fullmatch(r"v(\d+\.\d+\.\d+)-dev-(\d+)", public_label)
+        bare_release_match = re.fullmatch(r"v(\d+(?:\.\d+)*)", public_label)
+        if bare_release_match:
+            version = bare_release_match.group(1)
+            build = _read_build()
+            label, footer_label = _labels_for_parts(
+                version=version,
+                build=build,
+                channel="release",
+                dev_commits=0,
+            )
+            return {
+                "version": version,
+                "build": build,
+                "channel": "release",
+                "label": label,
+                "footer_label": footer_label,
+            }
+        dev_match = re.fullmatch(r"v(\d+(?:\.\d+)*)-dev-(\d+)", public_label)
         if dev_match:
             return {
                 "version": dev_match.group(1),
                 "build": _read_build(),
                 "channel": "dev",
                 "label": public_label,
+                "footer_label": public_label,
             }
         channel: AppVersionChannel = "dev" if _is_dev_channel(source) else "release"
         return {
@@ -114,29 +186,38 @@ def resolve_app_version(env: Mapping[str, str] | None = None) -> AppVersionInfo:
             "build": _read_build(),
             "channel": channel,
             "label": public_label,
+            "footer_label": public_label,
         }
 
     version = _read_platform_version()
     build = _read_build()
     channel = "dev" if _is_dev_channel(source) else "release"
-    label = format_app_version_label(
+    dev_commits = _read_dev_commits(source) if channel == "dev" else 0
+    label, footer_label = _labels_for_parts(
         version=version,
         build=build,
         channel=channel,
-        dev_commits=_read_dev_commits(source),
+        dev_commits=dev_commits,
     )
     return {
         "version": version,
         "build": build,
         "channel": channel,
         "label": label,
+        "footer_label": footer_label,
     }
 
 
 def app_version(env: Mapping[str, str] | None = None) -> str:
-    """Return the display version label (e.g. v1.2.99-9)."""
+    """Return the package version label (e.g. v1.2.102)."""
     return resolve_app_version(env)["label"]
 
 
-# Alias matching TypeScript AppVersion() naming for docs parity.
+def app_footer_version(env: Mapping[str, str] | None = None) -> str:
+    """Return the website footer version label (e.g. v1.2.102-12)."""
+    return resolve_app_version(env)["footer_label"]
+
+
+# Aliases matching TypeScript AppVersion() / AppFooterVersion() naming.
 AppVersion = app_version
+AppFooterVersion = app_footer_version

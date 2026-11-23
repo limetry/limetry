@@ -54,7 +54,7 @@ export function countCommitsSincePush(cwd: string): number {
 /**
  * Writes `LIMETRY_DEV_COMMITS` (+ Next/Expo public mirrors) for local AppVersion.
  *
- * No-ops in production/test so deploy builds keep `vA.B.C-X` from build-info.
+ * No-ops in production/test so deploy builds keep bare `vA.B.C` from build-info.
  *
  * @param cwd - Git working tree used for the ahead count.
  * @param env - Env bag to mutate (defaults to `process.env`).

@@ -48,16 +48,20 @@ from limetry.urls import (
 )
 from limetry.version import (
     APP_VERSION,
+    AppFooterVersion,
     AppVersion,
     AppVersionChannel,
     AppVersionInfo,
+    app_footer_version,
     app_version,
+    format_app_footer_version_label,
     format_app_version_label,
     resolve_app_version,
 )
 
 __all__ = [
     "APP_VERSION",
+    "AppFooterVersion",
     "AppVersion",
     "AppVersionChannel",
     "AppVersionInfo",
@@ -77,6 +81,7 @@ __all__ = [
     "PolicyViolationError",
     "RateLimitExceededError",
     "RemotePolicyEngine",
+    "app_footer_version",
     "app_version",
     "build_evaluated_audit_details",
     "build_minimized_authorization_request",
@@ -86,6 +91,7 @@ __all__ = [
     "create_remote_engine",
     "create_slim_action_policy",
     "create_slim_policy",
+    "format_app_footer_version_label",
     "format_app_version_label",
     "is_sensitive_key",
     "project_intent_for_audit",

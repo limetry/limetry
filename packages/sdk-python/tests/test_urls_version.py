@@ -2,6 +2,7 @@
 
 from limetry import (
     DEFAULT_LIMETRY_BASE_URL,
+    app_footer_version,
     app_version,
     resolve_app_version,
     resolve_limetry_base_url,
@@ -32,5 +33,14 @@ def test_resolve_cloud_base_url() -> None:
 def test_app_version_release() -> None:
     info = resolve_app_version({"NODE_ENV": "production"})
     assert info["channel"] == "release"
-    assert info["label"].startswith("v")
+    assert info["label"] == f"v{info['version']}"
+    assert info["footer_label"] == f"v{info['version']}-{info['build']}"
     assert app_version({"NODE_ENV": "production"}) == info["label"]
+    assert app_footer_version({"NODE_ENV": "production"}) == info["footer_label"]
+
+
+def test_app_version_unset_node_env_is_release() -> None:
+    info = resolve_app_version({})
+    assert info["channel"] == "release"
+    assert info["label"] == f"v{info['version']}"
+    assert "-dev-" not in info["label"]

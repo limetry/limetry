@@ -10,9 +10,11 @@
 
 export {
   APP_VERSION,
+  AppFooterVersion,
   AppVersion,
   type AppVersionChannel,
   type AppVersionInfo,
+  formatAppFooterVersionLabel,
   formatAppVersionLabel,
   resolveAppVersion,
 } from "./app-version.js"

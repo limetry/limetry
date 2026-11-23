@@ -1,7 +1,8 @@
 /**
- * Product version label for CLIs, footers, health, and preflight.
+ * Product version labels for CLIs, health, preflight, and website footers.
  *
- * - Deploy / production: `vA.B.C-X` where X is repo-root `build-info.json` build.
+ * - Package / CLI / health (release): `vA.B.C`
+ * - Website footers (release): `vA.B.C-X` where X is repo-root `build-info.json` build
  * - Local development: `vA.B.C-dev-Y` where Y is commits since last push
  *   (`LIMETRY_DEV_COMMITS` / `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*`, seeded by
  *   `@limetry/preflight` `seedDevVersionEnv`).
@@ -29,12 +30,14 @@ export type AppVersionChannel = "release" | "dev"
 export type AppVersionInfo = {
   /** Platform semver without a leading `v`. */
   version: string
-  /** Monotonic deploy/release build counter from build-info.json. */
+  /** Per-version deploy/release build counter from build-info.json. */
   build: number
   /** `dev` while running locally; `release` in production/test/deploy. */
   channel: AppVersionChannel
-  /** Display label, e.g. `v1.2.94-12` or `v1.2.94-dev-3`. */
+  /** Package/CLI/health label, e.g. `v1.2.94` or `v1.2.94-dev-3`. */
   label: string
+  /** Website footer label, e.g. `v1.2.94-12` or `v1.2.94-dev-3`. */
+  footerLabel: string
 }
 
 const DEV_COMMIT_ENV_KEYS = [
@@ -44,12 +47,30 @@ const DEV_COMMIT_ENV_KEYS = [
 ] as const
 
 /**
- * Formats a version label from resolved version/build/channel inputs.
+ * Formats the package/CLI version label (no build in release channel).
  *
  * @param input - Version parts.
  * @returns Display label.
  */
 export function formatAppVersionLabel(input: {
+  version: string
+  build: number
+  channel: AppVersionChannel
+  devCommits: number
+}): string {
+  if (input.channel === "dev") {
+    return `v${input.version}-dev-${input.devCommits}`
+  }
+  return `v${input.version}`
+}
+
+/**
+ * Formats the website footer version label (includes build in release channel).
+ *
+ * @param input - Version parts.
+ * @returns Footer display label.
+ */
+export function formatAppFooterVersionLabel(input: {
   version: string
   build: number
   channel: AppVersionChannel
@@ -125,8 +146,20 @@ function readPublicAppVersionLabel(env: NodeJS.ProcessEnv): string | undefined {
   return undefined
 }
 
+function labelsForParts(input: {
+  version: string
+  build: number
+  channel: AppVersionChannel
+  devCommits: number
+}): Pick<AppVersionInfo, "label" | "footerLabel"> {
+  return {
+    label: formatAppVersionLabel(input),
+    footerLabel: formatAppFooterVersionLabel(input),
+  }
+}
+
 /**
- * Resolves platform version + build/channel details for footers and health.
+ * Resolves platform version + build/channel details for packages and footers.
  *
  * @param env - Optional env bag (defaults to `process.env`).
  * @returns Structured version info.
@@ -134,13 +167,26 @@ function readPublicAppVersionLabel(env: NodeJS.ProcessEnv): string | undefined {
 export function resolveAppVersion(env: NodeJS.ProcessEnv = process.env): AppVersionInfo {
   const publicLabel = readPublicAppVersionLabel(env)
   if (publicLabel) {
-    const releaseMatch = /^v([0-9]+(?:\.[0-9]+)*)-([0-9]+)$/.exec(publicLabel)
-    if (releaseMatch) {
+    const legacyReleaseMatch = /^v([0-9]+(?:\.[0-9]+)*)-([0-9]+)$/.exec(publicLabel)
+    if (legacyReleaseMatch) {
+      const version = legacyReleaseMatch[1]!
+      const build = Number(legacyReleaseMatch[2])
       return {
-        version: releaseMatch[1]!,
-        build: Number(releaseMatch[2]),
+        version,
+        build,
         channel: "release",
-        label: publicLabel,
+        ...labelsForParts({ version, build, channel: "release", devCommits: 0 }),
+      }
+    }
+    const bareReleaseMatch = /^v([0-9]+(?:\.[0-9]+)*)$/.exec(publicLabel)
+    if (bareReleaseMatch) {
+      const version = bareReleaseMatch[1]!
+      const build = readBuild()
+      return {
+        version,
+        build,
+        channel: "release",
+        ...labelsForParts({ version, build, channel: "release", devCommits: 0 }),
       }
     }
     const devMatch = /^v([0-9]+(?:\.[0-9]+)*)-dev-([0-9]+)$/.exec(publicLabel)
@@ -150,13 +196,16 @@ export function resolveAppVersion(env: NodeJS.ProcessEnv = process.env): AppVers
         build: readBuild(),
         channel: "dev",
         label: publicLabel,
+        footerLabel: publicLabel,
       }
     }
+    const channel: AppVersionChannel = isDevChannel(env) ? "dev" : "release"
     return {
       version: readPlatformVersion(),
       build: readBuild(),
-      channel: isDevChannel(env) ? "dev" : "release",
+      channel,
       label: publicLabel,
+      footerLabel: publicLabel,
     }
   }
 
@@ -168,16 +217,26 @@ export function resolveAppVersion(env: NodeJS.ProcessEnv = process.env): AppVers
     version,
     build,
     channel,
-    label: formatAppVersionLabel({ version, build, channel, devCommits }),
+    ...labelsForParts({ version, build, channel, devCommits }),
   }
 }
 
 /**
- * Returns the display version label (`vA.B.C-X` or `vA.B.C-dev-Y`).
+ * Returns the package/CLI/health version label (`vA.B.C` or `vA.B.C-dev-Y`).
  *
  * @param env - Optional env bag (defaults to `process.env`).
  * @returns Version label string.
  */
 export function AppVersion(env: NodeJS.ProcessEnv = process.env): string {
   return resolveAppVersion(env).label
+}
+
+/**
+ * Returns the website footer version label (`vA.B.C-X` or `vA.B.C-dev-Y`).
+ *
+ * @param env - Optional env bag (defaults to `process.env`).
+ * @returns Footer version label string.
+ */
+export function AppFooterVersion(env: NodeJS.ProcessEnv = process.env): string {
+  return resolveAppVersion(env).footerLabel
 }
