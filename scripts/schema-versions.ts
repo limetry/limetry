@@ -366,7 +366,7 @@ export const COMPATIBILITY = ${withTrailingCommas(JSON.stringify(document, null,
  */
 export function formatCompatibilityPythonModule(document: CompatibilityDocument): string {
   return (
-    `"""Product, package, website, and schema compatibility for this release."""\n\n`
+    "\"\"\"Product, package, website, and schema compatibility for this release.\"\"\"\n\n"
     + `COMPATIBILITY = ${JSON.stringify(document, null, 4)}\n`
   )
 }
