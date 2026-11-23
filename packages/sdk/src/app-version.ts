@@ -82,13 +82,23 @@ function isDevChannel(env: NodeJS.ProcessEnv): boolean {
     return false
   }
   // Direct `process.env.NODE_ENV` so bundlers can inline; bag lookup alone is
-  // empty in many browser builds and incorrectly selects the `dev` channel.
+  // empty in many browser builds.
   const nodeEnv = env.NODE_ENV
     || (typeof process !== "undefined" ? process.env?.NODE_ENV : undefined)
   if (nodeEnv === "production" || nodeEnv === "test") {
     return false
   }
-  return true
+  // Published npm CLIs/MCP run with unset NODE_ENV — that must be release.
+  // Only explicit local/dev signals select the `-dev-Y` channel.
+  if (nodeEnv === "development") {
+    return true
+  }
+  for (const key of DEV_COMMIT_ENV_KEYS) {
+    if (env[key] && /^\d+$/.test(env[key]!)) {
+      return true
+    }
+  }
+  return false
 }
 
 function readDevCommits(env: NodeJS.ProcessEnv): number {

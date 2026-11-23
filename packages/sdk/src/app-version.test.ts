@@ -63,4 +63,11 @@ describe("AppVersion", () => {
     expect(release.version).toBe("1.2.98")
     expect(release.build).toBe(7)
   })
+
+  it("treats unset NODE_ENV as release (published npm CLIs)", () => {
+    const published = resolveAppVersion({})
+    expect(published.channel).toBe("release")
+    expect(published.label).toBe(`v${published.version}-${published.build}`)
+    expect(published.label).not.toContain("-dev-")
+  })
 })

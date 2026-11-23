@@ -27,12 +27,13 @@
     "directory": "packages/sdk"
   },
   "scripts": {
-    "prebuild": "node ../../scripts/embed-sdk-build-info.mjs",
-    "build": "tsc -p tsconfig.json",
-    "pretest": "node ../../scripts/embed-sdk-build-info.mjs",
+    "embed-build-info": "node ../../scripts/embed-sdk-build-info.mjs",
+    "prebuild": "yarn embed-build-info",
+    "build": "yarn embed-build-info && tsc -p tsconfig.json",
+    "pretest": "yarn embed-build-info",
     "test": "vitest run",
     "test:critical-coverage": "vitest run src/privacy/redact.test.ts src/policy/slim-policy.test.ts --coverage",
-    "pretypecheck": "node ../../scripts/embed-sdk-build-info.mjs",
+    "pretypecheck": "yarn embed-build-info",
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "devDependencies": {

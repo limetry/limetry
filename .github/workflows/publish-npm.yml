@@ -29,6 +29,8 @@ jobs:
 
       - name: Build all packages
         run: |
+          # Ensure gitignored build-info.generated.ts exists before tsc (CI checkout).
+          yarn workspace @limetry/sdk embed-build-info
           yarn workspace @limetry/sdk build
           yarn workspace @limetry/preflight build
           yarn workspace @limetry/cli build
