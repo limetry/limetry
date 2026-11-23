@@ -1,5 +1,9 @@
 /**
- * Static JSON search catalog API for `\@limetry/web` (S3/CloudFront export safe).
+ * Static JSON search catalog for `\@limetry/web` (S3/CloudFront export safe).
+ *
+ * Path is `/search.json` (not `/api/…`) because limetry.org CloudFront routes
+ * all `/api*` traffic to the Ask Limetry Lambda — a static catalog under
+ * `/api/search` would always 404 in production.
  */
 
 import { buildSearchCatalog } from "@/lib/site-search-catalog"
@@ -16,7 +20,7 @@ export const revalidate = false
 
 /**
  * Returns the full site search catalog. Query matching runs in the browser so
- * this route can be statically exported to S3/CloudFront.
+ * this route can be statically exported to S3/CloudFront as `search.json`.
  *
  * @returns JSON response with `{ entries }`.
  */

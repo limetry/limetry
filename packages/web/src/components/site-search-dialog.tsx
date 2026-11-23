@@ -34,7 +34,7 @@ type SiteSearchDialogProps = {
 }
 
 /**
- * Full-screen search overlay; fetches `/api/search` and matches client-side.
+ * Full-screen search overlay; fetches `/search.json` and matches client-side.
  *
  * @param props - Open state and change handler.
  * @returns Dialog element, or `null` when closed.
@@ -86,7 +86,7 @@ export function SiteSearchDialog({
     }
 
     const controller = new AbortController()
-    void fetch("/api/search", { signal: controller.signal })
+    void fetch("/search.json", { signal: controller.signal })
       .then(async (response) => {
         const data = (await response.json()) as { entries?: StaticSearchEntry[] }
         return Array.isArray(data.entries) ? data.entries : []
