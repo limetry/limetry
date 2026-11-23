@@ -107,34 +107,47 @@ const config: NextConfig = {
         ]
       },
       async rewrites() {
-        const assistantOrigin = (
-          process.env.LIMETRY_ASSISTANT_ORIGIN
-          || `http://127.0.0.1:${process.env.ASSISTANT_PORT || "3815"}`
+        /**
+         * Local `@limetry/api` (Ask Limetry + contact). Prefer `LIMETRY_API_ORIGIN`
+         * / `API_PORT`; keep `LIMETRY_ASSISTANT_*` as aliases for older env files.
+         */
+        const apiOrigin = (
+          process.env.LIMETRY_API_ORIGIN
+          || process.env.LIMETRY_ASSISTANT_ORIGIN
+          || `http://127.0.0.1:${
+            process.env.API_PORT
+            || process.env.ASSISTANT_PORT
+            || "3815"
+          }`
         ).replace(/\/$/, "")
         return [
           {
             source: "/api/assistant",
-            destination: `${assistantOrigin}/api/assistant`,
+            destination: `${apiOrigin}/api/assistant`,
           },
           {
             source: "/api/assistant/stream",
-            destination: `${assistantOrigin}/api/assistant/stream`,
+            destination: `${apiOrigin}/api/assistant/stream`,
           },
           {
             source: "/api/assistant/openapi.json",
-            destination: `${assistantOrigin}/api/assistant/openapi.json`,
+            destination: `${apiOrigin}/api/assistant/openapi.json`,
           },
           {
             source: "/api/assistant/docs",
-            destination: `${assistantOrigin}/api/assistant/docs`,
+            destination: `${apiOrigin}/api/assistant/docs`,
           },
           {
             source: "/api/assistant/docs/json",
-            destination: `${assistantOrigin}/api/assistant/docs/json`,
+            destination: `${apiOrigin}/api/assistant/docs/json`,
           },
           {
             source: "/api/contact",
-            destination: `${assistantOrigin}/api/contact`,
+            destination: `${apiOrigin}/api/contact`,
+          },
+          {
+            source: "/api/health",
+            destination: `${apiOrigin}/api/health`,
           },
         ]
       },

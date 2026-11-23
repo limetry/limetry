@@ -3,9 +3,10 @@ import { fileURLToPath } from "node:url"
 
 import { clearCorpusCache, loadAssistantEnv } from "@limetry/assistant"
 import type { FastifyInstance } from "fastify"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createApiApp } from "./create-app.js"
+import * as turnstileVerify from "./turnstile/verify.js"
 
 const corpusPath = resolve(
   fileURLToPath(new URL("./fixtures/minimal-corpus.json", import.meta.url)),
@@ -100,6 +101,8 @@ describe("Ask Limetry chat routes", () => {
     const body = response.json()
     expect(body.openapi).toMatch(/^3\./)
     expect(body.paths["/api/assistant"]).toBeTruthy()
+    expect(body.paths["/api/contact"]).toBeTruthy()
+    expect(body.paths["/api/health"]).toBeTruthy()
 
     const legacyJson = await app.inject({
       method: "GET",
@@ -114,6 +117,28 @@ describe("Ask Limetry chat routes", () => {
     })
     expect(legacyUi.statusCode).toBe(302)
     expect(legacyUi.headers.location).toBe("/openapi/assistant/")
+  })
+
+  it("returns 405 JSON for GET on POST-only chat routes", async () => {
+    const app = await buildApp()
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/assistant",
+      headers: { accept: "application/json" },
+    })
+    expect(response.statusCode).toBe(405)
+    expect(response.json().error).toBe("method_not_allowed")
+  })
+
+  it("serves /api/health for same-origin CloudFront checks", async () => {
+    const app = await buildApp()
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/health",
+    })
+    expect(response.statusCode).toBe(200)
+    expect(response.json().ok).toBe(true)
+    expect(response.json().service).toBe("ask-limetry")
   })
 
   it("requires bearer auth when LIMETRY_ASSISTANT_PUBLIC is false", async () => {
@@ -142,17 +167,50 @@ describe("Ask Limetry chat routes", () => {
 
 describe("contact routes", () => {
   it("returns 412 when Brevo is not configured", async () => {
+    const previous = {
+      CONTACT_PROVIDER: process.env.CONTACT_PROVIDER,
+      CONTACT_API_KEY: process.env.CONTACT_API_KEY,
+    }
+    delete process.env.CONTACT_PROVIDER
+    delete process.env.CONTACT_API_KEY
+    const verifySpy = vi.spyOn(turnstileVerify, "verifyTurnstileToken").mockResolvedValue({
+      ok: true,
+    })
+    try {
+      const app = await buildApp()
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/contact",
+        payload: {
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          message: "Hello from the analytical engine era.",
+          turnstileToken: "XXXX.DUMMY.TOKEN.XXXX",
+        },
+      })
+      expect(response.statusCode).toBe(412)
+      expect(response.json().error).toMatch(/not configured/i)
+    } finally {
+      verifySpy.mockRestore()
+      for (const [key, value] of Object.entries(previous)) {
+        if (value === undefined) {
+          delete process.env[key]
+        } else {
+          process.env[key] = value
+        }
+      }
+    }
+  })
+
+  it("returns 405 JSON for GET /api/contact", async () => {
     const app = await buildApp()
     const response = await app.inject({
-      method: "POST",
+      method: "GET",
       url: "/api/contact",
-      payload: {
-        name: "Ada Lovelace",
-        email: "ada@example.com",
-        message: "Hello from the analytical engine era.",
-      },
+      headers: { accept: "application/json" },
     })
-    expect(response.statusCode).toBe(412)
-    expect(response.json().error).toMatch(/not configured/i)
+    expect(response.statusCode).toBe(405)
+    expect(response.headers.allow).toBe("POST")
+    expect(response.json().error).toBe("method_not_allowed")
   })
 })

@@ -2,8 +2,8 @@
  * Static JSON search catalog for `\@limetry/web` (S3/CloudFront export safe).
  *
  * Path is `/search.json` (not `/api/…`) because limetry.org CloudFront routes
- * all `/api*` traffic to the Ask Limetry Lambda — a static catalog under
- * `/api/search` would always 404 in production.
+ * all `/api*` traffic to `@limetry/api` (Ask Limetry + contact) — a static
+ * catalog under `/api/search` would never reach S3 in production.
  */
 
 import { buildSearchCatalog } from "@/lib/site-search-catalog"

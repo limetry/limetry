@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Local limetry.org: Next web + public API (Ask Limetry / contact on :3815).
+ * Local limetry.org: Next web + `@limetry/api` (Ask Limetry + contact on :3815).
  *
  * Usage: yarn dev:web  (from repo root)
  *

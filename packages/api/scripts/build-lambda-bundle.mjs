@@ -98,7 +98,7 @@ writeFileSync(
     "# Limetry.org public API Lambda bundle",
     "",
     "Built by `yarn workspace @limetry/api build:lambda`.",
-    "Deployed behind CloudFront `/api/assistant*` and `/api/contact*` on limetry.org.",
+    "Deployed behind CloudFront `/api*` on limetry.org (Ask Limetry + contact + health).",
     "",
   ].join("\n"),
 )

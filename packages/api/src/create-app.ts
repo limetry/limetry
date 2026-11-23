@@ -77,24 +77,54 @@ export async function createApiApp(
     },
   })
 
+  const healthHandler = async () => ({
+    ok: true as const,
+    service: "ask-limetry" as const,
+    version: appVersion,
+  })
+
   app.get(
     "/health",
     {
       schema: {
         tags: ["assistant"],
-        summary: "Health check",
+        summary: "Health check (direct Function URL)",
         response: { 200: healthJsonSchema },
       },
     },
-    async () => ({
-      ok: true as const,
-      service: "ask-limetry" as const,
-      version: appVersion,
-    }),
+    healthHandler,
+  )
+
+  // Reachable via limetry.org CloudFront `/api*` (unlike `/health` on the Function URL).
+  app.get(
+    "/api/health",
+    {
+      schema: {
+        tags: ["assistant"],
+        summary: "Health check (same-origin /api*)",
+        response: { 200: healthJsonSchema },
+      },
+    },
+    healthHandler,
   )
 
   await createChatRoutes(app, env)
   await createContactRoutes(app)
+
+  /**
+   * POST-only routes: answer GET with 405 JSON so CloudFront customErrorResponses
+   * (which rewrite origin 404 → marketing `/404.html`) do not mask the API.
+   */
+  for (const path of ["/api/assistant", "/api/assistant/stream", "/api/contact"] as const) {
+    app.get(path, { schema: { hide: true } }, async (_request, reply) => {
+      reply.header("Allow", "POST")
+      return reply.status(405).send({
+        error: "method_not_allowed",
+        message: `Use POST ${path}.`,
+        path,
+      })
+    })
+  }
 
   app.get(
     PUBLIC_API_OPENAPI_JSON_PATH,
