@@ -1,8 +1,10 @@
 /**
  * Product version labels for CLIs, health, preflight, and website footers.
  *
- * - Package / CLI / health (release): `vA.B.C`
- * - Website footers (release): `vA.B.C-X` where X is repo-root `build-info.json` build
+ * - Package / CLI / health (release/prod): `vA.B.C`
+ * - Website footers (release/prod): `vA.B.C-X` where X is repo-root `build-info.json` build
+ * - AWS den stack: baked `LIMETRY_APP_VERSION` is `vA.B.C-beta.X` (or
+ *   `vA.B.C-beta.N-X` when package version already includes `-beta.N`)
  * - Local development: `vA.B.C-dev-Y` where Y is commits since last push
  *   (`LIMETRY_DEV_COMMITS` / `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*`, seeded by
  *   `@limetry/preflight` `seedDevVersionEnv`).
@@ -195,6 +197,38 @@ export function resolveAppVersion(env: NodeJS.ProcessEnv = process.env): AppVers
         version: devMatch[1]!,
         build: readBuild(),
         channel: "dev",
+        label: publicLabel,
+        footerLabel: publicLabel,
+      }
+    }
+    // AWS den bake: `vA.B.C-beta.X` or `vA.B.C-beta.N-X` (N from release:aws:dev).
+    const betaWithBuildMatch =
+      /^v(\d+\.\d+\.\d+-beta\.\d+)-(\d+)$/.exec(publicLabel)
+    if (betaWithBuildMatch) {
+      return {
+        version: betaWithBuildMatch[1]!,
+        build: Number(betaWithBuildMatch[2]),
+        channel: "release",
+        label: publicLabel,
+        footerLabel: publicLabel,
+      }
+    }
+    const betaBareBuildMatch = /^v(\d+\.\d+\.\d+)-beta\.(\d+)$/.exec(publicLabel)
+    if (betaBareBuildMatch) {
+      return {
+        version: betaBareBuildMatch[1]!,
+        build: Number(betaBareBuildMatch[2]),
+        channel: "release",
+        label: publicLabel,
+        footerLabel: publicLabel,
+      }
+    }
+    const betaMatch = /^v(\d+\.\d+\.\d+-beta\.\d+)$/.exec(publicLabel)
+    if (betaMatch) {
+      return {
+        version: betaMatch[1]!,
+        build: readBuild(),
+        channel: "release",
         label: publicLabel,
         footerLabel: publicLabel,
       }

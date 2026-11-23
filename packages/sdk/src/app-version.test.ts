@@ -102,4 +102,24 @@ describe("AppVersion", () => {
     expect(published.footerLabel).toBe(`v${published.version}-${published.build}`)
     expect(published.label).not.toContain("-dev-")
   })
+
+  it("keeps AWS den beta bake labels on health and footers", () => {
+    const betaBuild = resolveAppVersion({
+      NODE_ENV: "production",
+      LIMETRY_APP_VERSION: "v1.2.103-beta.2",
+    })
+    expect(betaBuild.label).toBe("v1.2.103-beta.2")
+    expect(betaBuild.footerLabel).toBe("v1.2.103-beta.2")
+    expect(betaBuild.version).toBe("1.2.103")
+    expect(betaBuild.build).toBe(2)
+
+    const stamped = resolveAppVersion({
+      NODE_ENV: "production",
+      LIMETRY_APP_VERSION: "v1.2.104-beta.6-3",
+    })
+    expect(stamped.label).toBe("v1.2.104-beta.6-3")
+    expect(stamped.footerLabel).toBe("v1.2.104-beta.6-3")
+    expect(stamped.version).toBe("1.2.104-beta.6")
+    expect(stamped.build).toBe(3)
+  })
 })
