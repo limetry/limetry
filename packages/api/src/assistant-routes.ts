@@ -15,6 +15,8 @@ import {
 } from "@limetry/assistant"
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify"
 
+import { logAssistantChatEvent } from "./site-audit-log.js"
+
 type AssistantRoutesOpts = {
   env: AssistantEnv
 }
@@ -103,6 +105,17 @@ export const assistantRoutes: FastifyPluginAsync<AssistantRoutesOpts> = async (
     async (request, reply) => {
       try {
         const result = await runAssistantChat(env, request.body)
+        try {
+          await logAssistantChatEvent({
+            message: request.body.message,
+            answer: result.answer,
+            sources: result.sources,
+            backend: result.backend,
+            model: result.model,
+          })
+        } catch (logError) {
+          console.error("[api] assistant site-audit log failed", logError)
+        }
         return reply.status(200).send({ ok: true, ...result })
       } catch (error) {
         const message = error instanceof Error ? error.message : "chat_failed"
@@ -148,11 +161,13 @@ export const assistantRoutes: FastifyPluginAsync<AssistantRoutesOpts> = async (
         })
 
         let emittedDelta = false
+        const answerParts: string[] = []
         if (prepared.textStream) {
           try {
             for await (const delta of prepared.textStream) {
               if (delta) {
                 emittedDelta = true
+                answerParts.push(delta)
                 writeSse(reply, { type: "delta", text: delta })
               }
             }
@@ -163,16 +178,41 @@ export const assistantRoutes: FastifyPluginAsync<AssistantRoutesOpts> = async (
             console.warn("[api] stream iteration failed; emitting fallback", streamError)
             writeSse(reply, { type: "error", message })
             if (!emittedDelta && prepared.fallbackAnswer) {
+              answerParts.push(prepared.fallbackAnswer)
               writeSse(reply, { type: "delta", text: prepared.fallbackAnswer })
+            }
+            try {
+              await logAssistantChatEvent({
+                message: request.body.message,
+                answer: answerParts.join(""),
+                sources: prepared.sources,
+                backend: prepared.backend,
+                model: prepared.model,
+                streamError: message,
+              })
+            } catch (logError) {
+              console.error("[api] assistant stream site-audit log failed", logError)
             }
             writeSse(reply, { type: "done" })
             reply.raw.end()
             return
           }
         } else if (prepared.fallbackAnswer) {
+          answerParts.push(prepared.fallbackAnswer)
           writeSse(reply, { type: "delta", text: prepared.fallbackAnswer })
         }
 
+        try {
+          await logAssistantChatEvent({
+            message: request.body.message,
+            answer: answerParts.join(""),
+            sources: prepared.sources,
+            backend: prepared.backend,
+            model: prepared.model,
+          })
+        } catch (logError) {
+          console.error("[api] assistant stream site-audit log failed", logError)
+        }
         writeSse(reply, { type: "done" })
         reply.raw.end()
       } catch (error) {

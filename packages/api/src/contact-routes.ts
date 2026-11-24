@@ -10,6 +10,7 @@ import {
   createContactProvider,
 } from "./contact/index.js"
 import { parseContactMessage } from "./contact/validate.js"
+import { logContactSubmitEvent } from "./site-audit-log.js"
 import {
   clientIpFromHeaders,
   consumeContactRateLimit,
@@ -107,6 +108,20 @@ export const contactRoutes: FastifyPluginAsync = async (app) => {
           error: result.error,
         })
         return reply.status(502).send({ error: "Unable to send your message" })
+      }
+
+      try {
+        await logContactSubmitEvent({
+          name: parsed.message.name,
+          email: parsed.message.email,
+          company: parsed.message.company,
+          message: parsed.message.message,
+          source: parsed.message.source,
+          messageId: result.messageId ?? null,
+          provider: provider.id,
+        })
+      } catch (logError) {
+        console.error("[api] contact site-audit log failed", logError)
       }
 
       return {

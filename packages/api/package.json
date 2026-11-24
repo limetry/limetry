@@ -27,6 +27,7 @@
     "typecheck": "yarn run -T tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1131.0",
     "@fastify/aws-lambda": "^6.4.2",
     "@fastify/swagger": "^9.9.5",
     "@limetry/assistant": "^1.2.105",

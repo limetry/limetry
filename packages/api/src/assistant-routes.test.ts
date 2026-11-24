@@ -6,6 +6,7 @@ import type { FastifyInstance } from "fastify"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createApiApp } from "./create-app.js"
+import * as siteAuditLog from "./site-audit-log.js"
 import * as turnstileVerify from "./turnstile/verify.js"
 
 const corpusPath = resolve(
@@ -163,6 +164,48 @@ describe("Ask Limetry chat routes", () => {
     expect(allowed.statusCode).toBe(200)
     expect(allowed.json().ok).toBe(true)
   })
+
+  it("logs successful Ask turns via site audit helper", async () => {
+    const logSpy = vi.spyOn(siteAuditLog, "logAssistantChatEvent").mockResolvedValue()
+    try {
+      const app = await buildApp()
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/assistant",
+        payload: { message: "How do I self-host Limetry?" },
+      })
+      expect(response.statusCode).toBe(200)
+      expect(logSpy).toHaveBeenCalledTimes(1)
+      expect(logSpy.mock.calls[0][0]).toMatchObject({
+        message: "How do I self-host Limetry?",
+        backend: "memory",
+      })
+      expect(String(logSpy.mock.calls[0][0].answer)).toBeTruthy()
+    } finally {
+      logSpy.mockRestore()
+    }
+  })
+
+  it("still returns 200 when site audit logging fails", async () => {
+    const logSpy = vi
+      .spyOn(siteAuditLog, "logAssistantChatEvent")
+      .mockRejectedValue(new Error("dynamo down"))
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const app = await buildApp()
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/assistant",
+        payload: { message: "How do I self-host Limetry?" },
+      })
+      expect(response.statusCode).toBe(200)
+      expect(response.json().ok).toBe(true)
+      expect(logSpy).toHaveBeenCalled()
+    } finally {
+      logSpy.mockRestore()
+      errorSpy.mockRestore()
+    }
+  })
 })
 
 describe("contact routes", () => {
@@ -212,5 +255,78 @@ describe("contact routes", () => {
     expect(response.statusCode).toBe(405)
     expect(response.headers.allow).toBe("POST")
     expect(response.json().error).toBe("method_not_allowed")
+  })
+
+  it("logs successful contact submits and stays 200 if logging throws", async () => {
+    const previous = {
+      CONTACT_PROVIDER: process.env.CONTACT_PROVIDER,
+      CONTACT_API_KEY: process.env.CONTACT_API_KEY,
+      CONTACT_FROM_EMAIL: process.env.CONTACT_FROM_EMAIL,
+      CONTACT_TO_EMAIL: process.env.CONTACT_TO_EMAIL,
+    }
+    process.env.CONTACT_PROVIDER = "brevo"
+    process.env.CONTACT_API_KEY = "xkeysib-test"
+    process.env.CONTACT_FROM_EMAIL = "hello@limetry.org"
+    process.env.CONTACT_TO_EMAIL = "hello@limetry.org"
+
+    const verifySpy = vi.spyOn(turnstileVerify, "verifyTurnstileToken").mockResolvedValue({
+      ok: true,
+    })
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ messageId: "msg_1" }), { status: 201 }),
+    )
+    const logSpy = vi
+      .spyOn(siteAuditLog, "logContactSubmitEvent")
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("dynamo down"))
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    try {
+      const app = await buildApp()
+      const ok = await app.inject({
+        method: "POST",
+        url: "/api/contact",
+        payload: {
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          message: "Hello from the analytical engine era.",
+          source: "contact-page",
+          turnstileToken: "XXXX.DUMMY.TOKEN.XXXX",
+        },
+      })
+      expect(ok.statusCode).toBe(200)
+      expect(ok.json().ok).toBe(true)
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "ada@example.com",
+          provider: "brevo",
+        }),
+      )
+
+      const stillOk = await app.inject({
+        method: "POST",
+        url: "/api/contact",
+        payload: {
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          message: "Hello from the analytical engine era.",
+          turnstileToken: "XXXX.DUMMY.TOKEN.XXXX",
+        },
+      })
+      expect(stillOk.statusCode).toBe(200)
+      expect(stillOk.json().ok).toBe(true)
+    } finally {
+      verifySpy.mockRestore()
+      fetchSpy.mockRestore()
+      logSpy.mockRestore()
+      errorSpy.mockRestore()
+      for (const [key, value] of Object.entries(previous)) {
+        if (value === undefined) {
+          delete process.env[key]
+        } else {
+          process.env[key] = value
+        }
+      }
+    }
   })
 })
