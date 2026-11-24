@@ -15,12 +15,13 @@ Product versioning is driven by **releasekit** from the private
 `yarn deploy:aws`). This public repo has no releasekit config or release
 scripts.
 
-Platform semver bumps **only when** configured published-package paths change
+Platform semver bumps **only when** kernel package sources change
 (`versionGate.paths` in the parent releasekit config). The gate hashes
-`@limetry/{sdk,cli,mcp,ci,sql,shopify,preflight,ui}` and `packages/sdk-python`
-— not server/API shells, marketing sites, static `public/` HTML, or
-`**/presentation/**`. Deploy-only and site chrome ship as build-only. Git tags
-(`v1.2.N`) are created only when semver actually bumps.
+`@limetry/{sdk,cli,mcp,ci,sql,shopify}` and `packages/sdk-python` — not
+`@limetry/ui` / `@limetry/preflight`, server/API shells, marketing sites, or
+stamp/align outputs (`compatibility.*`, embedded build-info). Those ship as
+**build-only** (footer `vA.B.C-X`); use `--force-bump` for an intentional
+ui/preflight-only npm cut. Git tags (`v1.2.N`) only when semver actually bumps.
 
 Runtime labels:
 
