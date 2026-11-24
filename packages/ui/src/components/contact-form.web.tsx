@@ -18,7 +18,7 @@ type SubmitState = "idle" | "submitting" | "success" | "error"
 const fieldClassName = cn(
   // Explicit slate fills so Expo web dark mode is not stuck on baked `bg-background`.
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm",
-  "text-slate-900 outline-none transition-[border-color,box-shadow] duration-150",
+  "text-slate-900 transition-[border-color,box-shadow] duration-150 outline-none",
   "placeholder:text-slate-400",
   "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500",
   "focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/25",
@@ -99,8 +99,9 @@ export function ContactForm({
     return (
       <div className={className} role="status" aria-live="polite">
         <p className="
-          rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm
-          font-medium text-slate-900 dark:text-slate-100
+          rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium
+          text-slate-900
+          dark:text-slate-100
         ">
           Message sent. We&apos;ll get back to you soon.
         </p>
@@ -121,7 +122,7 @@ export function ContactForm({
       data-form-type="other"
     >
       {resolvedSiteKey ? <TurnstileInvisibleMount containerRef={turnstile.containerRef} /> : null}
-      <div className={compact ? "gap-4 sm:grid-cols-2 grid" : "space-y-5"}>
+      <div className={compact ? "grid gap-4 sm:grid-cols-2" : "space-y-5"}>
         <div className="space-y-2">
           <label
             htmlFor={`${idPrefix}-name`}
@@ -215,10 +216,9 @@ export function ContactForm({
           <p
             className={cn(
               `
-                rounded-lg border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium
+                rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium
                 text-red-600
                 dark:text-red-400
-                border
               `,
               compact && "sm:col-span-2",
             )}
@@ -232,7 +232,7 @@ export function ContactForm({
             type="submit"
             disabled={state === "submitting"}
             className={cn(
-              "inline-flex w-full items-center justify-center whitespace-nowrap rounded-xl",
+              "inline-flex w-full items-center justify-center rounded-xl whitespace-nowrap",
               "bg-emerald-600 px-6 py-3 text-sm font-semibold text-white",
               "shadow-lg shadow-emerald-600/25 transition-all",
               "hover:-translate-y-0.5 hover:bg-emerald-500",

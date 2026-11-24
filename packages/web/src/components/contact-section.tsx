@@ -25,7 +25,10 @@ export function ContactSection({
   return (
     <section
       aria-labelledby="contact-strip-heading"
-      className="border-t border-slate-200 bg-linear-to-br from-emerald-500/6 via-white to-cyan-500/5 dark:border-slate-800 dark:from-emerald-400/8 dark:via-slate-950 dark:to-cyan-400/6"
+      className="
+        border-t border-slate-200 bg-linear-to-br from-emerald-500/6 via-white to-cyan-500/5
+        dark:border-slate-800 dark:from-emerald-400/8 dark:via-slate-950 dark:to-cyan-400/6
+      "
     >
       <div className="
         mx-auto grid max-w-7xl gap-8 px-4 py-12
@@ -41,7 +44,11 @@ export function ContactSection({
           </p>
           <h2
             id="contact-strip-heading"
-            className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl"
+            className="
+              mt-2 text-2xl font-bold tracking-tight text-slate-900
+              dark:text-slate-100
+              sm:text-3xl
+            "
           >
             Talk to the Limetry team
           </h2>
@@ -50,7 +57,11 @@ export function ContactSection({
             &nbsp;
             <Link
               href="/contact"
-              className="font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
+              className="
+                font-medium text-emerald-600 underline-offset-4
+                hover:underline
+                dark:text-emerald-400
+              "
             >
               Open contact
             </Link>
