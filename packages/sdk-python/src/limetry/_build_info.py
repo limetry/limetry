@@ -2,8 +2,8 @@
 
 BUILD_INFO = {
     "version": "1.2.106",
-    "build": 3,
-    "builtAt": "2026-11-25T23:01:14.497Z",
+    "build": 4,
+    "builtAt": "2026-11-26T20:42:36.840Z",
     "contentHash": "sha256:2c5293f694251f94171033a8fb325b2018806bd134e822fdc8639cdf5a6a0bb8",
-    "gitSha": "cb2a16b"
+    "gitSha": "d19d770"
 }
