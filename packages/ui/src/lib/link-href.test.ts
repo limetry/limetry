@@ -9,6 +9,7 @@ import {
 describe("link-href helpers", () => {
   it("keeps Limetry product origins in-family", () => {
     expect(isLimetryFamilyHref("https://limetry.org/docs")).toBe(true)
+    expect(isLimetryFamilyHref("https://www.limetry.org/")).toBe(true)
     expect(isLimetryFamilyHref("https://api.limetry.org/openapi")).toBe(true)
     expect(isLimetryFamilyHref("https://api.limetry.com/v1")).toBe(true)
     expect(isLimetryFamilyHref("https://app.limetry.com/pricing")).toBe(true)
@@ -18,6 +19,7 @@ describe("link-href helpers", () => {
 
   it("marks only third-party absolute URLs as external", () => {
     expect(isExternalHref("https://limetry.org/docs")).toBe(false)
+    expect(isExternalHref("https://www.limetry.org/")).toBe(false)
     expect(isExternalHref("https://api.limetry.com/openapi")).toBe(false)
     expect(isExternalHref("http://127.0.0.1:3800/contact")).toBe(false)
     expect(isExternalHref("/examples")).toBe(false)
