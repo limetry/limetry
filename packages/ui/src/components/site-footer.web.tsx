@@ -1,6 +1,7 @@
 import type { JSX } from "react"
 
 import { cn } from "../lib/cn"
+import { isExternalHref } from "../lib/link-href"
 import type { SiteFooterLink, SiteFooterProps } from "./site-footer.types"
 
 export type { SiteFooterLink, SiteFooterLinks } from "./site-footer.types"
@@ -13,7 +14,7 @@ function FooterAnchor({
   link: SiteFooterLink
   LinkComponent: SiteFooterProps["LinkComponent"]
 }): JSX.Element {
-  const external = link.external === true || /^https?:\/\//i.test(link.href)
+  const external = link.external === true || isExternalHref(link.href)
   return (
     <LinkComponent
       href={link.href}
@@ -39,7 +40,7 @@ export function SiteFooter({
     <footer
       className={cn(
         // Explicit light/dark fills — NativeWind bakes `bg-card` to white on Expo web.
-        "border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
+        "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 border-t",
         className,
       )}
     >

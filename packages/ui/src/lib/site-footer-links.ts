@@ -5,6 +5,8 @@
  * resolve to the OSS web origin. OpenAPI points at the caller's API surface.
  */
 
+import { isAbsoluteHttpHref, isLimetryFamilyHref } from "./link-href"
+
 /**
  * One footer destination.
  */
@@ -12,7 +14,7 @@ export type SiteFooterLink = {
   href: string
   label: string
   /**
-   * When true, open in a new tab (third-party or cross-product origins).
+   * When true, open in a new tab (third-party origins only).
    */
   external?: boolean
 }
@@ -72,34 +74,6 @@ function trimOrigin(value: string): string {
 }
 
 /**
- * True when a URL hostname is part of the Limetry product family.
- *
- * `*.limetry.org` / `*.limetry.com` (and local loopback) open same-window.
- *
- * @param href - Absolute or relative href.
- * @returns Whether the link should stay in the current tab.
- */
-function isLimetryFamilyHref(href: string): boolean {
-  if (!/^https?:\/\//i.test(href)) {
-    return true
-  }
-  try {
-    const hostname = new URL(href).hostname.toLowerCase()
-    return (
-      hostname === "limetry.org"
-      || hostname.endsWith(".limetry.org")
-      || hostname === "limetry.com"
-      || hostname.endsWith(".limetry.com")
-      || hostname === "localhost"
-      || hostname === "127.0.0.1"
-      || hostname === "::1"
-    )
-  } catch {
-    return false
-  }
-}
-
-/**
  * Builds an OSS marketing href (relative on the OSS site, absolute elsewhere).
  *
  * @param path - Absolute path beginning with `/`.
@@ -121,23 +95,13 @@ function ossHref(
 }
 
 /**
- * True when `href` is an absolute `http(s)` URL.
- *
- * @param href - Link destination.
- * @returns Whether the href leaves the current document origin as an absolute URL.
- */
-function isAbsoluteHttp(href: string): boolean {
-  return /^https?:\/\//i.test(href)
-}
-
-/**
  * Builds the shared Product / Open Source / Docs / legal footer destinations.
  *
  * @param input - Origins and OpenAPI target for the current frontend.
  * @returns Column link lists and legal bar links.
  */
 export function buildSiteFooterLinks(input: BuildSiteFooterLinksInput): SiteFooterLinks {
-  const openApiExternal = isAbsoluteHttp(input.openApiHref)
+  const openApiExternal = isAbsoluteHttpHref(input.openApiHref)
   const cloudApp = trimOrigin(input.cloudAppOrigin)
   const github = trimOrigin(input.githubUrl)
 

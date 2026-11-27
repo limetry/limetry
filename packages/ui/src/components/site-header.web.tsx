@@ -8,18 +8,16 @@ import type { ComponentType, JSX } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "../lib/cn"
+import { isAbsoluteHttpHref, isExternalHref } from "../lib/link-href"
 import { isNavItemActive } from "../navigation/types"
 import { DrawerMenu } from "./drawer-menu.web"
 import type { SiteHeaderLinkProps, SiteHeaderProps } from "./site-header.types"
 
 export type { SiteHeaderLinkProps, SiteHeaderProps } from "./site-header.types"
 
-function isExternalHref(href: string): boolean {
-  return /^https?:\/\//i.test(href)
-}
-
 function isDesktopItemActive(pathname: string, href: string): boolean {
-  if (isExternalHref(href)) {
+  // Cross-origin Limetry apps (API, Cloud) cannot be "active" on this host.
+  if (isAbsoluteHttpHref(href)) {
     return false
   }
   if (href.startsWith("/docs")) {

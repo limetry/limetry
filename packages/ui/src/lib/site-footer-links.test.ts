@@ -35,6 +35,22 @@ describe("buildSiteFooterLinks", () => {
     expect(links.legal.privacy.href).toBe("http://localhost:3800/privacy")
     expect(links.docs.find((l) => l.label === "Swagger UI")?.href).toBe("/openapi")
     expect(links.docs.find((l) => l.label === "Swagger UI")?.external).toBeUndefined()
+    expect(links.product.find((l) => l.label === "Limetry Cloud")?.external).toBeUndefined()
+  })
+
+  it("does not mark Limetry-family absolute OpenAPI hrefs as external", () => {
+    const links = buildSiteFooterLinks({
+      ossWebOrigin: "https://limetry.org",
+      cloudAppOrigin: "https://app.limetry.com",
+      openApiHref: "https://api.limetry.org/openapi",
+      githubUrl: "https://github.com/limetry/limetry",
+      includeCloudLink: true,
+      ossLinksRelative: true,
+    })
+    expect(links.product.find((l) => l.label === "OpenAPI")?.external).toBeUndefined()
+    expect(links.docs.find((l) => l.label === "Swagger UI")?.external).toBeUndefined()
+    expect(links.product.find((l) => l.label === "Limetry Cloud")?.external).toBeUndefined()
+    expect(links.opensource.find((l) => l.label === "GitHub")?.external).toBe(true)
   })
 
   it("omits Limetry Cloud when includeCloudLink is false", () => {

@@ -47,6 +47,11 @@
       "import": "./src/lib/site-footer-links.ts",
       "default": "./src/lib/site-footer-links.ts"
     },
+    "./link-href": {
+      "types": "./dist/lib/link-href.d.ts",
+      "import": "./src/lib/link-href.ts",
+      "default": "./src/lib/link-href.ts"
+    },
     "./contact-form": {
       "types": "./dist/components/contact-form.web.d.ts",
       "react-native": "./src/components/contact-form.tsx",
